@@ -1063,6 +1063,19 @@ namespace Wholemy {
 				return this;
 			}
 			#endregion
+			public virtual void Apx(double S, out Line A, out Line B) {
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = EX;
+				var y11 = EY;
+				S /= 2;
+				var L = Mat.Sqrt(x00 - x11, y00 - y11);
+				var yx = (y11 - y00) / L * S;
+				var xy = (x00 - x11) / L * S;
+
+				A = new Line(x00 + yx, y00 + xy, x11 + yx, y11 + xy);
+				B = new Line(x11 - yx, y11 - xy, x00 - yx, y00 - xy);
+			}
 		}
 		#endregion
 		#region #class# Cubic 
@@ -2195,22 +2208,42 @@ namespace Wholemy {
 			y0 = Bone.MY;
 			x1 = Bone.EX;
 			y1 = Bone.EY;
-			D /= 2;
-			var X = x0 + Mat.Sqrt(x0 - x1, y0 - y1);
-			AddRotate(x0, y0, X, y0, x1, y1);
+			var S = this.Thickness / 2;
+			var A = S * Arc14;
+			var x00 = Bone.MX;
+			var y00 = Bone.MY;
+			var x11 = Bone.EX;
+			var y11 = Bone.EY;
+
+			var L = Mat.Sqrt(x00 - x11, y00 - y11);
+			var yx = (y11 - y00) / L * S;
+			var xy = (x00 - x11) / L * S;
+			var ax0 = x00 + yx;
+			var ay0 = y00 + xy;
+			var ax1 = x11 + yx;
+			var ay1 = y11 + xy;
+			var bx1 = x11 - yx;
+			var by1 = y11 - xy;
+			var bx0 = x00 - yx;
+			var by0 = y00 - xy;
 			if(IsRoundM) {
-				AddItemArc(x0, y0 + D, x0 - D, y0); // лево // низ лево
-				AddItemArc(x0 - D, y0, x0, y0 - D); // лево // лево верх
+				var tx0 = x00 + (x00 - x11) / L * S;
+				var ty0 = y00 + (y00 - y11) / L * S;
+				AddItem(new Cubic(bx0, by0, (bx0 + (y00 - by0) / S * A), (by0 + (bx0 - x00) / S * A), (tx0 + (ty0 - y00) / S * A), (ty0+ (x00 - tx0) / S * A), tx0, ty0));
+				AddItem(new Cubic(tx0, ty0, (tx0 + (y00 - ty0) / S * A), (ty0 + (tx0 - x00) / S * A), (ax0 + (ay0 - y00) / S * A), (ay0+ (x00 - ax0) / S * A), ax0, ay0));
 			} else {
-				AddItem(x0, y0 + D, x0, y0 - D); // лево
+				AddItem(new Line(bx0, by0, ax0, ay0));
 			}
+			AddItem(new Line(ax0, ay0, ax1, ay1));
 			if(IsRoundE) {
-				AddItemArc(X, y0 - D, X + D, y0); // право // верх право
-				AddItemArc(X + D, y0, X, y0 + D); // право // право низ
+				var tx1 = x11 + (x11 - x00) / L * S;
+				var ty1 = y11 + (y11 - y00) / L * S;
+				AddItem(new Cubic(ax1, ay1, (ax1 + (y11 - ay1) / S * A), (ay1 + (ax1 - x11) / S * A), (tx1 + (ty1 - y11) / S * A), (ty1+ (x11 - tx1) / S * A), tx1, ty1));
+				AddItem(new Cubic(tx1, ty1, (tx1 + (y11 - ty1) / S * A), (ty1 + (tx1 - x11) / S * A), (bx1 + (by1 - y11) / S * A), (by1+ (x11 - bx1) / S * A), bx1, by1));
 			} else {
-				AddItem(X, y0 - D, X, y0 + D); // право
+				AddItem(new Line(ax1, ay1, bx1, by1));
 			}
-			CutRotate();
+			AddItem(new Line(bx1, by1, bx0, by0));
 		}
 		#endregion
 	}

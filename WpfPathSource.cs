@@ -1063,19 +1063,6 @@ namespace Wholemy {
 				return this;
 			}
 			#endregion
-			public virtual void Apx(double S, out Line A, out Line B) {
-				var x00 = MX;
-				var y00 = MY;
-				var x11 = EX;
-				var y11 = EY;
-				S /= 2;
-				var L = Mat.Sqrt(x00 - x11, y00 - y11);
-				var yx = (y11 - y00) / L * S;
-				var xy = (x00 - x11) / L * S;
-
-				A = new Line(x00 + yx, y00 + xy, x11 + yx, y11 + xy);
-				B = new Line(x11 - yx, y11 - xy, x00 - yx, y00 - xy);
-			}
 		}
 		#endregion
 		#region #class# Cubic 
@@ -1106,6 +1093,47 @@ namespace Wholemy {
 				V = this.ceY;
 				this.ceY = this.cmY;
 				this.cmY = V;
+			}
+			#endregion
+			#region #method# DivArc(A, B) 
+			public void DivArc(out Cubic A, out Cubic B) {
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = cmX;
+				var y11 = cmY;
+				var x22 = ceX;
+				var y22 = ceY;
+				var x33 = EX;
+				var y33 = EY;
+				var x01 = (x11 - x00) * 0.5 + x00;
+				var y01 = (y11 - y00) * 0.5 + y00;
+				var x12 = (x22 - x11) * 0.5 + x11;
+				var y12 = (y22 - y11) * 0.5 + y11;
+				var x23 = (x33 - x22) * 0.5 + x22;
+				var y23 = (y33 - y22) * 0.5 + y22;
+				var x02 = (x12 - x01) * 0.5 + x01;
+				var y02 = (y12 - y01) * 0.5 + y01;
+				var x13 = (x23 - x12) * 0.5 + x12;
+				var y13 = (y23 - y12) * 0.5 + y12;
+				var x03 = (x13 - x02) * 0.5 + x02;
+				var y03 = (y13 - y02) * 0.5 + y02;
+				double X, Y;
+				var al0 = System.Math.Sqrt((X = x23 - x33) * X + (Y = y23 - y33) * Y);
+				var bl0 = System.Math.Sqrt((X = x01 - x00) * X + (Y = y01 - y00) * Y);
+				var al1 = System.Math.Sqrt((X = x03 - x13) * X + (Y = y03 - y13) * Y);
+				var bl1 = System.Math.Sqrt((X = x02 - x03) * X + (Y = y02 - y03) * Y);
+				var al2 = al1 + (al0 - al1) * 0.5;
+				var bl2 = bl1 + (bl0 - bl1) * 0.5;
+				var x23u = x33 + (x23 - x33) / al0 * al2;
+				var y23u = y33 + (y23 - y33) / al0 * al2;
+				var x01u = x00 + (x01 - x00) / bl0 * bl2;
+				var y01u = y00 + (y01 - y00) / bl0 * bl2;
+				var x13u = x03 + (x13 - x03) / al1 * al2;
+				var y13u = y03 + (y13 - y03) / al1 * al2;
+				var x02u = x03 + (x02 - x03) / bl1 * bl2;
+				var y02u = y03 + (y02 - y03) / bl1 * bl2;
+				A = new Cubic(x00, y00, x01u, y01u, x02u, y02u, x03, y03);
+				B = new Cubic(x03, y03, x13u, y13u, x23u, y23u, x33, y33);
 			}
 			#endregion
 			#region #method# Change(Mod, Invert) 
@@ -1247,7 +1275,7 @@ namespace Wholemy {
 				return this;
 			}
 			#endregion
-			public virtual char Prefix => 'C';
+			public override char Prefix => 'C';
 		}
 		#endregion
 		#region #class# Quadratic 
@@ -1381,7 +1409,7 @@ namespace Wholemy {
 				return this;
 			}
 			#endregion
-			public virtual char Prefix => 'Q';
+			public override char Prefix => 'Q';
 		}
 		#endregion
 		#region #method# Invert 
@@ -2229,8 +2257,12 @@ namespace Wholemy {
 			if(IsRoundM) {
 				var tx0 = x00 + (x00 - x11) / L * S;
 				var ty0 = y00 + (y00 - y11) / L * S;
-				AddItem(new Cubic(bx0, by0, (bx0 + (y00 - by0) / S * A), (by0 + (bx0 - x00) / S * A), (tx0 + (ty0 - y00) / S * A), (ty0+ (x00 - tx0) / S * A), tx0, ty0));
-				AddItem(new Cubic(tx0, ty0, (tx0 + (y00 - ty0) / S * A), (ty0 + (tx0 - x00) / S * A), (ax0 + (ay0 - y00) / S * A), (ay0+ (x00 - ax0) / S * A), ax0, ay0));
+				new Cubic(bx0, by0, (bx0 + (y00 - by0) / S * A), (by0 + (bx0 - x00) / S * A), (tx0 + (ty0 - y00) / S * A), (ty0 + (x00 - tx0) / S * A), tx0, ty0).DivArc(out var a0,out var a1);
+				new Cubic(tx0, ty0, (tx0 + (y00 - ty0) / S * A), (ty0 + (tx0 - x00) / S * A), (ax0 + (ay0 - y00) / S * A), (ay0 + (x00 - ax0) / S * A), ax0, ay0).DivArc(out var a2,out var a3);
+				AddItem(a0);
+				AddItem(a1);
+				AddItem(a2);
+				AddItem(a3);
 			} else {
 				AddItem(new Line(bx0, by0, ax0, ay0));
 			}
@@ -2238,8 +2270,12 @@ namespace Wholemy {
 			if(IsRoundE) {
 				var tx1 = x11 + (x11 - x00) / L * S;
 				var ty1 = y11 + (y11 - y00) / L * S;
-				AddItem(new Cubic(ax1, ay1, (ax1 + (y11 - ay1) / S * A), (ay1 + (ax1 - x11) / S * A), (tx1 + (ty1 - y11) / S * A), (ty1+ (x11 - tx1) / S * A), tx1, ty1));
-				AddItem(new Cubic(tx1, ty1, (tx1 + (y11 - ty1) / S * A), (ty1 + (tx1 - x11) / S * A), (bx1 + (by1 - y11) / S * A), (by1+ (x11 - bx1) / S * A), bx1, by1));
+				new Cubic(ax1, ay1, (ax1 + (y11 - ay1) / S * A), (ay1 + (ax1 - x11) / S * A), (tx1 + (ty1 - y11) / S * A), (ty1 + (x11 - tx1) / S * A), tx1, ty1).DivArc(out var a0,out var a1);
+				new Cubic(tx1, ty1, (tx1 + (y11 - ty1) / S * A), (ty1 + (tx1 - x11) / S * A), (bx1 + (by1 - y11) / S * A), (by1 + (x11 - bx1) / S * A), bx1, by1).DivArc(out var a2,out var a3);
+				AddItem(a0);
+				AddItem(a1);
+				AddItem(a2);
+				AddItem(a3);
 			} else {
 				AddItem(new Line(ax1, ay1, bx1, by1));
 			}

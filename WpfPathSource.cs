@@ -1,6 +1,246 @@
 namespace Wholemy {
 	public class PathSource {
-		private static readonly double Arc14 = 4.0 / 3.0 * System.Math.Tan(System.Math.PI * 0.125);
+		#region #class# Lot 
+		public class Lot {
+			public int Fl;
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+			#endregion
+			public bool Valid;
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+			#endregion
+			public Lot Pair;
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+			#endregion
+			public Line Poly;
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+			#endregion
+			public int Count;
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+			#endregion
+			public Dot Base;
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+			#endregion
+			public Dot Last;
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+			#endregion
+			public Dot[] Cache;
+			#region #new# (Line) 
+			public Lot(Line Line) {
+				var Poly = this.Poly = Line;
+				var Base = this.Base = Poly.Dot(0.0);
+				var Last = this.Last = Poly.Dot(1.0);
+				Base.Next = Last;
+				Last.Prev = Base;
+				Base.NextRoot = Last.PrevRoot = 0.5;
+				Base.Lot = Last.Lot = this;
+				this.Count = 2;
+			}
+			#endregion
+			#region #get# Items 
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.RootHidden)]
+#endif
+			#endregion
+			public Dot[] Items {
+				#region #through# 
+#if TRACE
+				[System.Diagnostics.DebuggerStepThrough]
+#endif
+				#endregion
+				get {
+					if (Cache != null) return Cache;
+					var I = Count;
+					var A = new Dot[I];
+					var S = Last;
+					while (--I >= 0) { A[I] = S; S = S.Prev; }
+					Cache = A;
+					return A;
+				}
+			}
+			#endregion
+			#region #method# ToString 
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public override string ToString() {
+				var I = System.Globalization.CultureInfo.InvariantCulture;
+				return "Lot Count:" + Count.ToString();
+			}
+			#endregion
+			#region #method# Adds 
+			public void Adds() {
+				var I = this.Base;
+				var N = true;
+				while (I != null) {
+					var ii = I.Next;
+					if (N) I.AddPrev();
+					N = I.AddNext();
+					I = ii;
+				}
+			}
+			#endregion
+		}
+		#endregion
+		#region #class# Dot 
+		public class Dot {
+			public Lot Lot;
+			public Dot Prev;
+			public Dot Next;
+			public double PrevRoot;
+			public double NextRoot;
+			public double PrevLen;
+			public double NextLen;
+			/// <summary>Длина до точки другого лота, наиболее короткая)</summary>
+			public double Len = double.NaN;
+			public readonly double Root;
+			public readonly double X;
+			public readonly double Y;
+			public double AX;
+			public double AY;
+			public double BX;
+			public double BY;
+			public double S;
+			#region #new# (Root, X, Y, MX, MY, EX, EY) 
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public Dot(double Root, double X, double Y, double AX, double AY, double BX, double BY) {
+				this.PrevRoot = this.NextRoot = this.Root = Root;
+				this.X = X; this.Y = Y;
+				this.AX = AX; this.AY = AY;
+				this.BX = BX; this.BY = BY;
+				this.S = 0.0;
+			}
+			#endregion
+			#region #method# ToString 
+			public override string ToString() {
+				var I = System.Globalization.CultureInfo.InvariantCulture;
+				return $"Dot Len: {Len.ToString("G17", I)} Root: {Root.ToString("G17", I)} X: {X.ToString("G17", I)} Y: {Y.ToString("G17", I)}";
+			}
+			#endregion
+			#region #method# LenTo(Dot) 
+			public double LenTo(Dot Dot) {
+				return Mat.Sqrt(this.X - Dot.X, this.Y - Dot.Y);
+			}
+			#endregion
+			#region #method# AddPrev 
+			public bool AddPrev() {
+				var Lot = this.Lot;
+				Dot Prev, New; double Size;
+				var R = true;
+				if (this.PrevRoot < this.Root) {
+					Size = (this.Root - this.PrevRoot) * 0.5;
+					New = Lot.Poly.Dot(this.PrevRoot);
+					New.PrevRoot -= Size;
+					if (New.PrevRoot < 0.0) New.PrevRoot = 0.0;
+					New.NextRoot += Size;
+					if (New.NextRoot > 1.0) New.NextRoot = 1.0;
+					Prev = this.Prev;
+					if (Prev != null) {
+						if (Prev.NextRoot == this.PrevRoot) {
+							Prev.NextRoot = New.PrevRoot;
+							R = false;
+						}
+						New.Prev = Prev;
+						Prev.Next = New;
+					} else {
+						Lot.Base = New;
+					}
+					this.PrevRoot = New.NextRoot;
+					New.Next = this;
+					this.Prev = New;
+					New.Lot = Lot;
+					Lot.Count++;
+					Lot.Cache = null;
+				}
+				return R;
+			}
+			#endregion
+			#region #method# AddNext 
+			public bool AddNext() {
+				var Lot = this.Lot;
+				Dot Next, New; double Size;
+				var R = true;
+				if (this.NextRoot > this.Root) {
+					Size = (this.NextRoot - this.Root) * 0.5;
+					New = Lot.Poly.Dot(this.NextRoot);
+					New.PrevRoot -= Size;
+					if (New.PrevRoot < 0.0)
+						New.PrevRoot = 0.0;
+					New.NextRoot += Size;
+					if (New.NextRoot > 1.0)
+						New.NextRoot = 1.0;
+					Next = this.Next;
+					if (Next != null) {
+						if (Next.PrevRoot == this.NextRoot) {
+							Next.PrevRoot = New.NextRoot; R = false;
+						}
+						New.Next = Next;
+						Next.Prev = New;
+					} else {
+						Lot.Last = New;
+					}
+					this.NextRoot = New.PrevRoot;
+					New.Prev = this;
+					this.Next = New;
+					New.Lot = Lot;
+					Lot.Count++;
+					Lot.Cache = null;
+				}
+				return R;
+			}
+			#endregion
+			#region #method# Cut 
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public void Cut() {
+				var Lot = this.Lot;
+				if (Lot != null) {
+					var P = this.Prev;
+					var N = this.Next;
+					if (P != null) { P.Next = N; } else { Lot.Base = N; }
+					if (N != null) { N.Prev = P; } else { Lot.Last = P; }
+					Lot.Count--;
+					Lot.Cache = null;
+					this.Prev = null; this.Next = null; this.Lot = null;
+					this.Len = double.NaN;
+					Lot.Pair.Valid = false;
+				}
+			}
+			#endregion
+		}
+		#endregion
+		public static readonly double ArcTan = System.Math.Tan(System.Math.PI / 8);
+		public static readonly double Arc14 = 4.0 / 3.0 * System.Math.Tan(System.Math.PI / 8);
 		private System.Windows.Media.Geometry HoldPath;
 		private System.Windows.Media.GeometryCombineMode HoldMode;
 		private System.Windows.Media.Geometry LastPath;
@@ -21,14 +261,14 @@ namespace Wholemy {
 		public class Preset {
 			public double Value;
 			public Preset(double Value) {
-				if(Value < 0 || Value > 1) throw new System.ArgumentOutOfRangeException();
+				if (Value < 0 || Value > 1) throw new System.ArgumentOutOfRangeException();
 				this.Value = Value;
 			}
 		}
 		#endregion
 		#region #method# PresetRoot(Root) 
 		public void PresetRoot(double Root) {
-			if(Root < 0) {
+			if (Root < 0) {
 				this.RootE = new Preset(-Root);
 			} else {
 				this.RootM = new Preset(Root);
@@ -37,8 +277,8 @@ namespace Wholemy {
 		#endregion
 		#region #method# PresetRoot(RootM, RootE) 
 		public void PresetRoot(double RootM, double RootE) {
-			if(RootM < 0) RootM = -RootM;
-			if(RootE < 0) RootE = -RootE;
+			if (RootM < 0) RootM = -RootM;
+			if (RootE < 0) RootE = -RootE;
 			this.RootE = new Preset(RootM);
 			this.RootM = new Preset(RootE);
 		}
@@ -62,7 +302,7 @@ namespace Wholemy {
 				var Count = this.FigureCount;
 				var Array = new Figure[Count--];
 				var Cache = this.FigureLast;
-				while(Count >= 0) {
+				while (Count >= 0) {
 					Array[Count--] = Cache;
 					Cache = Cache.Prev;
 				}
@@ -72,13 +312,13 @@ namespace Wholemy {
 		#endregion
 		#region #method# FiguresToGeometry 
 		private System.Windows.Media.Geometry FiguresToGeometry() {
-			if(FigureCount > 0) {
+			if (FigureCount > 0) {
 				var Stream = new System.Windows.Media.StreamGeometry();
 				Stream.FillRule = FillRule ? System.Windows.Media.FillRule.Nonzero : System.Windows.Media.FillRule.EvenOdd;
 				var Context = Stream.Open();
 				var Figure = FigureBase;
-				while(Figure != null) {
-					if(Figure.ItemCount > 0) {
+				while (Figure != null) {
+					if (Figure.ItemCount > 0) {
 						var Cache = Figure.ItemBase;
 						var Value = Cache.Value;
 						Context.BeginFigure(new System.Windows.Point(Value.MX, Value.MY), Figure.IsFilled, Figure.IsClozed);
@@ -86,7 +326,7 @@ namespace Wholemy {
 						var PreX = Value.EX;
 						var PreY = Value.EY;
 						Cache = Cache.Next;
-						while(Cache != null) {
+						while (Cache != null) {
 							Value = Cache.Value;
 							Value.If(Context, PreX, PreY);
 							Value.To(Context);
@@ -107,8 +347,8 @@ namespace Wholemy {
 		public System.Windows.Media.Geometry CombineToGeometry() {
 			var Path = FiguresToGeometry();
 			var Prev = this.LastPath;
-			if(Prev != null) {
-				if(Path != null) {
+			if (Prev != null) {
+				if (Path != null) {
 					Path = System.Windows.Media.Geometry.Combine(Prev, Path, this.LastMode, null, this.Tolerance, this.ToleranceType);
 				} else {
 					Path = Prev;
@@ -116,8 +356,8 @@ namespace Wholemy {
 				this.LastPath = null;
 			}
 			var Part = this.HoldPath;
-			if(Part != null) {
-				if(Path != null) {
+			if (Part != null) {
+				if (Path != null) {
 					Path = System.Windows.Media.Geometry.Combine(Part, Path, this.HoldMode, null, this.Tolerance, this.ToleranceType);
 				} else {
 					Path = Part;
@@ -134,8 +374,8 @@ namespace Wholemy {
 		public PathSource Combine() {
 			var Path = FiguresToGeometry();
 			var Last = this.LastPath;
-			if(Last != null) {
-				if(Path != null) {
+			if (Last != null) {
+				if (Path != null) {
 					Path = System.Windows.Media.Geometry.Combine(Last, Path, this.LastMode, null, this.Tolerance, this.ToleranceType);
 				} else {
 					Path = Last;
@@ -143,8 +383,8 @@ namespace Wholemy {
 				this.LastPath = null;
 			}
 			var Hold = this.HoldPath;
-			if(Hold != null) {
-				if(Path != null) {
+			if (Hold != null) {
+				if (Path != null) {
 					Path = System.Windows.Media.Geometry.Combine(Hold, Path, this.HoldMode, null, this.Tolerance, this.ToleranceType);
 				} else {
 					Path = Hold;
@@ -163,16 +403,16 @@ namespace Wholemy {
 			get {
 				var Path = FiguresToGeometry();
 				var Last = this.LastPath;
-				if(Last != null) {
-					if(Path != null) {
+				if (Last != null) {
+					if (Path != null) {
 						Path = System.Windows.Media.Geometry.Combine(Last, Path, this.LastMode, null, this.Tolerance, this.ToleranceType);
 					} else {
 						Path = Last;
 					}
 				}
 				var Part = this.HoldPath;
-				if(Part != null) {
-					if(Path != null) {
+				if (Part != null) {
+					if (Path != null) {
 						Path = System.Windows.Media.Geometry.Combine(Part, Path, this.HoldMode, null, this.Tolerance, this.ToleranceType);
 					} else {
 						Path = Part;
@@ -185,15 +425,15 @@ namespace Wholemy {
 		#region #method# CombineLast 
 		private void CombineLast() {
 			var Path = FiguresToGeometry();
-			if(Path != null) {
+			if (Path != null) {
 				this.FigureCount = 0;
 				this.FigureBase = null;
 				this.FigureLast = null;
 				this.FillRule = false;
 			}
 			var Last = this.LastPath;
-			if(Last != null) {
-				if(Path != null) {
+			if (Last != null) {
+				if (Path != null) {
 					Path = System.Windows.Media.Geometry.Combine(Last, Path, this.LastMode, null, this.Tolerance, this.ToleranceType);
 				} else {
 					Path = Last;
@@ -205,23 +445,23 @@ namespace Wholemy {
 		#region #method# CombineHold 
 		private void CombineHold() {
 			var Path = FiguresToGeometry();
-			if(Path != null) {
+			if (Path != null) {
 				this.FigureCount = 0;
 				this.FigureBase = null;
 				this.FigureLast = null;
 				this.FillRule = false;
 			}
 			var Last = this.LastPath;
-			if(Last != null) {
-				if(Path != null) {
+			if (Last != null) {
+				if (Path != null) {
 					Path = System.Windows.Media.Geometry.Combine(Last, Path, this.LastMode, null, this.Tolerance, this.ToleranceType);
 				} else {
 					Path = Last;
 				}
 			}
 			var Hold = this.HoldPath;
-			if(Hold != null) {
-				if(Path != null) {
+			if (Hold != null) {
+				if (Path != null) {
 					Path = System.Windows.Media.Geometry.Combine(Hold, Path, this.HoldMode, null, this.Tolerance, this.ToleranceType);
 				} else {
 					Path = Hold;
@@ -324,7 +564,7 @@ namespace Wholemy {
 		#region #method# AddBone(Val) 
 		public Bone AddBone(Line Val) {
 			var Fig = this.FigureLast ?? new Figure(this);
-			if(this.Inverted && Fig.Inverted) Val.Invert();
+			if (this.Inverted && Fig.Inverted) Val.Invert();
 			return new Bone(Fig, Val);
 		}
 		#endregion
@@ -336,7 +576,7 @@ namespace Wholemy {
 		#region #method# AddBone(Val) 
 		public Bone AddBone(Quadratic Val) {
 			var Fig = this.FigureLast ?? new Figure(this);
-			if(this.Inverted && Fig.Inverted) Val.Invert();
+			if (this.Inverted && Fig.Inverted) Val.Invert();
 			return new Bone(Fig, Val);
 		}
 		#endregion
@@ -348,7 +588,7 @@ namespace Wholemy {
 		#region #method# AddBone(Val) 
 		public Bone AddBone(Cubic Val) {
 			var Fig = this.FigureLast ?? new Figure(this);
-			if(this.Inverted && Fig.Inverted) Val.Invert();
+			if (this.Inverted && Fig.Inverted) Val.Invert();
 			return new Bone(Fig, Val);
 		}
 		#endregion
@@ -442,7 +682,7 @@ namespace Wholemy {
 			Y += XY;
 			X *= W;
 			Y *= H;
-			if(W != 1.0 || H != 1.0 || X != 0.0 || Y != 0.0) {
+			if (W != 1.0 || H != 1.0 || X != 0.0 || Y != 0.0) {
 				this.Mod = new ResizeMod(this.Mod, W, H, X, Y);
 			}
 		}
@@ -468,7 +708,7 @@ namespace Wholemy {
 			Y += XY;
 			X *= W;
 			Y *= H;
-			if(W != 1.0 || H != 1.0 || X != 0.0 || Y != 0.0) {
+			if (W != 1.0 || H != 1.0 || X != 0.0 || Y != 0.0) {
 				this.Mod = new ResizeMod(this.Mod, W, H, X, Y);
 			}
 		}
@@ -491,7 +731,7 @@ namespace Wholemy {
 			H *= WH;
 			X += XY;
 			Y += XY;
-			if(W != 1.0 || H != 1.0 || X != 0.0 || Y != 0.0) {
+			if (W != 1.0 || H != 1.0 || X != 0.0 || Y != 0.0) {
 				this.Mod = new ResizeMod(this.Mod, W, H, X, Y);
 			}
 		}
@@ -515,13 +755,13 @@ namespace Wholemy {
 			H *= WH;
 			X += XY;
 			Y += XY;
-			if(W != 1.0 || H != 1.0 || X != 0.0 || Y != 0.0) {
+			if (W != 1.0 || H != 1.0 || X != 0.0 || Y != 0.0) {
 				this.Mod = new ResizeMod(this.Mod, W, H, X, Y);
 			}
 		}
 		#endregion
 		#region #class# ResizeMod 
-		public class ResizeMod: Change {
+		public class ResizeMod : Change {
 			public double SX, SY, MX, MY;
 			public ResizeMod(Change Next, double SX, double SY, double MX, double MY, Mods Mods = Mods.All) : base(Next, Mods) {
 				this.SX = SX;
@@ -530,11 +770,11 @@ namespace Wholemy {
 				this.MY = MY;
 			}
 			public override void Modify(ref double X, ref double Y, bool x, bool y) {
-				if(x || y) {
+				if (x || y) {
 					var RX = X;
 					var RY = Y;
-					if(x) X = RX * SX + MX;
-					if(y) Y = RY * SY + MY;
+					if (x) X = RX * SX + MX;
+					if (y) Y = RY * SY + MY;
 				}
 			}
 		}
@@ -575,7 +815,7 @@ namespace Wholemy {
 		}
 		#endregion
 		#region #class# RotAsMod 
-		public class RotateMod: Change {
+		public class RotateMod : Change {
 			public double AR, CX, CY;
 			public RotateMod(Change Next, double CX, double CY, double AR, Mods Mods = Mods.All) : base(Next, Mods) {
 				this.AR = AR;
@@ -588,16 +828,16 @@ namespace Wholemy {
 				this.CY = CY;
 			}
 			public override void Modify(ref double X, ref double Y, bool x, bool y) {
-				if(x || y) {
+				if (x || y) {
 					var AX = X;
 					var AY = Y;
 					Mat.Rotate(this.CX, this.CY, ref AX, ref AY, this.AR);
-					if(x) X = AX;
-					if(y) Y = AY;
+					if (x) X = AX;
+					if (y) Y = AY;
 				}
 			}
 		}
-		public class RotAsMod: Change {
+		public class RotAsMod : Change {
 			public double A, CX, CY;
 			public RotAsMod(Change Next, double A, double CX, double CY, Mods Mods = Mods.All) : base(Next, Mods) {
 				this.A = A;
@@ -605,7 +845,7 @@ namespace Wholemy {
 				this.CY = CY;
 			}
 			public override void Modify(ref double X, ref double Y, bool x, bool y) {
-				if(x || y) {
+				if (x || y) {
 					var RX = X;
 					var RY = Y;
 					var A = this.A;
@@ -616,14 +856,14 @@ namespace Wholemy {
 					var AS = System.Math.Sin(A);
 					RX -= CX;
 					RY -= CY;
-					if(x) X = ((RX * AC) - (RY * AS)) + CX;
-					if(y) Y = ((RX * AS) + (RY * AC)) + CY;
+					if (x) X = ((RX * AC) - (RY * AS)) + CX;
+					if (y) Y = ((RX * AS) + (RY * AC)) + CY;
 				}
 			}
 		}
 		#endregion
 		#region #class# RotOfMod 
-		public class RotOfMod: Change {
+		public class RotOfMod : Change {
 			public readonly double AR;
 			public readonly double AX, AY, CX, CY;
 			public readonly bool CW;
@@ -635,7 +875,7 @@ namespace Wholemy {
 				this.CW = CW;
 			}
 			public override void Modify(ref double X, ref double Y, bool x, bool y) {
-				if(x || y) {
+				if (x || y) {
 					var RX = X;
 					var RY = Y;
 					var AX = this.AX;
@@ -643,19 +883,19 @@ namespace Wholemy {
 					var CX = this.CX;
 					var CY = this.CY;
 					double A;
-					if(((CX < AX && CY < AY) || (CX > AX && CY > AY)) ^ CW) {
+					if (((CX < AX && CY < AY) || (CX > AX && CY > AY)) ^ CW) {
 						A = (AY > CY ? AY - CY : CY - AY) / (AX > CX ? CX - AX : AX - CX);
 					} else {
 						A = (AX > CX ? CX - AX : AX - CX) / (AY > CY ? AY - CY : CY - AY);
 					}
-					if(!CW) A = -A;
+					if (!CW) A = -A;
 					A = System.Math.Atan(A);
 					var AC = System.Math.Cos(A);
 					var AS = System.Math.Sin(A);
 					RX -= CX;
 					RY -= CY;
-					if(x) X = ((RX * AC) - (RY * AS)) + CX;
-					if(y) Y = ((RX * AS) + (RY * AC)) + CY;
+					if (x) X = ((RX * AC) - (RY * AS)) + CX;
+					if (y) Y = ((RX * AS) + (RY * AC)) + CY;
 				}
 			}
 		}
@@ -707,7 +947,7 @@ namespace Wholemy {
 					var Count = this.ItemCount;
 					var Array = new Line[Count--];
 					var Item = this.ItemLast;
-					while(Count >= 0) {
+					while (Count >= 0) {
 						Array[Count--] = Item.Value;
 						Item = Item.Prev;
 					}
@@ -744,7 +984,7 @@ namespace Wholemy {
 					var Count = this.BoneCount;
 					var Array = new Line[Count--];
 					var Bone = this.BoneLast;
-					while(Count >= 0) {
+					while (Count >= 0) {
 						Array[Count--] = Bone.Value;
 						Bone = Bone.Prev;
 					}
@@ -758,7 +998,7 @@ namespace Wholemy {
 				this.IsClozed = Owner.IsClozed;
 				this.Inverted = Owner.Inverted;
 				this.Owner = Owner;
-				if(Owner.FigureCount == 0) {
+				if (Owner.FigureCount == 0) {
 					Owner.FigureCount = 1;
 					Owner.FigureBase = this;
 					Owner.FigureLast = this;
@@ -773,15 +1013,15 @@ namespace Wholemy {
 			public override string ToString() {
 				var I = System.Globalization.CultureInfo.InvariantCulture;
 				var S = "";
-				if(ItemCount > 0) {
+				if (ItemCount > 0) {
 					var Cache = ItemBase;
 					S = "M" + Cache.Value.MX.ToString(I) + "," + Cache.Value.MY.ToString(I);
-					while(Cache != null) {
+					while (Cache != null) {
 						S += Cache.Value.ToPathString();
 						Cache = Cache.Next;
 					}
 				}
-				if(IsClozed) S += "z";
+				if (IsClozed) S += "z";
 				return S;
 			}
 			#endregion
@@ -807,12 +1047,12 @@ namespace Wholemy {
 			public Bone(Figure Figure, Line Value) {
 				this.Figure = Figure;
 				this.Value = Value;
-				if(Figure.BoneCount == 0) {
+				if (Figure.BoneCount == 0) {
 					Figure.BoneCount = 1;
 					Figure.BoneBase = this;
 					Figure.BoneLast = this;
 				} else {
-					if(Figure.Inverted) {
+					if (Figure.Inverted) {
 						(this.Next = Figure.BoneBase).Prev = this;
 						Figure.BoneBase = this;
 					} else {
@@ -855,12 +1095,12 @@ namespace Wholemy {
 			public Item(Figure Figure, Line Value) {
 				this.Figure = Figure;
 				this.Value = Value;
-				if(Figure.ItemCount == 0) {
+				if (Figure.ItemCount == 0) {
 					Figure.ItemCount = 1;
 					Figure.ItemBase = this;
 					Figure.ItemLast = this;
 				} else {
-					if(Figure.Inverted) {
+					if (Figure.Inverted) {
 						(this.Next = Figure.ItemBase).Prev = this;
 						Figure.ItemBase = this;
 					} else {
@@ -910,12 +1150,12 @@ namespace Wholemy {
 			#region #method# Change(Mod, Invert) 
 			public virtual void Change(Change Mod, bool Invert = false) {
 				var MX = this.MX; var MY = this.MY; var EX = this.EX; var EY = this.EY;
-				while(Mod != null) {
+				while (Mod != null) {
 					Mod.Modify(ref MX, ref MY, (Mod.Mods & Mods.MX) != 0, (Mod.Mods & Mods.MY) != 0);
 					Mod.Modify(ref EX, ref EY, (Mod.Mods & Mods.EX) != 0, (Mod.Mods & Mods.EY) != 0);
 					Mod = Mod.Next;
 				}
-				if(Invert) {
+				if (Invert) {
 					this.MX = EX; this.MY = EY; this.EX = MX; this.EY = MY;
 				} else {
 					this.MX = MX; this.MY = MY; this.EX = EX; this.EY = EY;
@@ -924,7 +1164,7 @@ namespace Wholemy {
 			#endregion
 			#region #method# If(Context, X, Y) 
 			public virtual void If(System.Windows.Media.StreamGeometryContext Context, double X, double Y) {
-				if(!double.Equals(X, MX) || !double.Equals(Y, MY))
+				if (!double.Equals(X, MX) || !double.Equals(Y, MY))
 					Context.LineTo(new System.Windows.Point(MX, MY), true, true);
 			}
 			#endregion
@@ -943,20 +1183,20 @@ namespace Wholemy {
 			public virtual string ToCompessedString(Line Prev) {
 				var S = "";
 				var I = System.Globalization.CultureInfo.InvariantCulture;
-				if(this.Prefix == 'L') {
-					if(Prev == null) { S = "M" + MX.ToString(I) + "," + MY.ToString(I); }
-					if(MX == EX) {
+				if (this.Prefix == 'L') {
+					if (Prev == null) { S = "M" + MX.ToString(I) + "," + MY.ToString(I); }
+					if (MX == EX) {
 						var V = "V" + EY.ToString(I);
 						var v = "v" + (EY - MY).ToString(I);
-						if(v.Length < V.Length) { S += v; } else { S += V; }
-					} else if(MY == EY) {
+						if (v.Length < V.Length) { S += v; } else { S += V; }
+					} else if (MY == EY) {
 						var H = "H" + EX.ToString(I);
 						var h = "h" + (EX - MX).ToString(I);
-						if(h.Length < H.Length) { S += h; } else { S += H; }
+						if (h.Length < H.Length) { S += h; } else { S += H; }
 					} else {
 						var L = "L" + EX.ToString(I) + "," + EY.ToString(I);
 						var l = "l" + (EX - MX).ToString(I) + "," + (EY - MY).ToString(I);
-						if(l.Length < L.Length) { S += l; } else { S += L; }
+						if (l.Length < L.Length) { S += l; } else { S += L; }
 					}
 				}
 				return S;
@@ -978,7 +1218,7 @@ namespace Wholemy {
 				var cmY = MY;
 				var ceX = EX;
 				var ceY = EY;
-				if(((MX < EX && MY < EY) || (MX > EX && MY > EY)) ^ Acw) {
+				if (((MX < EX && MY < EY) || (MX > EX && MY > EY)) ^ Acw) {
 					cmX += ((EX - MX) * Arc14);
 					ceY += ((MY - EY) * Arc14);
 				} else {
@@ -990,8 +1230,8 @@ namespace Wholemy {
 			#endregion
 			#region #method# Cuted(r0) 
 			public Line Cuted(double r0) {
-				if((r0 < 1.0) && (r0 > -1.0)) {
-					if(r0 != 0.0) {
+				if ((r0 < 1.0) && (r0 > -1.0)) {
+					if (r0 != 0.0) {
 						var root = r0 < 0.0 ? 1.0 + r0 : r0;
 						var x00 = this.MX;
 						var y00 = this.MY;
@@ -999,7 +1239,7 @@ namespace Wholemy {
 						var y11 = this.EY;
 						var x01 = (x11 - x00) * root + x00;
 						var y01 = (y11 - y00) * root + y00;
-						if(r0 < 0.0) {
+						if (r0 < 0.0) {
 							this.MX = x00; this.MY = y00;
 							this.EX = x01; this.EY = y01;
 						} else {
@@ -1013,9 +1253,9 @@ namespace Wholemy {
 			#endregion
 			#region #method# Cuted(r0, r1) 
 			public Line Cuted(double r0, double r1) {
-				if((r0 < 1.0) && (r0 > -1.0)) {
+				if ((r0 < 1.0) && (r0 > -1.0)) {
 					r1 = (r1 / (1.0 - r0));
-					while(r0 != 0.0) {
+					while (r0 != 0.0) {
 						var root = r0 < 0.0 ? 1.0 + r0 : r0;
 						var x00 = this.MX;
 						var y00 = this.MY;
@@ -1023,7 +1263,7 @@ namespace Wholemy {
 						var y11 = this.EY;
 						var x01 = (x11 - x00) * root + x00;
 						var y01 = (y11 - y00) * root + y00;
-						if(r0 < 0.0) {
+						if (r0 < 0.0) {
 							this.MX = x00; this.MY = y00;
 							this.EX = x01; this.EY = y01;
 						} else {
@@ -1038,13 +1278,13 @@ namespace Wholemy {
 			#endregion
 			#region #method# Cuted(M, E) 
 			public virtual Line Cuted(Preset M, Preset E) {
-				if(M == null && E == null) return this;
-				if(M != null && E != null) {
+				if (M == null && E == null) return this;
+				if (M != null && E != null) {
 					Cuted(M.Value, -E.Value);
 				} else {
-					if(M != null) {
+					if (M != null) {
 						Cuted(M.Value);
-					} else if(E != null) {
+					} else if (E != null) {
 						Cuted(-E.Value);
 					}
 				}
@@ -1063,10 +1303,109 @@ namespace Wholemy {
 				return this;
 			}
 			#endregion
+			#region #method# AddArcM(P) 
+			public virtual void AddArcM(PathSource P) {
+				var S = P.Thickness / 2;
+				var A = S * Arc14;
+				var MX = this.MX;
+				var MY = this.MY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				var YX = (EY - MY) / meL * S;
+				var XY = (MX - EX) / meL * S;
+				var AX = MX + YX;
+				var AY = MY + XY;
+				var BX = MX - YX;
+				var BY = MY - XY;
+				var CX = MX + (MX - EX) / meL * S;
+				var CY = MY + (MY - EY) / meL * S;
+				new Cubic(BX, BY, (BX + (MY - BY) / S * A), (BY + (BX - MX) / S * A), (CX + (CY - MY) / S * A), (CY + (MX - CX) / S * A), CX, CY).DivArc(out var a0, out var a1);
+				new Cubic(CX, CY, (CX + (MY - CY) / S * A), (CY + (CX - MX) / S * A), (AX + (AY - MY) / S * A), (AY + (MX - AX) / S * A), AX, AY).DivArc(out var a2, out var a3);
+				P.AddItem(a0);
+				P.AddItem(a1);
+				P.AddItem(a2);
+				P.AddItem(a3);
+			}
+			#endregion
+			#region #method# AddArcE(P) 
+			public virtual void AddArcE(PathSource P) {
+				var S = P.Thickness / 2;
+				var A = S * Arc14;
+				var MX = this.MX;
+				var MY = this.MY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				var YX = (EY - MY) / meL * S;
+				var XY = (MX - EX) / meL * S;
+				var AX = EX + YX;
+				var AY = EY + XY;
+				var BX = EX - YX;
+				var BY = EY - XY;
+				var CX = EX + (EX - MX) / meL * S;
+				var CY = EY + (EY - MY) / meL * S;
+				new Cubic(AX, AY, (AX + (EY - AY) / S * A), (AY + (AX - EX) / S * A), (CX + (CY - EY) / S * A), (CY + (EX - CX) / S * A), CX, CY).DivArc(out var a0, out var a1);
+				new Cubic(CX, CY, (CX + (EY - CY) / S * A), (CY + (CX - EX) / S * A), (BX + (BY - EY) / S * A), (BY + (EX - BX) / S * A), BX, BY).DivArc(out var a2, out var a3);
+				P.AddItem(a0);
+				P.AddItem(a1);
+				P.AddItem(a2);
+				P.AddItem(a3);
+			}
+			#endregion
+			#region #method# AddLinM(P) 
+			public virtual void AddLinM(PathSource P) {
+				var S = P.Thickness / 2;
+				var A = S * Arc14;
+				var MX = this.MX;
+				var MY = this.MY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				var YX = (EY - MY) / meL * S;
+				var XY = (MX - EX) / meL * S;
+				var AX = MX + YX;
+				var AY = MY + XY;
+				var BX = MX - YX;
+				var BY = MY - XY;
+				P.AddItem(new Line(BX, BY, AX, AY));
+			}
+			#endregion
+			#region #method# AddLinE(P) 
+			public virtual void AddLinE(PathSource P) {
+				var S = P.Thickness / 2;
+				var A = S * Arc14;
+				var MX = this.MX;
+				var MY = this.MY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				var YX = (EY - MY) / meL * S;
+				var XY = (MX - EX) / meL * S;
+				var AX = EX + YX;
+				var AY = EY + XY;
+				var BX = EX - YX;
+				var BY = EY - XY;
+				P.AddItem(new Line(AX, AY, BX, BY));
+			}
+			#endregion
+			#region #method# Dot(root) 
+			public virtual Dot Dot(double root) {
+				if (root < 0.0 || root > 1.0) throw new System.InvalidOperationException();
+				var R = root;
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = EX;
+				var y11 = EY;
+				var x01 = (x11 - x00) * R + x00;
+				var y01 = (y11 - y00) * R + y00;
+				return new Dot(root, x01, y01, x00, y00, x11, y11);
+			}
+			#endregion
 		}
 		#endregion
 		#region #class# Cubic 
-		public class Cubic: Line {
+		public class Cubic : Line {
 			#region #new# 
 			public Cubic() { }
 			#endregion
@@ -1136,17 +1475,161 @@ namespace Wholemy {
 				B = new Cubic(x03, y03, x13u, y13u, x23u, y23u, x33, y33);
 			}
 			#endregion
+			public void Div(double R, out Cubic A, out Cubic B) {
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = cmX;
+				var y11 = cmY;
+				var x22 = ceX;
+				var y22 = ceY;
+				var x33 = EX;
+				var y33 = EY;
+				var x01 = (x11 - x00) * R + x00;
+				var y01 = (y11 - y00) * R + y00;
+				var x12 = (x22 - x11) * R + x11;
+				var y12 = (y22 - y11) * R + y11;
+				var x23 = (x33 - x22) * R + x22;
+				var y23 = (y33 - y22) * R + y22;
+				var x02 = (x12 - x01) * R + x01;
+				var y02 = (y12 - y01) * R + y01;
+				var x13 = (x23 - x12) * R + x12;
+				var y13 = (y23 - y12) * R + y12;
+				var x03 = (x13 - x02) * R + x02;
+				var y03 = (y13 - y02) * R + y02;
+				A = new Cubic(x00, y00, x01, y01, x02, y02, x03, y03);
+				B = new Cubic(x03, y03, x13, y13, x23, y23, x33, y33);
+			}
+			#region #method# Dot(root) 
+			public override Dot Dot(double R) {
+				if (R < 0.0 || R > 1.0) throw new System.InvalidOperationException();
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = cmX;
+				var y11 = cmY;
+				var x22 = ceX;
+				var y22 = ceY;
+				var x33 = EX;
+				var y33 = EY;
+				var x01 = (x11 - x00) * R + x00;
+				var y01 = (y11 - y00) * R + y00;
+				var x12 = (x22 - x11) * R + x11;
+				var y12 = (y22 - y11) * R + y11;
+				var x02 = (x12 - x01) * R + x01;
+				var y02 = (y12 - y01) * R + y01;
+				var x23 = (x33 - x22) * R + x22;
+				var y23 = (y33 - y22) * R + y22;
+				var x13 = (x23 - x12) * R + x12;
+				var y13 = (y23 - y12) * R + y12;
+				var x03 = (x13 - x02) * R + x02;
+				var y03 = (y13 - y02) * R + y02;
+				return new Dot(R, x03, y03, x13, y13, x02, y02);
+			}
+			#endregion
+			#region #method# FixM 
+			public double FixM() {
+				var C = 0;
+				var R = 0.0;
+				var r = 0.5;
+				var rr = 0.5;
+				End:
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = cmX;
+				var y11 = cmY;
+				var x22 = ceX;
+				var y22 = ceY;
+				var x33 = EX;
+				var y33 = EY;
+				Next:
+				var x01 = (x11 - x00) * rr + x00;
+				var y01 = (y11 - y00) * rr + y00;
+				var x12 = (x22 - x11) * rr + x11;
+				var y12 = (y22 - y11) * rr + y11;
+				var x23 = (x33 - x22) * rr + x22;
+				var y23 = (y33 - y22) * rr + y22;
+				var x02 = (x12 - x01) * rr + x01;
+				var y02 = (y12 - y01) * rr + y01;
+				var x13 = (x23 - x12) * rr + x12;
+				var y13 = (y23 - y12) * rr + y12;
+				var x03 = (x13 - x02) * rr + x02;
+				var y03 = (y13 - y02) * rr + y02;
+				if (r > 0.0) {
+					if (x00 != x03 && y00 != y03) {
+						x11 = x01; y11 = y01; x22 = x02; y22 = y02; x33 = x03; y33 = y03;
+					} else {
+						if (x00 == x03 && y00 == y03 && x11 == x13 && y11 == y13 && x22 == x23 && y22 == y23) { r = 0.0; } else {
+							x00 = x03; y00 = y03; x11 = x13; y11 = y13; x22 = x23; y22 = y23;
+							R += r;
+						}
+					}
+					C++;
+					r *= 0.5;
+					goto Next;
+				} else {
+					if (rr != R) { rr = R; goto End; }
+					MX = x03; MY = y03; cmX = x13; cmY = y13; ceX = x23; ceY = y23;
+				}
+				return R;
+			}
+			#endregion
+			#region #method# FixE 
+			public double FixE() {
+				var C = 0;
+				var R = 1.0;
+				var r = 0.5;
+				var rr = 0.5;
+				End:
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = cmX;
+				var y11 = cmY;
+				var x22 = ceX;
+				var y22 = ceY;
+				var x33 = EX;
+				var y33 = EY;
+				Next:
+				var x01 = (x11 - x00) * rr + x00;
+				var y01 = (y11 - y00) * rr + y00;
+				var x12 = (x22 - x11) * rr + x11;
+				var y12 = (y22 - y11) * rr + y11;
+				var x23 = (x33 - x22) * rr + x22;
+				var y23 = (y33 - y22) * rr + y22;
+				var x02 = (x12 - x01) * rr + x01;
+				var y02 = (y12 - y01) * rr + y01;
+				var x13 = (x23 - x12) * rr + x12;
+				var y13 = (y23 - y12) * rr + y12;
+				var x03 = (x13 - x02) * rr + x02;
+				var y03 = (y13 - y02) * rr + y02;
+				if (r > 0.0) {
+					if (x11 != x03 && y11 != y03) {
+						x00 = x03; y00 = y03; x11 = x13; y11 = y13; x22 = x23; y22 = y23;
+					} else {
+						if (x11 == x01 && y11 == y01 && x22 == x02 && y22 == y02 && x33 == x03 && y33 == y03) { r = 0.0; } else {
+							x11 = x01; y11 = y01; x22 = x02; y22 = y02; x33 = x03; y33 = y03;
+							R -= r;
+						}
+					}
+					C++;
+					r *= 0.5;
+					goto Next;
+				} else {
+					if (rr != R) { rr = R; goto End; }
+					cmX = x01; cmY = y01; ceX = x02; ceY = y02; EX = x03; EY = y03;
+				}
+				return R;
+			}
+			#endregion
 			#region #method# Change(Mod, Invert) 
 			public override void Change(Change Mod, bool Invert) {
 				var MX = this.MX; var MY = this.MY; var cmX = this.cmX; var cmY = this.cmY; var ceX = this.ceX; var ceY = this.ceY; var EX = this.EX; var EY = this.EY;
-				while(Mod != null) {
+				while (Mod != null) {
 					Mod.Modify(ref MX, ref MY, (Mod.Mods & Mods.MX) != 0, (Mod.Mods & Mods.MY) != 0);
 					Mod.Modify(ref EX, ref EY, (Mod.Mods & Mods.EX) != 0, (Mod.Mods & Mods.EY) != 0);
 					Mod.Modify(ref cmX, ref cmY, (Mod.Mods & Mods.cmX) != 0, (Mod.Mods & Mods.cmY) != 0);
 					Mod.Modify(ref ceX, ref ceY, (Mod.Mods & Mods.ceX) != 0, (Mod.Mods & Mods.ceY) != 0);
 					Mod = Mod.Next;
 				}
-				if(Invert) {
+				if (Invert) {
 					this.MX = EX; this.MY = EY; this.cmX = ceX; this.cmY = ceY; this.ceX = cmX; this.ceY = cmY; this.EX = MX; this.EY = MY;
 				} else {
 					this.MX = MX; this.MY = MY; this.cmX = cmX; this.cmY = cmY; this.ceX = ceX; this.ceY = ceY; this.EX = EX; this.EY = EY;
@@ -1178,8 +1661,8 @@ namespace Wholemy {
 			#endregion
 			#region #method# Cuted(r0) 
 			public Cubic Cuted(double r0) {
-				if((r0 < 1.0) && (r0 > -1.0)) {
-					if(r0 != 0.0) {
+				if ((r0 < 1.0) && (r0 > -1.0)) {
+					if (r0 != 0.0) {
 						var root = r0 < 0.0 ? 1.0 + r0 : r0;
 						var x00 = this.MX;
 						var y00 = this.MY;
@@ -1201,7 +1684,7 @@ namespace Wholemy {
 						var y13 = (y23 - y12) * root + y12;
 						var x03 = (x13 - x02) * root + x02;
 						var y03 = (y13 - y02) * root + y02;
-						if(r0 < 0.0) {
+						if (r0 < 0.0) {
 							this.MX = x00; this.MY = y00;
 							this.cmX = x01; this.cmY = y01;
 							this.ceX = x02; this.ceY = y02;
@@ -1219,9 +1702,9 @@ namespace Wholemy {
 			#endregion
 			#region #method# Cuted(r0, r1) 
 			public Cubic Cuted(double r0, double r1) {
-				if((r0 < 1.0) && (r0 > -1.0)) {
+				if ((r0 < 1.0) && (r0 > -1.0)) {
 					r1 = (r1 / (1.0 - r0));
-					while(r0 != 0.0) {
+					while (r0 != 0.0) {
 						var root = r0 < 0.0 ? 1.0 + r0 : r0;
 						var x00 = this.MX;
 						var y00 = this.MY;
@@ -1243,7 +1726,7 @@ namespace Wholemy {
 						var y13 = (y23 - y12) * root + y12;
 						var x03 = (x13 - x02) * root + x02;
 						var y03 = (y13 - y02) * root + y02;
-						if(r0 < 0.0) {
+						if (r0 < 0.0) {
 							this.MX = x00; this.MY = y00;
 							this.cmX = x01; this.cmY = y01;
 							this.ceX = x02; this.ceY = y02;
@@ -1262,13 +1745,28 @@ namespace Wholemy {
 			#endregion
 			#region #method# Cuted(M, E) 
 			public override Line Cuted(Preset M, Preset E) {
-				if(M == null && E == null) return this;
-				if(M != null && E != null) {
+				if (M == null && E == null) return this;
+				if (M != null && E != null) {
 					Cuted(M.Value, -E.Value);
 				} else {
-					if(M != null) {
+					if (M != null) {
 						Cuted(M.Value);
-					} else if(E != null) {
+					} else if (E != null) {
+						Cuted(-E.Value);
+					}
+				}
+				return this;
+			}
+			#endregion
+			#region #method# CutedCubic(M, E) 
+			public Cubic CutedCubic(Preset M, Preset E) {
+				if (M == null && E == null) return this;
+				if (M != null && E != null) {
+					Cuted(M.Value, -E.Value);
+				} else {
+					if (M != null) {
+						Cuted(M.Value);
+					} else if (E != null) {
 						Cuted(-E.Value);
 					}
 				}
@@ -1276,10 +1774,294 @@ namespace Wholemy {
 			}
 			#endregion
 			public override char Prefix => 'C';
+			#region #method# AddArcM(P) 
+			public override void AddArcM(PathSource P) {
+				var S = P.Thickness / 2;
+				var A = S * Arc14;
+				var MX = this.MX;
+				var MY = this.MY;
+				var cmX = this.cmX;
+				var cmY = this.cmY;
+				var ceX = this.ceX;
+				var ceY = this.ceY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var cmL = Mat.Sqrt(MX - cmX, MY - cmY);
+				var ceL = Mat.Sqrt(EX - ceX, EY - ceY);
+				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				if (cmL > 0.0) {
+					if (Mat.Sqrt(EX - cmX, EY - cmY) > 0.0) {
+						EX = cmX;
+						EY = cmY;
+						meL = cmL;
+					}
+				} else if (ceL > 0.0) {
+					if (Mat.Sqrt(MX - ceX, MY - ceY) > 0.0) {
+						EX = ceX;
+						EY = ceY;
+						meL = Mat.Sqrt(MX - EX, MY - EY);
+					}
+				}
+				var YX = (EY - MY) / meL * S;
+				var XY = (MX - EX) / meL * S;
+				var AX = MX + YX;
+				var AY = MY + XY;
+				var BX = MX - YX;
+				var BY = MY - XY;
+				var CX = MX + (MX - EX) / meL * S;
+				var CY = MY + (MY - EY) / meL * S;
+				new Cubic(BX, BY, (BX + (MY - BY) / S * A), (BY + (BX - MX) / S * A), (CX + (CY - MY) / S * A), (CY + (MX - CX) / S * A), CX, CY).DivArc(out var a0, out var a1);
+				new Cubic(CX, CY, (CX + (MY - CY) / S * A), (CY + (CX - MX) / S * A), (AX + (AY - MY) / S * A), (AY + (MX - AX) / S * A), AX, AY).DivArc(out var a2, out var a3);
+				P.AddItem(a0);
+				P.AddItem(a1);
+				P.AddItem(a2);
+				P.AddItem(a3);
+			}
+			#endregion
+			#region #method# TesArcA(P) 
+			public bool TesArcA(PathSource P) {
+				var S = P.Thickness / 2;
+				if (this.Ext(S, out var Item)) {
+					this.Div(0.5, out var BA, out var BB);
+					Item.Div(0.5, out var AA, out var AB);
+					if (BB.Ext(S, out var B)) {
+						var cmcL = Mat.Sqrt(AB.MX - B.MX, AB.MY - B.MY);
+						if (cmcL < 0.5) {
+							P.AddItem(Item);
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+			#endregion
+			#region #method# TesArcB(P) 
+			public bool TesArcB(PathSource P) {
+				var S = P.Thickness / 2;
+				if (this.Ext(S, out var Item, true)) {
+					this.Div(0.5, out var RA, out var RB);
+					Item.Div(0.5, out var BA, out var BB);
+					if (RB.Ext(S, out var B, true)) {
+						var cecL = Mat.Sqrt(BA.EX - B.EX, BA.EY - B.EY);
+						if (cecL < 0.5) {
+							P.AddItem(Item);
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+			#endregion
+			#region #method# Ext(S, A, B) 
+			/// <summary>Расширяет кривую на указанную толщину)</summary>
+			/// <param name="S">Толщина линии, положительное или отридцательное значение определяет сторону)</param>
+			/// <param name="A">Возвращаемая кривая, если длина исходной кривой больше нуля)</param>
+			/// <param name="B">Инвертированная кривая с другой стороны, если длина исходной кривой больше нуля)</param>
+			/// <returns>Успех если длина исходной кривой больше нуля)</returns>
+			public bool Ext(double S, out Cubic A, out Cubic B) {
+				var MX = this.MX;
+				var MY = this.MY;
+				var cmX = this.cmX;
+				var cmY = this.cmY;
+				var ceX = this.ceX;
+				var ceY = this.ceY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var l0 = Mat.Path(cmX - MX, cmY - MY, out var l0X, out var l0Y);
+				var l1 = Mat.Path(ceX - cmX, ceY - cmY, out var l1X, out var l1Y);
+				var l2 = Mat.Path(EX - ceX, EY - ceY, out var l2X, out var l2Y);
+				var l = l0 + l1 + l2;
+				if (l == 0.0) { A = null; B = null; return false; }
+				if (l0 == 0.0) if (l1 > 0.0) { l0X = l1X; l0Y = l1Y; } else { l0X = l2X; l0Y = l2Y; }
+				if (l2 == 0.0) if (l1 > 0.0) { l2X = l1X; l2Y = l1Y; } else { l2X = l0X; l2Y = l0Y; }
+				A = new Cubic(MX + S * l0X, MY + S * l0Y, cmX + S * l1X, cmY + S * l1Y, ceX + S * l1X, ceY + S * l1Y, EX + S * l2X, EY + S * l2Y);
+				S = -S;
+				B = new Cubic(EX + S * l2X, EY + S * l2Y, ceX + S * l1X, ceY + S * l1Y, cmX + S * l1X, cmY + S * l1Y, MX + S * l0X, MY + S * l0Y);
+				return true;
+			}
+			#endregion
+			#region #method# Ext(S, R, I) 
+			/// <summary>Расширяет кривую на указанную толщину)</summary>
+			/// <param name="S">Толщина линии, положительное или отридцательное значение определяет сторону)</param>
+			/// <param name="R">Возвращаемая кривая, если длина исходной кривой больше нуля)</param>
+			/// <param name="I">Истина инвертирует значение толщины и направление возвращаемой кривой)</param>
+			/// <returns>Успех если длина исходной кривой больше нуля)</returns>
+			public bool Ext(double S, out Cubic R, bool I = false) {
+				var MX = this.MX;
+				var MY = this.MY;
+				var cmX = this.cmX;
+				var cmY = this.cmY;
+				var ceX = this.ceX;
+				var ceY = this.ceY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var l0 = Mat.Path(cmX - MX, cmY - MY, out var l0X, out var l0Y);
+				var l1 = Mat.Path(ceX - cmX, ceY - cmY, out var l1X, out var l1Y);
+				var l2 = Mat.Path(EX - ceX, EY - ceY, out var l2X, out var l2Y);
+				var l = l0 + l1 + l2;
+				if (l == 0.0) { R = null; return false; }
+				if (l0 == 0.0) if (l1 > 0.0) { l0X = l1X; l0Y = l1Y; } else { l0X = l2X; l0Y = l2Y; }
+				if (l2 == 0.0) if (l1 > 0.0) { l2X = l1X; l2Y = l1Y; } else { l2X = l0X; l2Y = l0Y; }
+				if (!I) {
+					R = new Cubic(MX + S * l0X, MY + S * l0Y, cmX + S * l1X, cmY + S * l1Y, ceX + S * l1X, ceY + S * l1Y, EX + S * l2X, EY + S * l2Y);
+				} else {
+					S = -S;
+					R = new Cubic(EX + S * l2X, EY + S * l2Y, ceX + S * l1X, ceY + S * l1Y, cmX + S * l1X, cmY + S * l1Y, MX + S * l0X, MY + S * l0Y);
+				}
+				return true;
+			}
+			#endregion
+			#region #method# TesArc(P, PA, PB, Reset) 
+			public bool TesArc(PathSource P, ref Cubic PA, ref Cubic PB, out bool Reset) {
+				var S = P.Thickness / 2;
+				if (this.Ext(S, out var A, out var B)) {
+					this.Div(0.5, out var RA, out var T);
+					if (T.Ext(S, out var TA, out var TB)) {
+						A.Div(0.5, out var AA, out var AB);
+						B.Div(0.5, out var BA, out var BB);
+						var cmcL = Mat.Sqrt(AB.MX - TA.MX, AB.MY - TA.MY);
+						var cecL = Mat.Sqrt(BA.EX - TB.EX, BA.EY - TB.EY);
+						if (cmcL < 0.5 && cecL < 0.5) {
+							if (PA != null && PB != null) {
+								var Aa = Mat.GetAR(PA.EX, PA.EY, PA.MX, PA.MY, A.EX, A.EY);
+								var Bb = Mat.GetAR(PB.MX, PB.MY, PB.EX, PB.EY, B.MX, B.MY);
+								if (Aa < 0) Aa = 4.0 + Aa; if (Bb < 0) Bb = 4.0 + Bb;
+								Reset = (Aa < 1.5 || Aa > 2.5 || Bb < 1.5 || Bb > 2.5);
+							} else {
+								Reset = false;
+							}
+							PA = A;
+							PB = B;
+							return true;
+						}
+					}
+				}
+				Reset = false;
+				return false;
+			}
+			#endregion
+			#region #method# AddArcE(P) 
+			public override void AddArcE(PathSource P) {
+				var S = P.Thickness / 2;
+				var A = S * Arc14;
+				var MX = this.MX;
+				var MY = this.MY;
+				var cmX = this.cmX;
+				var cmY = this.cmY;
+				var ceX = this.ceX;
+				var ceY = this.ceY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var cmL = Mat.Sqrt(MX - cmX, MY - cmY);
+				var ceL = Mat.Sqrt(EX - ceX, EY - ceY);
+				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				if (ceL > 0.0) {
+					if (Mat.Sqrt(MX - ceX, MY - ceY) > 0.0) {
+						MX = ceX;
+						MY = ceY;
+						meL = ceL;
+					}
+				} else if (cmL > 0.0) {
+					if (Mat.Sqrt(EX - cmX, EY - cmY) > 0.0) {
+						MX = cmX;
+						MY = cmY;
+						meL = Mat.Sqrt(MX - EX, MY - EY);
+					}
+				}
+				var YX = (EY - MY) / meL * S;
+				var XY = (MX - EX) / meL * S;
+				var AX = EX + YX;
+				var AY = EY + XY;
+				var BX = EX - YX;
+				var BY = EY - XY;
+				var CX = EX + (EX - MX) / meL * S;
+				var CY = EY + (EY - MY) / meL * S;
+				new Cubic(AX, AY, (AX + (EY - AY) / S * A), (AY + (AX - EX) / S * A), (CX + (CY - EY) / S * A), (CY + (EX - CX) / S * A), CX, CY).DivArc(out var a0, out var a1);
+				new Cubic(CX, CY, (CX + (EY - CY) / S * A), (CY + (CX - EX) / S * A), (BX + (BY - EY) / S * A), (BY + (EX - BX) / S * A), BX, BY).DivArc(out var a2, out var a3);
+				P.AddItem(a0);
+				P.AddItem(a1);
+				P.AddItem(a2);
+				P.AddItem(a3);
+			}
+			#endregion
+			#region #method# AddLinM(P) 
+			public override void AddLinM(PathSource P) {
+				var S = P.Thickness / 2;
+				var A = S * Arc14;
+				var MX = this.MX;
+				var MY = this.MY;
+				var cmX = this.cmX;
+				var cmY = this.cmY;
+				var ceX = this.ceX;
+				var ceY = this.ceY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var cmL = Mat.Sqrt(MX - cmX, MY - cmY);
+				var ceL = Mat.Sqrt(EX - ceX, EY - ceY);
+				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				if (cmL > 0.0) {
+					if (Mat.Sqrt(EX - cmX, EY - cmY) > 0.0) {
+						EX = cmX;
+						EY = cmY;
+						meL = cmL;
+					}
+				} else if (ceL > 0.0) {
+					if (Mat.Sqrt(MX - ceX, MY - ceY) > 0.0) {
+						EX = ceX;
+						EY = ceY;
+						meL = Mat.Sqrt(MX - EX, MY - EY);
+					}
+				}
+				var YX = (EY - MY) / meL * S;
+				var XY = (MX - EX) / meL * S;
+				var AX = MX + YX;
+				var AY = MY + XY;
+				var BX = MX - YX;
+				var BY = MY - XY;
+				P.AddItem(new Line(BX, BY, AX, AY));
+			}
+			#endregion
+			#region #method# AddLinE(P) 
+			public override void AddLinE(PathSource P) {
+				var S = P.Thickness / 2;
+				var A = S * Arc14;
+				var MX = this.MX;
+				var MY = this.MY;
+				var cmX = this.cmX;
+				var cmY = this.cmY;
+				var ceX = this.ceX;
+				var ceY = this.ceY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var cmL = Mat.Sqrt(MX - cmX, MY - cmY);
+				var ceL = Mat.Sqrt(EX - ceX, EY - ceY);
+				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				if (ceL > 0.0) {
+					if (Mat.Sqrt(MX - ceX, MY - ceY) > 0.0) {
+						MX = ceX;
+						MY = ceY;
+						meL = ceL;
+					}
+				} else if (cmL > 0.0) {
+					if (Mat.Sqrt(EX - cmX, EY - cmY) > 0.0) {
+						MX = cmX;
+						MY = cmY;
+						meL = Mat.Sqrt(MX - EX, MY - EY);
+					}
+				}
+				var YX = (EY - MY) / meL * S;
+				var XY = (MX - EX) / meL * S;
+				var AX = EX + YX;
+				var AY = EY + XY;
+				var BX = EX - YX;
+				var BY = EY - XY;
+				P.AddItem(new Line(AX, AY, BX, BY));
+			}
+			#endregion
 		}
 		#endregion
 		#region #class# Quadratic 
-		public class Quadratic: Line {
+		public class Quadratic : Line {
 			#region #new# 
 			public Quadratic() { }
 			#endregion
@@ -1293,13 +2075,13 @@ namespace Wholemy {
 			#region #method# Change(Mod, Invert) 
 			public override void Change(Change Mod, bool Invert) {
 				var MX = this.MX; var MY = this.MY; var QX = this.QX; var QY = this.QY; var EX = this.EX; var EY = this.EY;
-				while(Mod != null) {
+				while (Mod != null) {
 					Mod.Modify(ref MX, ref MY, (Mod.Mods & Mods.MX) != 0, (Mod.Mods & Mods.MY) != 0);
 					Mod.Modify(ref EX, ref EY, (Mod.Mods & Mods.EX) != 0, (Mod.Mods & Mods.EY) != 0);
 					Mod.Modify(ref QX, ref QY, (Mod.Mods & Mods.QX) != 0, (Mod.Mods & Mods.QY) != 0);
 					Mod = Mod.Next;
 				}
-				if(Invert) {
+				if (Invert) {
 					this.MX = EX; this.MY = EY; this.EX = MX; this.EY = MY;
 				} else {
 					this.MX = MX; this.MY = MY; this.EX = EX; this.EY = EY;
@@ -1332,8 +2114,8 @@ namespace Wholemy {
 			#endregion
 			#region #method# Cuted(r0) 
 			public Quadratic Cuted(double r0) {
-				if((r0 < 1.0) && (r0 > -1.0)) {
-					if(r0 != 0.0) {
+				if ((r0 < 1.0) && (r0 > -1.0)) {
+					if (r0 != 0.0) {
 						var root = r0 < 0.0 ? 1.0 + r0 : r0;
 						var x00 = this.MX;
 						var y00 = this.MY;
@@ -1347,7 +2129,7 @@ namespace Wholemy {
 						var y12 = (y22 - y11) * root + y11;
 						var x02 = (x12 - x01) * root + x01;
 						var y02 = (y12 - y01) * root + y01;
-						if(r0 < 0.0) {
+						if (r0 < 0.0) {
 							this.MX = x00; this.MY = y00;
 							this.QX = x01; this.QY = y01;
 							this.EX = x02; this.EY = y02;
@@ -1363,9 +2145,9 @@ namespace Wholemy {
 			#endregion
 			#region #method# Cuted(r0, r1) 
 			public Quadratic Cuted(double r0, double r1) {
-				if((r0 < 1.0) && (r0 > -1.0)) {
+				if ((r0 < 1.0) && (r0 > -1.0)) {
 					r1 = (r1 / (1.0 - r0));
-					while(r0 != 0.0) {
+					while (r0 != 0.0) {
 						var root = r0 < 0.0 ? 1.0 + r0 : r0;
 						var x00 = this.MX;
 						var y00 = this.MY;
@@ -1379,7 +2161,7 @@ namespace Wholemy {
 						var y12 = (y22 - y11) * root + y11;
 						var x02 = (x12 - x01) * root + x01;
 						var y02 = (y12 - y01) * root + y01;
-						if(r0 < 0.0) {
+						if (r0 < 0.0) {
 							this.MX = x00; this.MY = y00;
 							this.QX = x01; this.QY = y01;
 							this.EX = x02; this.EY = y02;
@@ -1396,13 +2178,13 @@ namespace Wholemy {
 			#endregion
 			#region #method# Cuted(M, E) 
 			public override Line Cuted(Preset M, Preset E) {
-				if(M == null && E == null) return this;
-				if(M != null && E != null) {
+				if (M == null && E == null) return this;
+				if (M != null && E != null) {
 					Cuted(M.Value, -E.Value);
 				} else {
-					if(M != null) {
+					if (M != null) {
 						Cuted(M.Value);
-					} else if(E != null) {
+					} else if (E != null) {
 						Cuted(-E.Value);
 					}
 				}
@@ -1410,11 +2192,134 @@ namespace Wholemy {
 			}
 			#endregion
 			public override char Prefix => 'Q';
+			#region #method# AddArcM(P) 
+			public override void AddArcM(PathSource P) {
+				var S = P.Thickness / 2;
+				var A = S * Arc14;
+				var MX = this.MX;
+				var MY = this.MY;
+				var QX = this.QX;
+				var QY = this.QY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var cmL = Mat.Sqrt(MX - QX, MY - QY);
+				var ceL = Mat.Sqrt(EX - QX, EY - QY);
+				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				if (cmL > 0.0 && ceL > 0.0) { EX = QX; EY = QY; meL = cmL; }
+				var YX = (EY - MY) / meL * S;
+				var XY = (MX - EX) / meL * S;
+				var AX = MX + YX;
+				var AY = MY + XY;
+				var BX = MX - YX;
+				var BY = MY - XY;
+				var CX = MX + (MX - EX) / meL * S;
+				var CY = MY + (MY - EY) / meL * S;
+				new Cubic(BX, BY, (BX + (MY - BY) / S * A), (BY + (BX - MX) / S * A), (CX + (CY - MY) / S * A), (CY + (MX - CX) / S * A), CX, CY).DivArc(out var a0, out var a1);
+				new Cubic(CX, CY, (CX + (MY - CY) / S * A), (CY + (CX - MX) / S * A), (AX + (AY - MY) / S * A), (AY + (MX - AX) / S * A), AX, AY).DivArc(out var a2, out var a3);
+				P.AddItem(a0);
+				P.AddItem(a1);
+				P.AddItem(a2);
+				P.AddItem(a3);
+			}
+			#endregion
+			#region #method# AddArcE(P) 
+			public override void AddArcE(PathSource P) {
+				var S = P.Thickness / 2;
+				var A = S * Arc14;
+				var MX = this.MX;
+				var MY = this.MY;
+				var QX = this.QX;
+				var QY = this.QY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var cmL = Mat.Sqrt(MX - QX, MY - QY);
+				var ceL = Mat.Sqrt(EX - QX, EY - QY);
+				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				if (ceL > 0.0 && cmL > 0.0) { MX = QX; MY = QY; meL = ceL; }
+				var YX = (EY - MY) / meL * S;
+				var XY = (MX - EX) / meL * S;
+				var AX = EX + YX;
+				var AY = EY + XY;
+				var BX = EX - YX;
+				var BY = EY - XY;
+				var CX = EX + (EX - MX) / meL * S;
+				var CY = EY + (EY - MY) / meL * S;
+				new Cubic(AX, AY, (AX + (EY - AY) / S * A), (AY + (AX - EX) / S * A), (CX + (CY - EY) / S * A), (CY + (EX - CX) / S * A), CX, CY).DivArc(out var a0, out var a1);
+				new Cubic(CX, CY, (CX + (EY - CY) / S * A), (CY + (CX - EX) / S * A), (BX + (BY - EY) / S * A), (BY + (EX - BX) / S * A), BX, BY).DivArc(out var a2, out var a3);
+				P.AddItem(a0);
+				P.AddItem(a1);
+				P.AddItem(a2);
+				P.AddItem(a3);
+			}
+			#endregion
+			#region #method# AddLinM(P) 
+			public override void AddLinM(PathSource P) {
+				var S = P.Thickness / 2;
+				var MX = this.MX;
+				var MY = this.MY;
+				var QX = this.QX;
+				var QY = this.QY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var cmL = Mat.Sqrt(MX - QX, MY - QY);
+				var ceL = Mat.Sqrt(EX - QX, EY - QY);
+				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				if (cmL > 0.0 && ceL > 0.0) { EX = QX; EY = QY; meL = cmL; }
+				var YX = (EY - MY) / meL * S;
+				var XY = (MX - EX) / meL * S;
+				var AX = MX + YX;
+				var AY = MY + XY;
+				var BX = MX - YX;
+				var BY = MY - XY;
+				P.AddItem(new Line(BX, BY, AX, AY));
+			}
+			#endregion
+			#region #method# AddLinE(P) 
+			public override void AddLinE(PathSource P) {
+				var S = P.Thickness / 2;
+				var MX = this.MX;
+				var MY = this.MY;
+				var QX = this.QX;
+				var QY = this.QY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var cmL = Mat.Sqrt(MX - QX, MY - QY);
+				var ceL = Mat.Sqrt(EX - QX, EY - QY);
+				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				if (ceL > 0.0 && cmL > 0.0) { MX = QX; MY = QY; meL = ceL; }
+				var YX = (EY - MY) / meL * S;
+				var XY = (MX - EX) / meL * S;
+				var AX = EX + YX;
+				var AY = EY + XY;
+				var BX = EX - YX;
+				var BY = EY - XY;
+				P.AddItem(new Line(AX, AY, BX, BY));
+			}
+			#endregion
+			#region #method# Dot(root) 
+			public override Dot Dot(double root) {
+				if (root < 0.0 || root > 1.0) throw new System.InvalidOperationException();
+				var R = root;
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = QX;
+				var y11 = QY;
+				var x22 = EX;
+				var y22 = EY;
+				var x01 = (x11 - x00) * R + x00;
+				var y01 = (y11 - y00) * R + y00;
+				var x12 = (x22 - x11) * R + x11;
+				var y12 = (y22 - y11) * R + y11;
+				var x02 = (x12 - x01) * R + x01;
+				var y02 = (y12 - y01) * R + y01;
+				return new Dot(root, x02, y02, x12, y12, x01, y01);
+			}
+			#endregion
 		}
 		#endregion
 		#region #method# Invert 
 		public void Invert() {
-			if(this.Inverted) {
+			if (this.Inverted) {
 				this.Inverted = false;
 			} else {
 				this.Inverted = true;
@@ -1468,19 +2373,19 @@ namespace Wholemy {
 		/// <param name="R">Радиус кольца)</param>
 		/// <param name="hole">Наличие дыры)</param>
 		public void AddOrc(double X, double Y, double R, bool hole = true) {
-			if(R > 0.0) {
+			if (R > 0.0) {
 				var x00 = X; var y00 = Y - R; var x01 = X + R; var y01 = Y;
 				var x10 = X + R; var y10 = Y; var x11 = X; var y11 = Y + R;
 				var x20 = X; var y20 = Y + R; var x21 = X - R; var y21 = Y;
 				var x30 = X - R; var y30 = Y; var x31 = X; var y31 = Y - R;
 				var D = this.Thickness;
 				D /= 2;
-				if(D > 0.0) {
+				if (D > 0.0) {
 					AddItemArc(x00, y00 - D, x01 + D, y01);
 					AddItemArc(x10 + D, y10, x11, y11 + D);
 					AddItemArc(x20, y20 + D, x21 - D, y21);
 					AddItemArc(x30 - D, y30, x31, y31 - D);
-					if(hole && R - D > 0.0) {
+					if (hole && R - D > 0.0) {
 						BeginFz();
 						Invert();
 						AddItemArc(x00, y00 + D, x01 - D, y01);
@@ -1490,7 +2395,7 @@ namespace Wholemy {
 						Invert();
 					}
 				}
-				if(IsBonesUse) {
+				if (IsBonesUse) {
 					AddBoneArc(x00, y00, x01, y01);
 					AddBoneArc(x10, y10, x11, y11);
 					AddBoneArc(x20, y20, x21, y21);
@@ -1509,7 +2414,7 @@ namespace Wholemy {
 			AddItemArc(X + R, Y, X, Y + R);
 			AddItemArc(X, Y + R, X - R, Y);
 			AddItemArc(X - R, Y, X, Y - R);
-			if(IsBonesUse) {
+			if (IsBonesUse) {
 				AddBoneArc(X, Y - R, X + R, Y);
 				AddBoneArc(X + R, Y, X, Y + R);
 				AddBoneArc(X, Y + R, X - R, Y);
@@ -1523,9 +2428,9 @@ namespace Wholemy {
 			var C = new Cubic(TX, TY, TX, TY, RX, RY, RX, RY);
 			var RTX = RX - TX;
 			var RTY = RY - TY;
-			if(TX < RX || RTX == RTY) { C.cmX += (RTX * Arc14); }
-			if(TY < RY || RTX == RTY) { C.ceY -= (RTY * Arc14); }
-			if(Inverted) C.Invert();
+			if (TX < RX || RTX == RTY) { C.cmX += (RTX * Arc14); }
+			if (TY < RY || RTX == RTY) { C.ceY -= (RTY * Arc14); }
+			if (Inverted) C.Invert();
 			return AddItem(C);
 		}
 		#endregion
@@ -1535,9 +2440,9 @@ namespace Wholemy {
 			var C = new Cubic(RX, RY, RX, RY, BX, BY, BX, BY);
 			var BRY = BY - RY;
 			var RBX = RX - BX;
-			if(RY < BY || BRY == RBX) { C.cmY += (BRY * Arc14); }
-			if(BX < RX || BRY == RBX) { C.ceX += (RBX * Arc14); }
-			if(Inverted) C.Invert();
+			if (RY < BY || BRY == RBX) { C.cmY += (BRY * Arc14); }
+			if (BX < RX || BRY == RBX) { C.ceX += (RBX * Arc14); }
+			if (Inverted) C.Invert();
 			return AddItem(C);
 		}
 		#endregion
@@ -1547,9 +2452,9 @@ namespace Wholemy {
 			var C = new Cubic(BX, BY, BX, BY, LX, LY, LX, LY);
 			var BLX = BX - LX;
 			var BLY = BY - LY;
-			if(LX < BX || BLX == BLY) { C.cmX -= (BLX * Arc14); }
-			if(LY < BY || BLX == BLY) { C.ceY += (BLY * Arc14); }
-			if(Inverted) C.Invert();
+			if (LX < BX || BLX == BLY) { C.cmX -= (BLX * Arc14); }
+			if (LY < BY || BLX == BLY) { C.ceY += (BLY * Arc14); }
+			if (Inverted) C.Invert();
 			return AddItem(C);
 		}
 		#endregion
@@ -1559,9 +2464,9 @@ namespace Wholemy {
 			var C = new Cubic(LX, LY, LX, LY, TX, TY, TX, TY);
 			var LTY = LY - TY;
 			var TLX = TX - LX;
-			if(TY < LY || LTY == TLX) { C.cmY -= (LTY * Arc14); }
-			if(LX < TX || LTY == TLX) { C.ceX -= (TLX * Arc14); }
-			if(Inverted) C.Invert();
+			if (TY < LY || LTY == TLX) { C.cmY -= (LTY * Arc14); }
+			if (LX < TX || LTY == TLX) { C.ceX -= (TLX * Arc14); }
+			if (Inverted) C.Invert();
 			return AddItem(C);
 		}
 		#endregion
@@ -1571,9 +2476,9 @@ namespace Wholemy {
 			var C = new Cubic(TX, TY, TX, TY, RX, RY, RX, RY);
 			var RTX = RX - TX;
 			var RTY = RY - TY;
-			if(TX < RX || RTX == RTY) { C.cmX += (RTX * Arc14); }
-			if(TY < RY || RTX == RTY) { C.ceY -= (RTY * Arc14); }
-			if(Inverted) C.Invert();
+			if (TX < RX || RTX == RTY) { C.cmX += (RTX * Arc14); }
+			if (TY < RY || RTX == RTY) { C.ceY -= (RTY * Arc14); }
+			if (Inverted) C.Invert();
 			return C;
 		}
 		#endregion
@@ -1583,9 +2488,9 @@ namespace Wholemy {
 			var C = new Cubic(RX, RY, RX, RY, BX, BY, BX, BY);
 			var BRY = BY - RY;
 			var RBX = RX - BX;
-			if(RY < BY || BRY == RBX) { C.cmY += (BRY * Arc14); }
-			if(BX < RX || BRY == RBX) { C.ceX += (RBX * Arc14); }
-			if(Inverted) C.Invert();
+			if (RY < BY || BRY == RBX) { C.cmY += (BRY * Arc14); }
+			if (BX < RX || BRY == RBX) { C.ceX += (RBX * Arc14); }
+			if (Inverted) C.Invert();
 			return C;
 		}
 		#endregion
@@ -1595,9 +2500,9 @@ namespace Wholemy {
 			var C = new Cubic(BX, BY, BX, BY, LX, LY, LX, LY);
 			var BLX = BX - LX;
 			var BLY = BY - LY;
-			if(LX < BX || BLX == BLY) { C.cmX -= (BLX * Arc14); }
-			if(LY < BY || BLX == BLY) { C.ceY += (BLY * Arc14); }
-			if(Inverted) C.Invert();
+			if (LX < BX || BLX == BLY) { C.cmX -= (BLX * Arc14); }
+			if (LY < BY || BLX == BLY) { C.ceY += (BLY * Arc14); }
+			if (Inverted) C.Invert();
 			return C;
 		}
 		#endregion
@@ -1607,9 +2512,9 @@ namespace Wholemy {
 			var C = new Cubic(LX, LY, LX, LY, TX, TY, TX, TY);
 			var LTY = LY - TY;
 			var TLX = TX - LX;
-			if(TY < LY || LTY == TLX) { C.cmY -= (LTY * Arc14); }
-			if(LX < TX || LTY == TLX) { C.ceX -= (TLX * Arc14); }
-			if(Inverted) C.Invert();
+			if (TY < LY || LTY == TLX) { C.cmY -= (LTY * Arc14); }
+			if (LX < TX || LTY == TLX) { C.ceX -= (TLX * Arc14); }
+			if (Inverted) C.Invert();
 			return C;
 		}
 		#endregion
@@ -1663,117 +2568,82 @@ namespace Wholemy {
 		#endregion
 		#region #method# AddArcT(x0, y0, x1, y1) 
 		public void AddArcT(double x0, double y0, double x1, double y1) {
+			var D = this.Thickness / 2;
 			var IsRoundM = this.IsRoundM;
 			var IsRoundE = this.IsRoundE;
 			var RootM = this.RootM; this.RootM = null;
 			var RootE = this.RootE; this.RootE = null;
-			var D = this.Thickness;
-			var C = new Line(x0, y0, x1, y1).ToArcC().Cuted(RootM, RootE);
-			if(IsBonesUse) AddBone(new Line(x0, y0, x1, y1).ToArcC().Cuted(RootM, RootE));
-			D /= 2;
-			double x, y, xy, yx;
-			if(x0 < x1) {
-				x = x1 - x0;
-				if(y0 < y1) { // Право верх
-					y = y1 - y0;
-					xy = x / y;
-					yx = y / x;
-					var O = GetAtr(x0, y0 - D, x1 + D, y1).Cuted(RootM, RootE);
-					if(IsRoundM) {
-						if(RootM != null) AddRotate(C.MX, C.MY, C.MX, C.MY - D, O.MX, O.MY);
-						AddItemArc(C.MX, C.MY + D, C.MX - D, C.MY);
-						AddItemArc(C.MX - D, C.MY, C.MX, C.MY - D);
-						if(RootM != null) CutRotate();
-						UnionFz();
-					}
-					if(IsRoundE) {
-						if(RootE != null) AddRotate(C.EX, C.EY, C.EX + D, C.EY, O.EX, O.EY);
-						AddItemArc(C.EX + D, C.EY, C.EX, C.EY + D);
-						AddItemArc(C.EX, C.EY + D, C.EX - D, C.EY);
-						if(RootE != null) CutRotate();
-						UnionFz();
-					}
-					AddAtr(x0, y0 - D, x1 + D, y1).Value.Cuted(RootM, RootE);
-					if(xy > 1.0) { AddRotate(x1 - (D / xy), y0, x1, y1, true, Mods.Mxy | Mods.cmxy); }
-					if(yx > 1.0) { AddRotate(x1, y0 + (D / yx), x0, y0, false, Mods.Exy | Mods.cexy); }
-					AddAtr(x0, y0 + D, x1 - D, y1, true).Value.Cuted(RootE, RootM);
-					if(xy > 1.0 || yx > 1.0) { CutRotate(); }
-				} else { // Лево верх
-					y = y0 - y1;
-					xy = x / y;
-					yx = y / x;
-					var O = GetAlt(x0 - D, y0, x1, y1 - D).Cuted(RootM, RootE);
-					if(IsRoundM) {
-						if(RootM != null) AddRotate(C.MX, C.MY, C.MX - D, C.MY, O.MX, O.MY);
-						AddItemArc(C.MX + D, C.MY, C.MX, C.MY + D);
-						AddItemArc(C.MX, C.MY + D, C.MX - D, C.MY);
-						if(RootM != null) CutRotate();
-						UnionFz();
-					}
-					if(IsRoundE) {
-						if(RootE != null) AddRotate(C.EX, C.EY, C.EX, C.EY - D, O.EX, O.EY);
-						AddItemArc(C.EX, C.EY - D, C.EX + D, C.EY);
-						AddItemArc(C.EX + D, C.EY, C.EX, C.EY + D);
-						if(RootE != null) CutRotate();
-						UnionFz();
-					}
-					AddAlt(x0 - D, y0, x1, y1 - D).Value.Cuted(RootM, RootE);
-					if(xy > 1.0) { AddRotate(x1, y0 + D, x0, y0, false, Mods.Exy | Mods.cexy); }
-					if(yx > 1.0) { AddRotate(x1 + D, y0, x1, y1, true, Mods.Mxy | Mods.cmxy); }
-					AddAlt(x0 + D, y0, x1, y1 + D, true).Value.Cuted(RootE, RootM);
-					if(xy > 1.0 || yx > 1.0) { CutRotate(); }
+			var Bone = new Line(x0, y0, x1, y1).ToArcC().CutedCubic(RootM, RootE);
+			if (IsBonesUse) AddBone(Bone);
+			double POS = 0.0;
+			var list = new List<Cubic>();
+			if (IsBonesUse) { AddBone(Bone); }
+			NEXT:
+			var Pos = 0.0;
+			var Pre = 0.0;
+			while (CntAinT(Bone, out Pos)) {
+				Bone.Div(Pos, out Bone, out var Next);
+				list.Add(Bone, Pre, Pos);
+				Bone = Next;
+				Pre = Pos;
+			}
+			list.Add(Bone, Pre, 1.0 - Pre);
+			for (var p = list.Base; p != null; p = p.Next) {
+				if (p.Root <= 0.5 && p.Root + p.Size > 0.5) {
+					var r = 0.5 - p.Root;
+					p.Value.Div(r, out var a1, out var a2);
+					p.Add(a1, r, a2);
+					break;
 				}
-			} else {
-				x = x0 - x1;
-				if(y0 < y1) { // Право низ
-					y = y1 - y0;
-					xy = x / y;
-					yx = y / x;
-					var O = GetArb(x0 + D, y0, x1, y1 + D).Cuted(RootM, RootE);
-					if(IsRoundM) {
-						if(RootM != null) AddRotate(C.MX, C.MY, C.MX + D, C.MY, O.MX, O.MY);
-						AddItemArc(C.MX - D, C.MY, C.MX, C.MY - D);
-						AddItemArc(C.MX, C.MY - D, C.MX + D, C.MY);
-						if(RootM != null) CutRotate();
-						UnionFz();
+			}
+			var ps = list.Base;
+			Bone = ps.Value;
+			if (IsRoundM) {
+				Bone.AddArcM(this);
+			}
+			bool first = true;
+			while (ps != null) {
+				Bone = ps.Value;
+				ps = ps.Next;
+				var DIV = 0.5;
+				var TES = Bone;
+				Cubic NOW;
+				Cubic RAM;
+				TES = Bone;
+				DIV = 0.5;
+				TESNEXTA:
+				if (!TES.TesArcA(this)) {
+					NOWNEXTA:
+					TES.Div(DIV, out NOW, out RAM);
+					if (NOW.TesArcA(this)) {
+						TES = RAM;
+						DIV = 0.5;
+						goto TESNEXTA;
+					} else {
+						DIV /= 2.0;
+						if (DIV > 0) goto NOWNEXTA;
 					}
-					if(IsRoundE) {
-						if(RootE != null) AddRotate(C.EX, C.EY, C.EX, C.EY + D, O.EX, O.EY);
-						AddItemArc(C.EX, C.EY + D, C.EX - D, C.EY);
-						AddItemArc(C.EX - D, C.EY, C.EX, C.EY - D);
-						if(RootE != null) CutRotate();
-						UnionFz();
-					}
-					AddArb(x0 + D, y0, x1, y1 + D).Value.Cuted(RootM, RootE);
-					if(xy > 1.0) { AddRotate(x1, y0 - D, x0, y0, false, Mods.Exy | Mods.cexy); }
-					if(yx > 1.0) { AddRotate(x1 - D, y0, x1, y1, true, Mods.Mxy | Mods.cmxy); }
-					AddArb(x0 - D, y0, x1, y1 - D, true).Value.Cuted(RootE, RootM);
-					if(xy > 1.0 || yx > 1.0) { CutRotate(); }
-				} else { // Лево низ
-					y = y0 - y1;
-					xy = x / y;
-					yx = y / x;
-					var O = GetAbl(x0, y0 + D, x1 - D, y1).Cuted(RootM, RootE);
-					if(IsRoundM) {
-						if(RootM != null) AddRotate(C.MX, C.MY, C.MX, C.MY + D, O.MX, O.MY);
-						AddItemArc(C.MX, C.MY - D, C.MX + D, C.MY);
-						AddItemArc(C.MX + D, C.MY, C.MX, C.MY + D);
-						if(RootM != null) CutRotate();
-						UnionFz();
-					}
-					if(IsRoundE) {
-						if(RootE != null) AddRotate(C.EX, C.EY, C.EX - D, C.EY, O.EX, O.EY);
-						AddItemArc(C.EX - D, C.EY, C.EX, C.EY - D);
-						AddItemArc(C.EX, C.EY - D, C.EX + D, C.EY);
-						if(RootE != null) CutRotate();
-						UnionFz();
-					}
-					AddAbl(x0, y0 + D, x1 - D, y1).Value.Cuted(RootM, RootE);
-					if(xy > 1.0) { AddRotate(x1 + (D / xy), y0, x1, y1, true, Mods.Mxy | Mods.cmxy); }
-					if(yx > 1.0) { AddRotate(x1, y0 - (D / yx), x0, y0, false, Mods.Exy | Mods.cexy); }
-					AddAbl(x0, y0 - D, x1 + D, y1, true).Value.Cuted(RootE, RootM);
-					if(xy > 1.0 || yx > 1.0) { CutRotate(); }
 				}
+				if (ps == null && IsRoundE) {
+					Bone.AddArcE(this);
+
+				}
+				TES = Bone;
+				DIV = 0.5;
+				TESNEXTB:
+				if (!TES.TesArcB(this)) {
+					NOWNEXTB:
+					TES.Div(1.0 - DIV, out RAM, out NOW);
+					if (NOW.TesArcB(this)) {
+						TES = RAM;
+						DIV = 0.5;
+						goto TESNEXTB;
+					} else {
+						DIV /= 2.0;
+						if (DIV > 0) goto NOWNEXTB;
+					}
+				}
+				if (ps != null) Union();
 			}
 		}
 		#endregion
@@ -1783,7 +2653,7 @@ namespace Wholemy {
 			var y00 = y0;
 			var x11 = x1;
 			var y11 = y1;
-			if((y0 < y1) ^ cw) {
+			if ((y0 < y1) ^ cw) {
 				y00 += ((x0 - x1) * Arc14);
 				y11 += ((x1 - x0) * Arc14);
 			} else {
@@ -1799,7 +2669,7 @@ namespace Wholemy {
 			var y00 = y0;
 			var x11 = x1;
 			var y11 = y1;
-			if((y0 < y1) ^ cw) {
+			if ((y0 < y1) ^ cw) {
 				x00 += ((y0 - y1) * Arc14);
 				x11 += ((y1 - y0) * Arc14);
 			} else {
@@ -1813,8 +2683,8 @@ namespace Wholemy {
 		public void AddYrc00(double x0, double y0, double x1, double y1) {
 			var D = this.Thickness;
 			D /= 2;
-			if(x0 < x1) {
-				if(y0 < y1) { // Право верх
+			if (x0 < x1) {
+				if (y0 < y1) { // Право верх
 					AddItemYrc(x0 + D, y0, x1 + D, y1);
 					AddItemYrc(x1 - D, y1, x0 - D, y0, true);
 				} else { // Лево верх
@@ -1822,7 +2692,7 @@ namespace Wholemy {
 					AddItemYrc(x1 - D, y1, x0 - D, y0, true);
 				}
 			} else {
-				if(y0 < y1) { // Право низ
+				if (y0 < y1) { // Право низ
 					AddItemYrc(x0 + D, y0, x1 + D, y1);
 					AddItemYrc(x1 - D, y1, x0 - D, y0, true);
 				} else { // Лево низ
@@ -1836,8 +2706,8 @@ namespace Wholemy {
 		public void AddXrc00(double x0, double y0, double x1, double y1) {
 			var D = this.Thickness;
 			D /= 2;
-			if(x0 < x1) {
-				if(y0 < y1) { // Право верх
+			if (x0 < x1) {
+				if (y0 < y1) { // Право верх
 					AddItemXrc(x0, y0 + D, x1, y1 + D);
 					AddItemXrc(x1, y1 - D, x0, y0 - D, true);
 				} else { // Лево верх
@@ -1845,7 +2715,7 @@ namespace Wholemy {
 					AddItemXrc(x1, y1 - D, x0, y0 - D, true);
 				}
 			} else {
-				if(y0 < y1) { // Право низ
+				if (y0 < y1) { // Право низ
 					AddItemXrc(x0, y0 + D, x1, y1 + D);
 					AddItemXrc(x1, y1 - D, x0, y0 - D, true);
 				} else { // Лево низ
@@ -1855,17 +2725,17 @@ namespace Wholemy {
 			}
 		}
 		#endregion
-		#region #struct# Dot 
-		public struct Dot {
+		#region #struct# DOT 
+		public struct DOT {
 			public double X;
 			public double Y;
-			public Dot(double X, double Y) { this.X = X; this.Y = Y; }
-			public static Dot operator +(Dot A, Dot B) {
+			public DOT(double X, double Y) { this.X = X; this.Y = Y; }
+			public static DOT operator +(DOT A, DOT B) {
 				A.X += B.X;
 				A.Y += B.Y;
 				return A;
 			}
-			public static Dot operator -(Dot Prev, Dot Last) {
+			public static DOT operator -(DOT Prev, DOT Last) {
 				Prev.X = 2.0 * Last.X - Prev.X;
 				Prev.Y = 2.0 * Last.Y - Prev.Y;
 				return Prev;
@@ -1874,158 +2744,158 @@ namespace Wholemy {
 		#endregion
 		#region #method# Parse(Val, Index, Count) 
 		public void Parse(string Val, int Index = 0, int Count = 0) {
-			if(Val != null) {
-				if(Count == 0) Count = Val.Length;
+			if (Val != null) {
+				if (Count == 0) Count = Val.Length;
 				char Chr = ' ';
 				bool Pre = false;
 				char Lot = ' ';
-				while(Index < Count && char.IsWhiteSpace(Val, Index)) { Index++; }
-				if(Index < Count && Val[Index] == 'F') {
+				while (Index < Count && char.IsWhiteSpace(Val, Index)) { Index++; }
+				if (Index < Count && Val[Index] == 'F') {
 					Index++;
-					while(Index < Count && char.IsWhiteSpace(Val, Index)) { Index++; }
+					while (Index < Count && char.IsWhiteSpace(Val, Index)) { Index++; }
 					Chr = Val[Index];
-					if(Index == Count || (Chr != '0' && Chr != '1')) throw new System.FormatException("IllegalToken F");
+					if (Index == Count || (Chr != '0' && Chr != '1')) throw new System.FormatException("IllegalToken F");
 					this.FillRule = (Chr == '1');
 					Index++;
 				}
 				Figure Fig = null;
-				var Base = new Dot();
-				var Prev = new Dot();
-				var Last = new Dot();
-				while(ParseToken(Val, ref Index, Count, ref Chr, ref Pre)) {
-					if(Fig == null && Chr != 'm') throw new System.FormatException("NeededToken M UnexpectedToken " + Chr);
-					switch(Chr) {
-					#region #case# 'm' Начало 
-					case 'm': {
-						Fig = new Figure(this) { IsClozed = false, IsFilled = true };
-						if(ParsePoint(Val, ref Index, Count, ref Base)) {
-							while(ParsePoint(Val, ref Index, Count, ref Last)) {
-								if(Pre) Last += Base;
-								AddItem(Base.X, Base.Y, Last.X, Last.Y);
-								Base = Last;
+				var Base = new DOT();
+				var Prev = new DOT();
+				var Last = new DOT();
+				while (ParseToken(Val, ref Index, Count, ref Chr, ref Pre)) {
+					if (Fig == null && Chr != 'm') throw new System.FormatException("NeededToken M UnexpectedToken " + Chr);
+					switch (Chr) {
+						#region #case# 'm' Начало 
+						case 'm': {
+								Fig = new Figure(this) { IsClozed = false, IsFilled = true };
+								if (ParsePoint(Val, ref Index, Count, ref Base)) {
+									while (ParsePoint(Val, ref Index, Count, ref Last)) {
+										if (Pre) Last += Base;
+										AddItem(Base.X, Base.Y, Last.X, Last.Y);
+										Base = Last;
+									}
+								}
+								Lot = 'l';
 							}
-						}
-						Lot = 'l';
-					}
-					continue;
-					#endregion
-					#region #case# 'l' Линия 
-					case 'l': {
-						while(ParsePoint(Val, ref Index, Count, ref Last)) {
-							if(Pre) Last += Base;
-							AddItem(Base.X, Base.Y, Last.X, Last.Y);
-							Base = Last;
-						}
-						Lot = 'l';
-					}
-					continue;
-					#endregion
-					#region #case# 'h' Горизонтальная линия 
-					case 'h': {
-						while(ParseNumber(Val, ref Index, Count, ref Last.X)) {
-							if(Pre) Last.X += Base.X;
-							AddItem(Base.X, Base.Y, Last.X, Last.Y);
-							Base = Last;
-						}
-						Lot = 'l';
-					}
-					continue;
-					#endregion
-					#region #case# 'v' Вертикальная линия 
-					case 'v': {
-						while(ParseNumber(Val, ref Index, Count, ref Last.Y)) {
-							if(Pre) Last.Y += Base.Y;
-							AddItem(Base.X, Base.Y, Last.X, Last.Y);
-							Base = Last;
-						}
-						Lot = 'l';
-					}
-					continue;
-					#endregion
-					#region #case# 'a' Элипс 
-					case 'a': {
-						//do {
-						//	double width = this.ReadNumber(false);
-						//	double height = this.ReadNumber(true);
-						//	double rotationAngle = this.ReadNumber(true);
-						//	bool isLargeArc = this.ReadBool();
-						//	bool flag2 = this.ReadBool();
-						//	_lastPoint = this.ReadPoint(Chr, true);
-						//	context.ArcTo(this._lastPoint, new Size(width, height), rotationAngle, isLargeArc, flag2 ? SweepDirection.Clockwise : SweepDirection.Counterclockwise, true, false);
-						//}
-						//while (this.IsNumber(true));
-						throw new System.FormatException("NotSupportedToken " + Chr);
-						Lot = 'a';
-					}
-					continue;
-					#endregion
-					#region #case# 'q' Квадратик 
-					case 'q': {
-						while(ParsePoint(Val, ref Index, Count, ref Prev)) {
-							if(Pre) Prev += Base;
-							ParseCommaPoint(Val, ref Index, Count, ref Last);
-							if(Pre) Last += Base;
-							AddItem(Base.X, Base.Y, Prev.X, Prev.Y, Last.X, Last.Y);
-							Base = Last;
-						}
-						Lot = 'q';
-					}
-					continue;
-					#endregion
-					#region #case# 't' Квадратик часть 
-					case 't': {
-						if(Lot == 'q') { Prev = Prev - Last; } else { Prev = Last; }
-						while(ParsePoint(Val, ref Index, Count, ref Last)) {
-							if(Pre) Last += Base;
-							AddItem(Base.X, Base.Y, Prev.X, Prev.Y, Last.X, Last.Y);
-							Base = Last;
-						}
-						Lot = 'q';
-					}
-					continue;
-					#endregion
-					#region #case# 'c' Кубик 
-					case 'c': {
-						Dot Next = new Dot();
-						while(ParsePoint(Val, ref Index, Count, ref Next)) {
-							if(Pre) Next += Base;
-							ParseCommaPoint(Val, ref Index, Count, ref Prev);
-							if(Pre) Prev += Base;
-							ParseCommaPoint(Val, ref Index, Count, ref Last);
-							if(Pre) Last += Base;
-							AddItem(Base.X, Base.Y, Next.X, Next.Y, Prev.X, Prev.Y, Last.X, Last.Y);
-							Base = Last;
-						}
-						Lot = 'c';
-					}
-					continue;
-					#endregion
-					#region #case# 's' Кубик часть 
-					case 's': {
-						Dot Next = new Dot();
-						if(Lot == 'c') { Next = Prev - Last; } else { Next = Last; }
-						while(ParsePoint(Val, ref Index, Count, ref Next)) {
-							if(Pre) Next += Base;
-							ParseCommaPoint(Val, ref Index, Count, ref Prev);
-							if(Pre) Prev += Base;
-							ParseCommaPoint(Val, ref Index, Count, ref Last);
-							if(Pre) Last += Base;
-							AddItem(Base.X, Base.Y, Next.X, Next.Y, Prev.X, Prev.Y, Last.X, Last.Y);
-							Base = Last;
-						}
-						Lot = 'c';
-					}
-					continue;
-					#endregion
-					#region #case# 'z' Замкнутый 
-					case 'z': {
-						Fig.IsClozed = true;
-						Fig = null;
-						Last = Base;
-					}
-					continue;
-					#endregion
-					default: throw new System.FormatException("UnexpectedToken " + Chr);
+							continue;
+						#endregion
+						#region #case# 'l' Линия 
+						case 'l': {
+								while (ParsePoint(Val, ref Index, Count, ref Last)) {
+									if (Pre) Last += Base;
+									AddItem(Base.X, Base.Y, Last.X, Last.Y);
+									Base = Last;
+								}
+								Lot = 'l';
+							}
+							continue;
+						#endregion
+						#region #case# 'h' Горизонтальная линия 
+						case 'h': {
+								while (ParseNumber(Val, ref Index, Count, ref Last.X)) {
+									if (Pre) Last.X += Base.X;
+									AddItem(Base.X, Base.Y, Last.X, Last.Y);
+									Base = Last;
+								}
+								Lot = 'l';
+							}
+							continue;
+						#endregion
+						#region #case# 'v' Вертикальная линия 
+						case 'v': {
+								while (ParseNumber(Val, ref Index, Count, ref Last.Y)) {
+									if (Pre) Last.Y += Base.Y;
+									AddItem(Base.X, Base.Y, Last.X, Last.Y);
+									Base = Last;
+								}
+								Lot = 'l';
+							}
+							continue;
+						#endregion
+						#region #case# 'a' Элипс 
+						case 'a': {
+								//do {
+								//	double width = this.ReadNumber(false);
+								//	double height = this.ReadNumber(true);
+								//	double rotationAngle = this.ReadNumber(true);
+								//	bool isLargeArc = this.ReadBool();
+								//	bool flag2 = this.ReadBool();
+								//	_lastPoint = this.ReadPoint(Chr, true);
+								//	context.ArcTo(this._lastPoint, new Size(width, height), rotationAngle, isLargeArc, flag2 ? SweepDirection.Clockwise : SweepDirection.Counterclockwise, true, false);
+								//}
+								//while (this.IsNumber(true));
+								throw new System.FormatException("NotSupportedToken " + Chr);
+								Lot = 'a';
+							}
+							continue;
+						#endregion
+						#region #case# 'q' Квадратик 
+						case 'q': {
+								while (ParsePoint(Val, ref Index, Count, ref Prev)) {
+									if (Pre) Prev += Base;
+									ParseCommaPoint(Val, ref Index, Count, ref Last);
+									if (Pre) Last += Base;
+									AddItem(Base.X, Base.Y, Prev.X, Prev.Y, Last.X, Last.Y);
+									Base = Last;
+								}
+								Lot = 'q';
+							}
+							continue;
+						#endregion
+						#region #case# 't' Квадратик часть 
+						case 't': {
+								if (Lot == 'q') { Prev = Prev - Last; } else { Prev = Last; }
+								while (ParsePoint(Val, ref Index, Count, ref Last)) {
+									if (Pre) Last += Base;
+									AddItem(Base.X, Base.Y, Prev.X, Prev.Y, Last.X, Last.Y);
+									Base = Last;
+								}
+								Lot = 'q';
+							}
+							continue;
+						#endregion
+						#region #case# 'c' Кубик 
+						case 'c': {
+								DOT Next = new DOT();
+								while (ParsePoint(Val, ref Index, Count, ref Next)) {
+									if (Pre) Next += Base;
+									ParseCommaPoint(Val, ref Index, Count, ref Prev);
+									if (Pre) Prev += Base;
+									ParseCommaPoint(Val, ref Index, Count, ref Last);
+									if (Pre) Last += Base;
+									AddItem(Base.X, Base.Y, Next.X, Next.Y, Prev.X, Prev.Y, Last.X, Last.Y);
+									Base = Last;
+								}
+								Lot = 'c';
+							}
+							continue;
+						#endregion
+						#region #case# 's' Кубик часть 
+						case 's': {
+								DOT Next = new DOT();
+								if (Lot == 'c') { Next = Prev - Last; } else { Next = Last; }
+								while (ParsePoint(Val, ref Index, Count, ref Next)) {
+									if (Pre) Next += Base;
+									ParseCommaPoint(Val, ref Index, Count, ref Prev);
+									if (Pre) Prev += Base;
+									ParseCommaPoint(Val, ref Index, Count, ref Last);
+									if (Pre) Last += Base;
+									AddItem(Base.X, Base.Y, Next.X, Next.Y, Prev.X, Prev.Y, Last.X, Last.Y);
+									Base = Last;
+								}
+								Lot = 'c';
+							}
+							continue;
+						#endregion
+						#region #case# 'z' Замкнутый 
+						case 'z': {
+								Fig.IsClozed = true;
+								Fig = null;
+								Last = Base;
+							}
+							continue;
+						#endregion
+						default: throw new System.FormatException("UnexpectedToken " + Chr);
 					}
 				}
 			}
@@ -2034,16 +2904,16 @@ namespace Wholemy {
 		#region #method# ParseToken(Val, Inx, Cnt, Chr, Pre) 
 		private static bool ParseToken(string Val, ref int Inx, int Cnt, ref char Chr, ref bool Pre) {
 			var Index = Inx;
-			while(Index < Cnt && char.IsWhiteSpace(Val, Index)) { Index++; }
+			while (Index < Cnt && char.IsWhiteSpace(Val, Index)) { Index++; }
 			Inx = Index;
-			if(Index < Cnt) {
+			if (Index < Cnt) {
 				var Char = Val[Index];
-				if((Char >= 'A' && Char <= 'Z')) {
+				if ((Char >= 'A' && Char <= 'Z')) {
 					Chr = (char)('a' + (Char - 'A'));
 					Pre = false;
 					Inx = Index + 1;
 					return true;
-				} else if((Char >= 'a' && Char <= 'z')) {
+				} else if ((Char >= 'a' && Char <= 'z')) {
 					Chr = Char;
 					Pre = true;
 					Inx = Index + 1;
@@ -2054,15 +2924,15 @@ namespace Wholemy {
 		}
 		#endregion
 		#region #method# ParseCommaPoint(Val, Inx, Cnt, Dot) 
-		private static bool ParseCommaPoint(string Val, ref int Inx, int Cnt, ref Dot Dot) {
+		private static bool ParseCommaPoint(string Val, ref int Inx, int Cnt, ref DOT Dot) {
 			var Index = Inx;
-			Dot Num = new Dot();
-			while(Index < Cnt && char.IsWhiteSpace(Val, Index)) { Index++; }
-			if(Index < Cnt && Val[Index] == ',') { Index++; }
-			if(ParseNumber(Val, ref Index, Cnt, ref Num.X)) {
-				while(Index < Cnt && char.IsWhiteSpace(Val, Index)) { Index++; }
-				if(Index < Cnt && Val[Index] == ',') { Index++; }
-				if(ParseNumber(Val, ref Index, Cnt, ref Num.Y)) {
+			DOT Num = new DOT();
+			while (Index < Cnt && char.IsWhiteSpace(Val, Index)) { Index++; }
+			if (Index < Cnt && Val[Index] == ',') { Index++; }
+			if (ParseNumber(Val, ref Index, Cnt, ref Num.X)) {
+				while (Index < Cnt && char.IsWhiteSpace(Val, Index)) { Index++; }
+				if (Index < Cnt && Val[Index] == ',') { Index++; }
+				if (ParseNumber(Val, ref Index, Cnt, ref Num.Y)) {
 					Inx = Index;
 					Dot = Num;
 					return true;
@@ -2072,13 +2942,13 @@ namespace Wholemy {
 		}
 		#endregion
 		#region #method# ParsePoint(Val, Inx, Cnt, Dot) 
-		private static bool ParsePoint(string Val, ref int Inx, int Cnt, ref Dot Dot) {
+		private static bool ParsePoint(string Val, ref int Inx, int Cnt, ref DOT Dot) {
 			var Index = Inx;
-			Dot Num = new Dot();
-			if(ParseNumber(Val, ref Index, Cnt, ref Num.X)) {
-				while(Index < Cnt && char.IsWhiteSpace(Val, Index)) { Index++; }
-				if(Index < Cnt && Val[Index] == ',') { Index++; }
-				if(ParseNumber(Val, ref Index, Cnt, ref Num.Y)) {
+			DOT Num = new DOT();
+			if (ParseNumber(Val, ref Index, Cnt, ref Num.X)) {
+				while (Index < Cnt && char.IsWhiteSpace(Val, Index)) { Index++; }
+				if (Index < Cnt && Val[Index] == ',') { Index++; }
+				if (ParseNumber(Val, ref Index, Cnt, ref Num.Y)) {
 					Inx = Index;
 					Dot = Num;
 					return true;
@@ -2090,44 +2960,44 @@ namespace Wholemy {
 		#region #method# ParseNumber(Val, Inx, Cnt, Num) 
 		private static bool ParseNumber(string Val, ref int Inx, int Cnt, ref double Num) {
 			var Index = Inx;
-			while(Index < Cnt && char.IsWhiteSpace(Val, Index)) { Index++; }
+			while (Index < Cnt && char.IsWhiteSpace(Val, Index)) { Index++; }
 			Inx = Index;
 			char Char;
 			bool Negative = false;
-			if(Index < Cnt) {
+			if (Index < Cnt) {
 				Char = Val[Index];
-				if(Char == 'N' || Char == 'n') {
+				if (Char == 'N' || Char == 'n') {
 					Inx = Index + 3;
 					Num = double.NaN;
 					return true;
 				}
 			}
 			int Start = Index;
-			if(Index < Cnt) {
+			if (Index < Cnt) {
 				Char = Val[Index];
-				if(Char == '-' || Char == '+') { Index++; }
-				if(Char == '-') { Negative = true; }
-				if(Char == '+') { Start++; }
+				if (Char == '-' || Char == '+') { Index++; }
+				if (Char == '-') { Negative = true; }
+				if (Char == '+') { Start++; }
 			}
-			if(Index < Cnt) {
+			if (Index < Cnt) {
 				Char = Val[Index];
-				if(Char == 'I' || Char == 'i') {
+				if (Char == 'I' || Char == 'i') {
 					Inx = Index + 8;
 					Num = Negative ? double.NegativeInfinity : double.PositiveInfinity;
 					return true;
 				}
 			}
-			while(Index < Cnt && Val[Index] >= '0' && Val[Index] <= '9') { Index++; }
-			if(Index < Cnt && Val[Index] == '.') {
+			while (Index < Cnt && Val[Index] >= '0' && Val[Index] <= '9') { Index++; }
+			if (Index < Cnt && Val[Index] == '.') {
 				Index++;
-				while(Index < Cnt && Val[Index] >= '0' && Val[Index] <= '9') { Index++; }
+				while (Index < Cnt && Val[Index] >= '0' && Val[Index] <= '9') { Index++; }
 			}
-			if(Index < Cnt && (Val[Index] == 'E' || Val[Index] == 'e')) {
+			if (Index < Cnt && (Val[Index] == 'E' || Val[Index] == 'e')) {
 				Index++;
-				if(Index < Cnt && Val[Index] == '-' || Val[Index] == '+') { Index++; }
-				while(Index < Cnt && Val[Index] >= '0' && Val[Index] <= '9') { Index++; }
+				if (Index < Cnt && Val[Index] == '-' || Val[Index] == '+') { Index++; }
+				while (Index < Cnt && Val[Index] >= '0' && Val[Index] <= '9') { Index++; }
 			}
-			if(double.TryParse(Val.Substring(Start, Index - Start), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out Num)) {
+			if (double.TryParse(Val.Substring(Start, Index - Start), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out Num)) {
 				Inx = Index;
 				return true;
 			}
@@ -2138,10 +3008,10 @@ namespace Wholemy {
 		public string Uncompessed {
 			get {
 				string Result = "";
-				if(FigureCount > 0) {
+				if (FigureCount > 0) {
 					var Figure = FigureBase;
-					while(Figure != null) {
-						if(Figure.ItemCount > 0) {
+					while (Figure != null) {
+						if (Figure.ItemCount > 0) {
 							Result += Figure.ToString();
 						}
 						Figure = Figure.Next;
@@ -2155,18 +3025,18 @@ namespace Wholemy {
 		public string Compessed {
 			get {
 				string Result = "";
-				if(FigureCount > 0) {
+				if (FigureCount > 0) {
 					var Figure = FigureBase;
-					while(Figure != null) {
-						if(Figure.ItemCount > 0) {
+					while (Figure != null) {
+						if (Figure.ItemCount > 0) {
 							var Item = Figure.ItemBase;
 							Item Prev = null;
-							while(Item != null) {
+							while (Item != null) {
 								Result += Item.Value.ToCompessedString(Prev?.Value);
 								Prev = Item;
 								Item = Item.Next;
 							}
-							if(Figure.IsClozed) Result += "z";
+							if (Figure.IsClozed) Result += "z";
 						}
 						Figure = Figure.Next;
 					}
@@ -2231,7 +3101,7 @@ namespace Wholemy {
 			var RootM = this.RootM; this.RootM = null;
 			var RootE = this.RootE; this.RootE = null;
 			var Bone = new Line(x0, y0, x1, y1).Cuted(RootM, RootE);
-			if(IsBonesUse) { AddBone(Bone); }
+			if (IsBonesUse) { AddBone(Bone); }
 			x0 = Bone.MX;
 			y0 = Bone.MY;
 			x1 = Bone.EX;
@@ -2254,11 +3124,11 @@ namespace Wholemy {
 			var by1 = y11 - xy;
 			var bx0 = x00 - yx;
 			var by0 = y00 - xy;
-			if(IsRoundM) {
+			if (IsRoundM) {
 				var tx0 = x00 + (x00 - x11) / L * S;
 				var ty0 = y00 + (y00 - y11) / L * S;
-				new Cubic(bx0, by0, (bx0 + (y00 - by0) / S * A), (by0 + (bx0 - x00) / S * A), (tx0 + (ty0 - y00) / S * A), (ty0 + (x00 - tx0) / S * A), tx0, ty0).DivArc(out var a0,out var a1);
-				new Cubic(tx0, ty0, (tx0 + (y00 - ty0) / S * A), (ty0 + (tx0 - x00) / S * A), (ax0 + (ay0 - y00) / S * A), (ay0 + (x00 - ax0) / S * A), ax0, ay0).DivArc(out var a2,out var a3);
+				new Cubic(bx0, by0, (bx0 + (y00 - by0) / S * A), (by0 + (bx0 - x00) / S * A), (tx0 + (ty0 - y00) / S * A), (ty0 + (x00 - tx0) / S * A), tx0, ty0).DivArc(out var a0, out var a1);
+				new Cubic(tx0, ty0, (tx0 + (y00 - ty0) / S * A), (ty0 + (tx0 - x00) / S * A), (ax0 + (ay0 - y00) / S * A), (ay0 + (x00 - ax0) / S * A), ax0, ay0).DivArc(out var a2, out var a3);
 				AddItem(a0);
 				AddItem(a1);
 				AddItem(a2);
@@ -2267,11 +3137,11 @@ namespace Wholemy {
 				AddItem(new Line(bx0, by0, ax0, ay0));
 			}
 			AddItem(new Line(ax0, ay0, ax1, ay1));
-			if(IsRoundE) {
+			if (IsRoundE) {
 				var tx1 = x11 + (x11 - x00) / L * S;
 				var ty1 = y11 + (y11 - y00) / L * S;
-				new Cubic(ax1, ay1, (ax1 + (y11 - ay1) / S * A), (ay1 + (ax1 - x11) / S * A), (tx1 + (ty1 - y11) / S * A), (ty1 + (x11 - tx1) / S * A), tx1, ty1).DivArc(out var a0,out var a1);
-				new Cubic(tx1, ty1, (tx1 + (y11 - ty1) / S * A), (ty1 + (tx1 - x11) / S * A), (bx1 + (by1 - y11) / S * A), (by1 + (x11 - bx1) / S * A), bx1, by1).DivArc(out var a2,out var a3);
+				new Cubic(ax1, ay1, (ax1 + (y11 - ay1) / S * A), (ay1 + (ax1 - x11) / S * A), (tx1 + (ty1 - y11) / S * A), (ty1 + (x11 - tx1) / S * A), tx1, ty1).DivArc(out var a0, out var a1);
+				new Cubic(tx1, ty1, (tx1 + (y11 - ty1) / S * A), (ty1 + (tx1 - x11) / S * A), (bx1 + (by1 - y11) / S * A), (by1 + (x11 - bx1) / S * A), bx1, by1).DivArc(out var a2, out var a3);
 				AddItem(a0);
 				AddItem(a1);
 				AddItem(a2);
@@ -2280,6 +3150,338 @@ namespace Wholemy {
 				AddItem(new Line(ax1, ay1, bx1, by1));
 			}
 			AddItem(new Line(bx1, by1, bx0, by0));
+		}
+		#endregion
+		#region #method# AddAin00(x0, y0, x1, y1) 
+		#region #through# 
+#if TRACE
+		[System.Diagnostics.DebuggerStepThrough]
+#endif
+		#endregion
+		public void AddAin00(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) {
+			this.IsRoundM = false;
+			this.IsRoundE = false;
+			AddAinT(x0, y0, x1, y1, x2, y2, x3, y3);
+		}
+		#endregion
+		#region #method# AddAin01(x0, y0, x1, y1) 
+		#region #through# 
+#if TRACE
+		[System.Diagnostics.DebuggerStepThrough]
+#endif
+		#endregion
+		public void AddAin01(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) {
+			this.IsRoundM = false;
+			this.IsRoundE = true;
+			AddAinT(x0, y0, x1, y1, x2, y2, x3, y3);
+		}
+		#endregion
+		#region #method# AddAin10(x0, y0, x1, y1) 
+		#region #through# 
+#if TRACE
+		[System.Diagnostics.DebuggerStepThrough]
+#endif
+		#endregion
+		public void AddAin10(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) {
+			this.IsRoundM = true;
+			this.IsRoundE = false;
+			AddAinT(x0, y0, x1, y1, x2, y2, x3, y3);
+		}
+		#endregion
+		#region #method# AddAin11(x0, y0, x1, y1) 
+		#region #through# 
+#if TRACE
+		[System.Diagnostics.DebuggerStepThrough]
+#endif
+		#endregion
+		public void AddAin11(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) {
+			this.IsRoundM = true;
+			this.IsRoundE = true;
+			AddAinT(x0, y0, x1, y1, x2, y2, x3, y3);
+		}
+		#endregion
+		#region #class# List 
+		public class List<T> {
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+			#endregion
+			public Item Base;
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+			#endregion
+			public Item Last;
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+			#endregion
+			public int Count;
+			#region #class# Item 
+			public class Item {
+				public double Root;
+				public double Size;
+				public T Value;
+				#region #invisible# 
+#if TRACE
+				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+				#endregion
+				public Item Prev;
+				#region #invisible# 
+#if TRACE
+				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+				#endregion
+				public Item Next;
+				public List<T> List;
+				#region #method# Add(Now, Root, End) 
+				public Item Add(T Now, double Root, T End) {
+					var NowSize = this.Size * Root;
+					var EndRoot = this.Root + NowSize;
+					var EndSize = this.Size - NowSize;
+					this.Size = NowSize;
+					var List = this.List;
+					this.Value = Now;
+					var Item = new Item() { Value = End, List = List, Root = EndRoot, Size = EndSize };
+					var Next = this.Next;
+					if (Next != null) {
+						Next.Prev = Item;
+						Item.Next = Next;
+					} else {
+						List.Last = Item;
+					}
+					this.Next = Item;
+					Item.Prev = this;
+					List.Count++;
+					return Item;
+				}
+				#endregion
+				public override string ToString() {
+					var T = System.Globalization.CultureInfo.InvariantCulture;
+					return "Item Root = " + this.Root.ToString(T) + " Size = " + this.Size.ToString(T) + " [" + this.Value + "]";
+				}
+			}
+			#endregion
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			#region #method# Add(Value) 
+			public Item Add(T Value, double Root, double Size) {
+				var Item = new Item() { Value = Value, Root = Root, Size = Size, List = this };
+				var Last = this.Last;
+				if (Last == null) {
+					this.Last = Item;
+					this.Base = Item;
+				} else {
+					Last.Next = Item;
+					this.Last = Item;
+				}
+				this.Count++;
+				return Item;
+			}
+			#endregion
+			#region #method# Add(List) 
+			public void Add(List<T> List) {
+				if (List != null && List.Base != null) {
+					var Last = this.Last;
+					if (Last == null) {
+						this.Base = List.Base;
+						this.Last = List.Last;
+						this.Count = List.Count;
+					} else {
+						this.Last = List.Last;
+						Last.Next = List.Base;
+						List.Base.Prev = Last;
+						this.Count += List.Count;
+					}
+					List.Base = null;
+					List.Last = null;
+					List.Count = 0;
+					for (var Item = List.Base; Item != null; Item = Item.Next) {
+						Item.List = this;
+					}
+				}
+			}
+			#endregion
+			#region #property# Items 
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.RootHidden)]
+#endif
+			#endregion
+			public Item[] Items {
+				#region #through# 
+#if TRACE
+				[System.Diagnostics.DebuggerStepThrough]
+#endif
+				#endregion
+				get {
+					var C = this.Count;
+					var A = new Item[C];
+					var I = 0;
+					var Item = Base;
+					while (Item != null) {
+						A[I++] = Item;
+						Item = Item.Next;
+					}
+					return A;
+				}
+			}
+			#endregion
+			public override string ToString() {
+				return "List Count = " + this.Count.ToString();
+			}
+		}
+		#endregion
+
+		#region #method# AddAinT(x0, y0, x1, y1) 
+		private bool CntAinT(Cubic Cubic, out double Pos) {
+			var Count = 0;
+			var Div0pos = 0.0;
+			var Div0 = 1.0;
+			var Max = 0.0;
+			var Div1 = 1.0;
+			var DIV = 0.5;
+			var LEN = 0.0;
+			var POS = 0.0;
+			var TES = Cubic;
+			Cubic NOW;
+			Cubic RAM;
+			Cubic PA = null;
+			Cubic PB = null;
+			TESNEXT:
+			if (TES.TesArc(this, ref PA, ref PB, out var reset0)) {
+				Count++;
+				var div = 1.0 - POS;
+				if (Div0 > div) {
+					Div0pos = POS;
+					Div0 = div;
+				}
+				POS = 1.0;
+			} else {
+				NOWNEXT:
+				TES.Div(DIV, out NOW, out RAM);
+				if (NOW.TesArc(this, ref PA, ref PB, out var reset1)) {
+					Count++;
+					TES = RAM;
+					var pos = POS;
+					pos += (1.0 - pos) * DIV;
+					var div = pos - POS;
+					if (reset1) {
+						Pos = POS;
+						return true;
+					}
+					POS = pos;
+					DIV = 0.5;
+					goto TESNEXT;
+				} else {
+					DIV /= 2.0;
+					if (DIV > 0) goto NOWNEXT;
+				}
+			}
+			Pos = POS;
+			return false;
+		}
+		public void AddAinT(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) {
+			var D = this.Thickness / 2;
+			var IsRoundM = this.IsRoundM;
+			var IsRoundE = this.IsRoundE;
+			var RootM = this.RootM; this.RootM = null;
+			var RootE = this.RootE; this.RootE = null;
+			var Bone = new Cubic(x0, y0, x1, y1, x2, y2, x3, y3).CutedCubic(RootM, RootE);
+			double POS = 0.0;
+			var list = new List<Cubic>();
+			if (IsBonesUse) { AddBone(Bone); }
+			NEXT:
+			var Pos = 0.0;
+			var Pre = 0.0;
+			while (CntAinT(Bone, out Pos)) {
+				Bone.Div(Pos, out Bone, out var Next);
+				list.Add(Bone, Pre, Pos);
+				Bone = Next;
+				Pre = Pos;
+			}
+			list.Add(Bone, Pre, 1.0 - Pre);
+			for(var p = list.Base; p!=null;p = p.Next) {
+				if(p.Root<=0.5 && p.Root + p.Size >0.5) {
+					var r = 0.5 - p.Root;
+					p.Value.Div(r, out var a1, out var a2);
+					p.Add(a1, r, a2);
+					break;
+				}
+			}
+			var ps = list.Base;
+			Bone = ps.Value;
+			if (IsRoundM) {
+				Bone.AddArcM(this);
+			}
+			bool first = true;
+			while (ps != null) {
+				Bone = ps.Value;
+				ps = ps.Next;
+
+				//var p = new Pomax.Bezier(Bone.MX, Bone.MY, Bone.cmX, Bone.cmY, Bone.ceX, Bone.ceY, Bone.EX, Bone.EY);
+				//var l = p.offset(-D).Base;
+				//while (l != null) {
+				//	var po = l.Bezier.points;
+				//	AddItem(new Cubic(po[0].X, po[0].Y, po[1].X, po[1].Y, po[2].X, po[2].Y, po[3].X, po[3].Y));
+				//	l = l.Next;
+				//}
+				//Bone.Add2ArcA(this);
+				var DIV = 0.5;
+				var TES = Bone;
+				Cubic NOW;
+				Cubic RAM;
+				TES = Bone;
+				DIV = 0.5;
+				TESNEXTA:
+				if (!TES.TesArcA(this)) {
+					NOWNEXTA:
+					TES.Div(DIV, out NOW, out RAM);
+					if (NOW.TesArcA(this)) {
+						TES = RAM;
+						DIV = 0.5;
+						goto TESNEXTA;
+					} else {
+						DIV /= 2.0;
+						if (DIV > 0) goto NOWNEXTA;
+					}
+				}
+				if (ps == null && IsRoundE) {
+					Bone.AddArcE(this);
+					
+				}
+
+				//l = p.offset(D).Base;
+				//while (l != null) {
+				//	var po = l.Bezier.points;
+				//	AddItem(new Cubic(po[0].X, po[0].Y, po[1].X, po[1].Y, po[2].X, po[2].Y, po[3].X, po[3].Y));
+				//	l = l.Next;
+				//}
+				//Bone.Add2ArcB(this);
+				TES = Bone;
+				DIV = 0.5;
+				TESNEXTB:
+				if (!TES.TesArcB(this)) {
+					NOWNEXTB:
+					TES.Div(1.0 - DIV, out RAM, out NOW);
+					if (NOW.TesArcB(this)) {
+						TES = RAM;
+						DIV = 0.5;
+						goto TESNEXTB;
+					} else {
+						DIV /= 2.0;
+						if (DIV > 0) goto NOWNEXTB;
+					}
+				}
+				if (ps != null) Union();
+			}
 		}
 		#endregion
 	}

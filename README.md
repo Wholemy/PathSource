@@ -1,2 +1,2 @@
 # PathSource
-PathSource for Fonts or other output
+Вас ждут передовые разработки, идеально отрисованные кубические пути, ну прямо как Stroke из WPF, наслаждайтесь)))

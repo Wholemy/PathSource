@@ -1,3 +1,8 @@
+using System.DirectoryServices;
+using System.Linq;
+using System.Runtime.Intrinsics.Arm;
+using System.Windows;
+
 namespace Wholemy {
 	public class PathSource {
 		#region #class# Lot 
@@ -1818,8 +1823,49 @@ namespace Wholemy {
 				P.AddItem(a3);
 			}
 			#endregion
-			#region #method# TesArcA(P) 
-			public bool TesArcA(PathSource P) {
+			public bool AddA(PathSource P) {
+				var DIV = 0.5;
+				var TES = this;
+				Cubic NOW;
+				Cubic RAM;
+				DIV = 0.5;
+				TESNEXTA:
+				if (!TES.TesAddA(P)) {
+					NOWNEXTA:
+					TES.Div(DIV, out NOW, out RAM);
+					if (NOW.TesAddA(P)) {
+						TES = RAM;
+						DIV = 0.5;
+						goto TESNEXTA;
+					} else {
+						DIV /= 2.0;
+						if (DIV > 0) goto NOWNEXTA;
+					}
+				}
+				return false;
+			}
+			public bool AddB(PathSource P) {
+				var TES = this;
+				var DIV = 0.5;
+				Cubic NOW;
+				Cubic RAM;
+				TESNEXTB:
+				if (!TES.TesAddB(P)) {
+					NOWNEXTB:
+					TES.Div(1.0 - DIV, out RAM, out NOW);
+					if (NOW.TesAddB(P)) {
+						TES = RAM;
+						DIV = 0.5;
+						goto TESNEXTB;
+					} else {
+						DIV /= 2.0;
+						if (DIV > 0) goto NOWNEXTB;
+					}
+				}
+				return false;
+			}
+			#region #method# TesAddA(P) 
+			public bool TesAddA(PathSource P) {
 				var S = P.Thickness / 2;
 				if (this.Ext(S, out var Item)) {
 					this.Div(0.5, out var BA, out var BB);
@@ -1835,8 +1881,8 @@ namespace Wholemy {
 				return false;
 			}
 			#endregion
-			#region #method# TesArcB(P) 
-			public bool TesArcB(PathSource P) {
+			#region #method# TesAddB(P) 
+			public bool TesAddB(PathSource P) {
 				var S = P.Thickness / 2;
 				if (this.Ext(S, out var Item, true)) {
 					this.Div(0.5, out var RA, out var RB);
@@ -1912,8 +1958,7 @@ namespace Wholemy {
 			}
 			#endregion
 			#region #method# TesArc(P, PA, PB, Reset) 
-			public bool TesArc(PathSource P, ref Cubic PA, ref Cubic PB, out bool Reset) {
-				var S = P.Thickness / 2;
+			public bool TesArc(double S, ref Cubic PA, ref Cubic PB, out bool Reset) {
 				if (this.Ext(S, out var A, out var B)) {
 					this.Div(0.5, out var RA, out var T);
 					if (T.Ext(S, out var TA, out var TB)) {
@@ -1923,10 +1968,10 @@ namespace Wholemy {
 						var cecL = Mat.Sqrt(BA.EX - TB.EX, BA.EY - TB.EY);
 						if (cmcL < 0.5 && cecL < 0.5) {
 							if (PA != null && PB != null) {
-								var Aa = Mat.GetAR(PA.EX, PA.EY, PA.MX, PA.MY, A.EX, A.EY);
-								var Bb = Mat.GetAR(PB.MX, PB.MY, PB.EX, PB.EY, B.MX, B.MY);
-								if (Aa < 0) Aa = 4.0 + Aa; if (Bb < 0) Bb = 4.0 + Bb;
-								Reset = (Aa < 1.5 || Aa > 2.5 || Bb < 1.5 || Bb > 2.5);
+								var Aa = Mat.GetA1(PA.EX, PA.EY, PA.MX, PA.MY, A.EX, A.EY);
+								var Bb = Mat.GetA1(PB.MX, PB.MY, PB.EX, PB.EY, B.MX, B.MY);
+								if (Aa < 0) Aa = 1.0 + Aa; if (Bb < 0) Bb = 1.0 + Bb;
+								Reset = (Aa < /*1.5*/0.375 || Aa > 0.625 || Aa == 0.5 || Bb < /*1.5*/0.375 || Bb > 0.625 || Bb == 0.5);
 							} else {
 								Reset = false;
 							}
@@ -1938,6 +1983,64 @@ namespace Wholemy {
 				}
 				Reset = false;
 				return false;
+			}
+			#endregion
+			#region #private# #method# ExtTes(Size, #out# Pos) 
+			private bool ExtTes(double Size, out double Pos) {
+				var DIV = 0.5;
+				var POS = 0.0;
+				var TES = this;
+				var Reset = false;
+				Cubic NOW;
+				Cubic RAM;
+				Cubic PA = null;
+				Cubic PB = null;
+				RTES:
+				if (TES.TesArc(Size, ref PA, ref PB, out Reset)) {
+					POS = 1.0;
+				} else {
+					NEXT:
+					TES.Div(DIV, out NOW, out RAM);
+					if (NOW.TesArc(Size, ref PA, ref PB, out Reset)) {
+						TES = RAM;
+						if (Reset) { Pos = POS; return true; }
+						POS += (1.0 - POS) * DIV;
+						DIV = 0.5;
+						goto RTES;
+					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
+				}
+				Pos = POS;
+				return false;
+			}
+			#endregion
+			#region #method# ExtTes(Size) 
+			public List<Cubic> ExtTes(double Size) {
+				var L = new List<Cubic>();
+				var P = 0.0;
+				var R = 0.0;
+				var S = 0.0;
+				var V = this;
+				List<Cubic>.Item U;
+				while (V.ExtTes(Size, out P)) {
+					V.Div(P, out V, out var Next);
+					S = (1.0 - R) * P;
+					U = L.Add(V, R, S);
+					if (R < 0.5 && R + S > 0.5) {
+						P = (0.5 - R) * S;
+						U.Value.Div(P, out var A, out var B);
+						U.Add(A, P, B);
+					}
+					V = Next;
+					R += S;
+				}
+				S = 1.0 - R;
+				U = L.Add(V, R, S);
+				if (R < 0.5 && R + S > 0.5) {
+					P = (0.5 - R) * S;
+					U.Value.Div(P, out var A, out var B);
+					U.Add(A, P, B);
+				}
+				return L;
 			}
 			#endregion
 			#region #method# AddArcE(P) 
@@ -2576,26 +2679,7 @@ namespace Wholemy {
 			var Bone = new Line(x0, y0, x1, y1).ToArcC().CutedCubic(RootM, RootE);
 			if (IsBonesUse) AddBone(Bone);
 			double POS = 0.0;
-			var list = new List<Cubic>();
-			if (IsBonesUse) { AddBone(Bone); }
-			NEXT:
-			var Pos = 0.0;
-			var Pre = 0.0;
-			while (CntAinT(Bone, out Pos)) {
-				Bone.Div(Pos, out Bone, out var Next);
-				list.Add(Bone, Pre, Pos);
-				Bone = Next;
-				Pre = Pos;
-			}
-			list.Add(Bone, Pre, 1.0 - Pre);
-			for (var p = list.Base; p != null; p = p.Next) {
-				if (p.Root <= 0.5 && p.Root + p.Size > 0.5) {
-					var r = 0.5 - p.Root;
-					p.Value.Div(r, out var a1, out var a2);
-					p.Add(a1, r, a2);
-					break;
-				}
-			}
+			var list = Bone.ExtTes(D);
 			var ps = list.Base;
 			Bone = ps.Value;
 			if (IsRoundM) {
@@ -2605,44 +2689,10 @@ namespace Wholemy {
 			while (ps != null) {
 				Bone = ps.Value;
 				ps = ps.Next;
-				var DIV = 0.5;
-				var TES = Bone;
-				Cubic NOW;
-				Cubic RAM;
-				TES = Bone;
-				DIV = 0.5;
-				TESNEXTA:
-				if (!TES.TesArcA(this)) {
-					NOWNEXTA:
-					TES.Div(DIV, out NOW, out RAM);
-					if (NOW.TesArcA(this)) {
-						TES = RAM;
-						DIV = 0.5;
-						goto TESNEXTA;
-					} else {
-						DIV /= 2.0;
-						if (DIV > 0) goto NOWNEXTA;
-					}
-				}
-				if (ps == null && IsRoundE) {
+				Bone.AddA(this);
+				if (ps == null && IsRoundE)
 					Bone.AddArcE(this);
-
-				}
-				TES = Bone;
-				DIV = 0.5;
-				TESNEXTB:
-				if (!TES.TesArcB(this)) {
-					NOWNEXTB:
-					TES.Div(1.0 - DIV, out RAM, out NOW);
-					if (NOW.TesArcB(this)) {
-						TES = RAM;
-						DIV = 0.5;
-						goto TESNEXTB;
-					} else {
-						DIV /= 2.0;
-						if (DIV > 0) goto NOWNEXTB;
-					}
-				}
+				Bone.AddB(this);
 				if (ps != null) Union();
 			}
 		}
@@ -3202,35 +3252,44 @@ namespace Wholemy {
 		#endregion
 		#region #class# List 
 		public class List<T> {
+			/// <summary>Начинающий элмент в списке)</summary>
 			#region #invisible# 
 #if TRACE
 			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
 			#endregion
 			public Item Base;
+			/// <summary>Завершающий элмент в списке)</summary>
 			#region #invisible# 
 #if TRACE
 			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
 			#endregion
 			public Item Last;
+			/// <summary>Число элементов в списке)</summary>
 			#region #invisible# 
 #if TRACE
 			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
 			#endregion
 			public int Count;
+			/// <summary>Число преломлений, разворотов)</summary>
+			public int Reset;
 			#region #class# Item 
 			public class Item {
 				public double Root;
 				public double Size;
 				public T Value;
+				/// <summary>Истина определяет, что корень является преломлением, требует деления)</summary>
+				public bool Reset;
+				/// <summary>Предыдущий элмент в списке)</summary>
 				#region #invisible# 
 #if TRACE
 				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
 				#endregion
 				public Item Prev;
+				/// <summary>Следующий элмент в списке)</summary>
 				#region #invisible# 
 #if TRACE
 				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
@@ -3240,9 +3299,9 @@ namespace Wholemy {
 				public List<T> List;
 				#region #method# Add(Now, Root, End) 
 				public Item Add(T Now, double Root, T End) {
-					var NowSize = this.Size * Root;
-					var EndRoot = this.Root + NowSize;
-					var EndSize = this.Size - NowSize;
+					var NowSize = this.Root + Root - this.Root;
+					var EndRoot = this.Root + Root;
+					var EndSize = this.Size - Root;
 					this.Size = NowSize;
 					var List = this.List;
 					this.Value = Now;
@@ -3262,7 +3321,10 @@ namespace Wholemy {
 				#endregion
 				public override string ToString() {
 					var T = System.Globalization.CultureInfo.InvariantCulture;
-					return "Item Root = " + this.Root.ToString(T) + " Size = " + this.Size.ToString(T) + " [" + this.Value + "]";
+					return "Item Root = " + this.Root.ToString(T) + " Size = " + this.Size.ToString(T) + " Bound = " + this.Bound.ToString(T) + "[" + this.Value + "]";
+				}
+				public double Bound {
+					get { return this.Root + this.Size; }
 				}
 			}
 			#endregion
@@ -3271,7 +3333,7 @@ namespace Wholemy {
 			[System.Diagnostics.DebuggerStepThrough]
 #endif
 			#endregion
-			#region #method# Add(Value) 
+			#region #method# Add(Value, Root,Size) 
 			public Item Add(T Value, double Root, double Size) {
 				var Item = new Item() { Value = Value, Root = Root, Size = Size, List = this };
 				var Last = this.Last;
@@ -3341,53 +3403,6 @@ namespace Wholemy {
 		#endregion
 
 		#region #method# AddAinT(x0, y0, x1, y1) 
-		private bool CntAinT(Cubic Cubic, out double Pos) {
-			var Count = 0;
-			var Div0pos = 0.0;
-			var Div0 = 1.0;
-			var Max = 0.0;
-			var Div1 = 1.0;
-			var DIV = 0.5;
-			var LEN = 0.0;
-			var POS = 0.0;
-			var TES = Cubic;
-			Cubic NOW;
-			Cubic RAM;
-			Cubic PA = null;
-			Cubic PB = null;
-			TESNEXT:
-			if (TES.TesArc(this, ref PA, ref PB, out var reset0)) {
-				Count++;
-				var div = 1.0 - POS;
-				if (Div0 > div) {
-					Div0pos = POS;
-					Div0 = div;
-				}
-				POS = 1.0;
-			} else {
-				NOWNEXT:
-				TES.Div(DIV, out NOW, out RAM);
-				if (NOW.TesArc(this, ref PA, ref PB, out var reset1)) {
-					Count++;
-					TES = RAM;
-					var pos = POS;
-					pos += (1.0 - pos) * DIV;
-					var div = pos - POS;
-					if (reset1) {
-						Pos = POS;
-						return true;
-					}
-					POS = pos;
-					DIV = 0.5;
-					goto TESNEXT;
-				} else {
-					DIV /= 2.0;
-					if (DIV > 0) goto NOWNEXT;
-				}
-			}
-			Pos = POS;
-			return false;
-		}
 		public void AddAinT(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) {
 			var D = this.Thickness / 2;
 			var IsRoundM = this.IsRoundM;
@@ -3395,27 +3410,8 @@ namespace Wholemy {
 			var RootM = this.RootM; this.RootM = null;
 			var RootE = this.RootE; this.RootE = null;
 			var Bone = new Cubic(x0, y0, x1, y1, x2, y2, x3, y3).CutedCubic(RootM, RootE);
-			double POS = 0.0;
-			var list = new List<Cubic>();
 			if (IsBonesUse) { AddBone(Bone); }
-			NEXT:
-			var Pos = 0.0;
-			var Pre = 0.0;
-			while (CntAinT(Bone, out Pos)) {
-				Bone.Div(Pos, out Bone, out var Next);
-				list.Add(Bone, Pre, Pos);
-				Bone = Next;
-				Pre = Pos;
-			}
-			list.Add(Bone, Pre, 1.0 - Pre);
-			for(var p = list.Base; p!=null;p = p.Next) {
-				if(p.Root<=0.5 && p.Root + p.Size >0.5) {
-					var r = 0.5 - p.Root;
-					p.Value.Div(r, out var a1, out var a2);
-					p.Add(a1, r, a2);
-					break;
-				}
-			}
+			var list = Bone.ExtTes(D);
 			var ps = list.Base;
 			Bone = ps.Value;
 			if (IsRoundM) {
@@ -3425,61 +3421,10 @@ namespace Wholemy {
 			while (ps != null) {
 				Bone = ps.Value;
 				ps = ps.Next;
-
-				//var p = new Pomax.Bezier(Bone.MX, Bone.MY, Bone.cmX, Bone.cmY, Bone.ceX, Bone.ceY, Bone.EX, Bone.EY);
-				//var l = p.offset(-D).Base;
-				//while (l != null) {
-				//	var po = l.Bezier.points;
-				//	AddItem(new Cubic(po[0].X, po[0].Y, po[1].X, po[1].Y, po[2].X, po[2].Y, po[3].X, po[3].Y));
-				//	l = l.Next;
-				//}
-				//Bone.Add2ArcA(this);
-				var DIV = 0.5;
-				var TES = Bone;
-				Cubic NOW;
-				Cubic RAM;
-				TES = Bone;
-				DIV = 0.5;
-				TESNEXTA:
-				if (!TES.TesArcA(this)) {
-					NOWNEXTA:
-					TES.Div(DIV, out NOW, out RAM);
-					if (NOW.TesArcA(this)) {
-						TES = RAM;
-						DIV = 0.5;
-						goto TESNEXTA;
-					} else {
-						DIV /= 2.0;
-						if (DIV > 0) goto NOWNEXTA;
-					}
-				}
-				if (ps == null && IsRoundE) {
+				Bone.AddA(this);
+				if (ps == null && IsRoundE)
 					Bone.AddArcE(this);
-					
-				}
-
-				//l = p.offset(D).Base;
-				//while (l != null) {
-				//	var po = l.Bezier.points;
-				//	AddItem(new Cubic(po[0].X, po[0].Y, po[1].X, po[1].Y, po[2].X, po[2].Y, po[3].X, po[3].Y));
-				//	l = l.Next;
-				//}
-				//Bone.Add2ArcB(this);
-				TES = Bone;
-				DIV = 0.5;
-				TESNEXTB:
-				if (!TES.TesArcB(this)) {
-					NOWNEXTB:
-					TES.Div(1.0 - DIV, out RAM, out NOW);
-					if (NOW.TesArcB(this)) {
-						TES = RAM;
-						DIV = 0.5;
-						goto TESNEXTB;
-					} else {
-						DIV /= 2.0;
-						if (DIV > 0) goto NOWNEXTB;
-					}
-				}
+				Bone.AddB(this);
 				if (ps != null) Union();
 			}
 		}

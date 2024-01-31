@@ -1,9 +1,3 @@
-using System.Collections.Generic;
-using System.DirectoryServices;
-using System.Linq;
-using System.Runtime.Intrinsics.Arm;
-using System.Windows;
-
 namespace Wholemy {
 	public class PathSource {
 		#region #class# Lot 
@@ -293,10 +287,14 @@ namespace Wholemy {
 		private int FigureCount;
 		private Figure FigureBase;
 		private Figure FigureLast;
+		/// <summary>Толщина линий)</summary>
 		public double Thickness;
 		public bool IsBonesUse;
 		public bool IsRoundM;
 		public bool IsRoundE;
+		/// <summary>Истинное значение устанавливает точность 0.005 при обнаружении разворотов в кривых,
+		/// а так же добавляет излишние операции для нормальной точности, которая эквивалентна значению 0.5)</summary>
+		public bool Ideal;
 		#region #property# Figures 
 		private Figure[] Figures {
 			#region #through# 
@@ -1481,6 +1479,7 @@ namespace Wholemy {
 				B = new Cubic(x03, y03, x13u, y13u, x23u, y23u, x33, y33);
 			}
 			#endregion
+			#region #method# Div(R, A, B) 
 			public void Div(double R, out Cubic A, out Cubic B) {
 				var x00 = MX;
 				var y00 = MY;
@@ -1505,6 +1504,7 @@ namespace Wholemy {
 				A = new Cubic(x00, y00, x01, y01, x02, y02, x03, y03);
 				B = new Cubic(x03, y03, x13, y13, x23, y23, x33, y33);
 			}
+			#endregion
 			#region #method# Dot(root) 
 			public override Dot Dot(double R) {
 				if (R < 0.0 || R > 1.0) throw new System.InvalidOperationException();
@@ -2140,15 +2140,15 @@ namespace Wholemy {
 			}
 			#endregion
 			#region #method# TesArc(P, PA, PB, Reset) 
-			public bool TesArc(double S, ref Cubic PA, ref Cubic PB, out bool Reset) {
-				if (this.Ext(S, out var A, out var B)) {
+			public bool TesArc(double Need, double Size, ref Cubic PA, ref Cubic PB, out bool Reset) {
+				if (this.Ext(Size, out var A, out var B)) {
 					this.Div(0.5, out var RA, out var T);
-					if (T.Ext(S, out var TA, out var TB)) {
+					if (T.Ext(Size, out var TA, out var TB)) {
 						A.Div(0.5, out var AA, out var AB);
 						B.Div(0.5, out var BA, out var BB);
-						var cmcL = Mat.Sqrt(AB.MX - TA.MX, AB.MY - TA.MY);
-						var cecL = Mat.Sqrt(BA.EX - TB.EX, BA.EY - TB.EY);
-						if (cmcL < 0.5 && cecL < 0.5) {
+						var AL = Mat.Sqrt(AB.MX - TA.MX, AB.MY - TA.MY);
+						var BL = Mat.Sqrt(BA.EX - TB.EX, BA.EY - TB.EY);
+						if (AL < Need && BL < Need) {
 							if (PA != null && PB != null) {
 								var Aa = Mat.GetA1(PA.EX, PA.EY, PA.MX, PA.MY, A.EX, A.EY);
 								var Bb = Mat.GetA1(PB.MX, PB.MY, PB.EX, PB.EY, B.MX, B.MY);
@@ -2168,7 +2168,7 @@ namespace Wholemy {
 			}
 			#endregion
 			#region #private# #method# ExtTes(Size, #out# Pos) 
-			private bool ExtTes(double Size, out double Pos) {
+			private bool ExtTes(double Need, double Size, out double Pos) {
 				var DIV = 0.5;
 				var POS = 0.0;
 				var TES = this;
@@ -2178,12 +2178,12 @@ namespace Wholemy {
 				Cubic PA = null;
 				Cubic PB = null;
 				RTES:
-				if (TES.TesArc(Size, ref PA, ref PB, out Reset)) {
+				if (TES.TesArc(Need, Size, ref PA, ref PB, out Reset)) {
 					POS = 1.0;
 				} else {
 					NEXT:
 					TES.Div(DIV, out NOW, out RAM);
-					if (NOW.TesArc(Size, ref PA, ref PB, out Reset)) {
+					if (NOW.TesArc(Need, Size, ref PA, ref PB, out Reset)) {
 						TES = RAM;
 						if (Reset) { Pos = POS; return true; }
 						POS += (1.0 - POS) * DIV;
@@ -2196,14 +2196,14 @@ namespace Wholemy {
 			}
 			#endregion
 			#region #method# ExtTes(Size) 
-			public List<Cubic> ExtTes(double Size) {
+			public List<Cubic> ExtTes(double Need, double Size) {
 				var L = new List<Cubic>();
 				var P = 0.0;
 				var R = 0.0;
 				var S = 0.0;
 				var V = this;
 				List<Cubic>.Item U;
-				while (V.ExtTes(Size, out P)) {
+				while (V.ExtTes(Need, Size, out P)) {
 					V.Div(P, out V, out var Next);
 					S = (1.0 - R) * P;
 					U = L.Add(V, R, S);
@@ -2860,20 +2860,18 @@ namespace Wholemy {
 			var RootE = this.RootE; this.RootE = null;
 			var Bone = new Line(x0, y0, x1, y1).ToArcC().CutedCubic(RootM, RootE);
 			if (IsBonesUse) AddBone(Bone);
-			var list = Bone.ExtTes(D);
+			var Ideal = this.Ideal;
+			var list = Bone.ExtTes(Ideal ? 0.005 : 0.5, D);
 			var ps = list.Base;
 			Bone = ps.Value;
-			if (IsRoundM) {
-				Bone.AddArcM(this);
-			}
-			bool first = true;
+			if (IsRoundM) { Bone.AddArcM(this); }
 			while (ps != null) {
 				Bone = ps.Value;
 				ps = ps.Next;
-				Bone.NormalAddA(this);
-				if (ps == null && IsRoundE)
+				if (Ideal) { Bone.IdealAddA(this); } else { Bone.NormalAddA(this); }
+				if ((Ideal||ps == null) && IsRoundE)
 					Bone.AddArcE(this);
-				Bone.NormalAddB(this);
+				if (Ideal) { Bone.IdealAddB(this); } else { Bone.NormalAddB(this); }
 				if (ps != null) Union();
 			}
 		}
@@ -3383,52 +3381,79 @@ namespace Wholemy {
 			AddItem(new Line(bx1, by1, bx0, by0));
 		}
 		#endregion
-		#region #method# AddAin00(x0, y0, x1, y1) 
+		#region #method# AddCubic00(x0, y0, x1, y1, x2, y2, x3, y3) 
 		#region #through# 
 #if TRACE
 		[System.Diagnostics.DebuggerStepThrough]
 #endif
 		#endregion
-		public void AddAin00(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) {
+		public void AddCubic00(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) {
 			this.IsRoundM = false;
 			this.IsRoundE = false;
-			AddAinT(x0, y0, x1, y1, x2, y2, x3, y3);
+			AddCubicT(x0, y0, x1, y1, x2, y2, x3, y3);
 		}
 		#endregion
-		#region #method# AddAin01(x0, y0, x1, y1) 
+		#region #method# AddCubic01(x0, y0, x1, y1, x2, y2, x3, y3) 
 		#region #through# 
 #if TRACE
 		[System.Diagnostics.DebuggerStepThrough]
 #endif
 		#endregion
-		public void AddAin01(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) {
+		public void AddCubic01(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) {
 			this.IsRoundM = false;
 			this.IsRoundE = true;
-			AddAinT(x0, y0, x1, y1, x2, y2, x3, y3);
+			AddCubicT(x0, y0, x1, y1, x2, y2, x3, y3);
 		}
 		#endregion
-		#region #method# AddAin10(x0, y0, x1, y1) 
+		#region #method# AddCubic10(x0, y0, x1, y1, x2, y2, x3, y3) 
 		#region #through# 
 #if TRACE
 		[System.Diagnostics.DebuggerStepThrough]
 #endif
 		#endregion
-		public void AddAin10(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) {
+		public void AddCubic10(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) {
 			this.IsRoundM = true;
 			this.IsRoundE = false;
-			AddAinT(x0, y0, x1, y1, x2, y2, x3, y3);
+			AddCubicT(x0, y0, x1, y1, x2, y2, x3, y3);
 		}
 		#endregion
-		#region #method# AddAin11(x0, y0, x1, y1) 
+		#region #method# AddCubic11(x0, y0, x1, y1, x2, y2, x3, y3) 
 		#region #through# 
 #if TRACE
 		[System.Diagnostics.DebuggerStepThrough]
 #endif
 		#endregion
-		public void AddAin11(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) {
+		public void AddCubic11(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) {
 			this.IsRoundM = true;
 			this.IsRoundE = true;
-			AddAinT(x0, y0, x1, y1, x2, y2, x3, y3);
+			AddCubicT(x0, y0, x1, y1, x2, y2, x3, y3);
+		}
+		#endregion
+		#region #method# AddCubicT(x0, y0, x1, y1, x2, y2, x3, y3) 
+		public void AddCubicT(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) {
+			var D = this.Thickness / 2;
+			var IsRoundM = this.IsRoundM;
+			var IsRoundE = this.IsRoundE;
+			var RootM = this.RootM; this.RootM = null;
+			var RootE = this.RootE; this.RootE = null;
+			var Bone = new Cubic(x0, y0, x1, y1, x2, y2, x3, y3).CutedCubic(RootM, RootE);
+			if (IsBonesUse) { AddBone(Bone); }
+			var Ideal = this.Ideal;
+			var list = Bone.ExtTes(Ideal ? 0.005 : 0.5, D);
+			var ps = list.Base;
+			Bone = ps.Value;
+			if (IsRoundM) {
+				Bone.AddArcM(this);
+			}
+			while (ps != null) {
+				Bone = ps.Value;
+				ps = ps.Next;
+				if (Ideal) { Bone.IdealAddA(this); } else { Bone.NormalAddA(this); }
+				if ((Ideal || ps == null) && IsRoundE)
+					Bone.AddArcE(this);
+				if (Ideal) { Bone.IdealAddB(this); } else { Bone.NormalAddB(this); }
+				if (ps != null) Union();
+			}
 		}
 		#endregion
 		#region #class# List 
@@ -3579,34 +3604,6 @@ namespace Wholemy {
 			#endregion
 			public override string ToString() {
 				return "List Count = " + this.Count.ToString();
-			}
-		}
-		#endregion
-
-		#region #method# AddAinT(x0, y0, x1, y1) 
-		public void AddAinT(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) {
-			var D = this.Thickness / 2;
-			var IsRoundM = this.IsRoundM;
-			var IsRoundE = this.IsRoundE;
-			var RootM = this.RootM; this.RootM = null;
-			var RootE = this.RootE; this.RootE = null;
-			var Bone = new Cubic(x0, y0, x1, y1, x2, y2, x3, y3).CutedCubic(RootM, RootE);
-			if (IsBonesUse) { AddBone(Bone); }
-			var list = Bone.ExtTes(D);
-			var ps = list.Base;
-			Bone = ps.Value;
-			if (IsRoundM) {
-				Bone.AddArcM(this);
-			}
-			bool first = true;
-			while (ps != null) {
-				Bone = ps.Value;
-				ps = ps.Next;
-				Bone.NormalAddA(this);
-				if (ps == null && IsRoundE)
-					Bone.AddArcE(this);
-				Bone.NormalAddB(this);
-				if (ps != null) Union();
 			}
 		}
 		#endregion

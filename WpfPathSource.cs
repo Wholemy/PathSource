@@ -295,6 +295,8 @@ namespace Wholemy {
 		/// <summary>Истинное значение устанавливает точность 0.005 при обнаружении разворотов в кривых,
 		/// а так же добавляет излишние операции для нормальной точности, которая эквивалентна значению 0.5)</summary>
 		public bool Ideal;
+		public const double IdealPrecision = 0.005;
+		public const double NormalPrecision = 0.5;
 		#region #property# Figures 
 		private Figure[] Figures {
 			#region #through# 
@@ -1834,12 +1836,12 @@ namespace Wholemy {
 				Cubic SET = null;
 				DIV = 0.5;
 				NEXT:
-				if (TES.NormalExtA(Size, ref SET)) {
+				if (TES.ExtA(NormalPrecision, Size, ref SET)) {
 					P.AddItem(SET);
 				} else {
 					LESS:
 					TES.Div(DIV, out NOW, out RAM);
-					if (NOW.NormalExtA(Size, ref SET)) {
+					if (NOW.ExtA(NormalPrecision, Size, ref SET)) {
 						P.AddItem(SET);
 						TES = RAM;
 						DIV = 0.5;
@@ -1861,12 +1863,12 @@ namespace Wholemy {
 				Cubic RAM;
 				Cubic SET = null;
 				NEXT:
-				if (TES.NormalExtB(Size, ref SET)) {
+				if (TES.ExtB(NormalPrecision, Size, ref SET)) {
 					P.AddItem(SET);
 				} else {
 					LESS:
 					TES.Div(1.0 - DIV, out RAM, out NOW);
-					if (NOW.NormalExtB(Size, ref SET)) {
+					if (NOW.ExtB(NormalPrecision, Size, ref SET)) {
 						P.AddItem(SET);
 						TES = RAM;
 						DIV = 0.5;
@@ -1879,15 +1881,15 @@ namespace Wholemy {
 				return false;
 			}
 			#endregion
-			#region #method# NormalExtA(S, R) 
-			public bool NormalExtA(double S, ref Cubic R) {
-				if (this.Ext(S, out var Item)) {
+			#region #method# ExtA(Need, Size, Result) 
+			public bool ExtA(double Need, double Size, ref Cubic Result) {
+				if (this.Ext(Size, out var Item)) {
 					this.Div(0.5, out var BA, out var BB);
 					Item.Div(0.5, out var AA, out var AB);
-					if (BB.Ext(S, out var B)) {
+					if (BB.Ext(Size, out var B)) {
 						var cmcL = Mat.Sqrt(AB.MX - B.MX, AB.MY - B.MY);
-						if (cmcL < 0.5) {
-							R = Item;
+						if (cmcL < Need) {
+							Result = Item;
 							return true;
 						}
 					}
@@ -1895,15 +1897,15 @@ namespace Wholemy {
 				return false;
 			}
 			#endregion
-			#region #method# NormalExtB(S, R) 
-			public bool NormalExtB(double S, ref Cubic R) {
-				if (this.Ext(S, out var Item, true)) {
+			#region #method# ExtB(Need, Size, Result) 
+			public bool ExtB(double Need,double Size, ref Cubic Result) {
+				if (this.Ext(Size, out var Item, true)) {
 					this.Div(0.5, out var RA, out var RB);
 					Item.Div(0.5, out var BA, out var BB);
-					if (RB.Ext(S, out var B, true)) {
+					if (RB.Ext(Size, out var B, true)) {
 						var cecL = Mat.Sqrt(BA.EX - B.EX, BA.EY - B.EY);
-						if (cecL < 0.5) {
-							R = Item;
+						if (cecL < Need) {
+							Result = Item;
 							return true;
 						}
 					}
@@ -1927,18 +1929,18 @@ namespace Wholemy {
 				Cubic NEWSET = null;
 				DIV = 0.5;
 				NEXT:
-				if (TES.IdealExtA(Size, ref SET)) {
+				if (TES.ExtA(IdealPrecision, Size, ref SET)) {
 					if (PRETES != null)
 						P.AddItem(PRESET);
 					P.AddItem(SET);
 				} else {
 					LESS:
 					TES.Div(DIV, out NOW, out RAM);
-					if (NOW.IdealExtA(Size, ref SET)) {
+					if (NOW.ExtA(IdealPrecision, Size, ref SET)) {
 						if (PRETES != null) {
 							var NEWDIV = PREDIV + (1.0 - PREDIV) * DIV;
 							PRETES.Div(NEWDIV, out PRENOW, out PRERAM);
-							if (PRENOW.IdealExtA(Size, ref NEWSET)) {
+							if (PRENOW.ExtA(IdealPrecision, Size, ref NEWSET)) {
 								PREDIV = NEWDIV;
 								PRESET = NEWSET;
 							} else {
@@ -1978,18 +1980,18 @@ namespace Wholemy {
 				Cubic SET = null;
 				Cubic NEWSET = null;
 				NEXT:
-				if (TES.IdealExtB(Size, ref SET)) {
+				if (TES.ExtB(IdealPrecision, Size, ref SET)) {
 					if (PRETES != null)
 						P.AddItem(PRESET);
 					P.AddItem(SET);
 				} else {
 					LESS:
 					TES.Div(1.0 - DIV, out RAM, out NOW);
-					if (NOW.IdealExtB(Size, ref SET)) {
+					if (NOW.ExtB(IdealPrecision, Size, ref SET)) {
 						if (PRETES != null) {
 							var NEWDIV = PREDIV + (1.0 - PREDIV) * DIV;
 							PRETES.Div(1.0 - NEWDIV, out PRERAM, out PRENOW);
-							if (PRENOW.IdealExtB(Size, ref NEWSET)) {
+							if (PRENOW.ExtB(IdealPrecision, Size, ref NEWSET)) {
 								PREDIV = NEWDIV;
 								PRESET = NEWSET;
 							} else {
@@ -2009,72 +2011,6 @@ namespace Wholemy {
 					} else {
 						DIV /= 2.0;
 						if (DIV > 0) goto LESS;
-					}
-				}
-				return false;
-			}
-			#endregion
-			#region #method# IdealExtA(S, R) 
-			public bool IdealExtA(double S, ref Cubic R) {
-				if (this.Ext(S, out var Item)) {
-					this.Div(0.5, out var BA, out var BB);
-					Item.Div(0.5, out var AA, out var AB);
-					if (BB.Ext(S, out var B)) {
-						var cmcL = Mat.Sqrt(AB.MX - B.MX, AB.MY - B.MY);
-						if (cmcL < 0.005) {
-							R = Item;
-							return true;
-						}
-					}
-				}
-				return false;
-			}
-			#endregion
-			#region #method# IdealExtB(S, R) 
-			public bool IdealExtB(double S, ref Cubic R) {
-				if (this.Ext(S, out var Item, true)) {
-					this.Div(0.5, out var RA, out var RB);
-					Item.Div(0.5, out var BA, out var BB);
-					if (RB.Ext(S, out var B, true)) {
-						var cecL = Mat.Sqrt(BA.EX - B.EX, BA.EY - B.EY);
-						if (cecL < 0.005) {
-							R = Item;
-							return true;
-						}
-					}
-				}
-				return false;
-			}
-			#endregion
-			#region #method# TesAddA(P) 
-			public bool TesAddA(PathSource P) {
-				var S = P.Thickness / 2;
-				if (this.Ext(S, out var Item)) {
-					this.Div(0.5, out var BA, out var BB);
-					Item.Div(0.5, out var AA, out var AB);
-					if (BB.Ext(S, out var B)) {
-						var cmcL = Mat.Sqrt(AB.MX - B.MX, AB.MY - B.MY);
-						if (cmcL < 0.5) {
-							P.AddItem(Item);
-							return true;
-						}
-					}
-				}
-				return false;
-			}
-			#endregion
-			#region #method# TesAddB(P) 
-			public bool TesAddB(PathSource P) {
-				var S = P.Thickness / 2;
-				if (this.Ext(S, out var Item, true)) {
-					this.Div(0.5, out var RA, out var RB);
-					Item.Div(0.5, out var BA, out var BB);
-					if (RB.Ext(S, out var B, true)) {
-						var cecL = Mat.Sqrt(BA.EX - B.EX, BA.EY - B.EY);
-						if (cecL < 0.5) {
-							P.AddItem(Item);
-							return true;
-						}
 					}
 				}
 				return false;
@@ -2853,31 +2789,12 @@ namespace Wholemy {
 		#endregion
 		#region #method# AddArcT(x0, y0, x1, y1) 
 		public void AddArcT(double x0, double y0, double x1, double y1) {
-			var D = this.Thickness / 2;
-			var IsRoundM = this.IsRoundM;
-			var IsRoundE = this.IsRoundE;
-			var RootM = this.RootM; this.RootM = null;
-			var RootE = this.RootE; this.RootE = null;
-			var Bone = new Line(x0, y0, x1, y1).ToArcC().CutedCubic(RootM, RootE);
-			if (IsBonesUse) AddBone(Bone);
-			var Ideal = this.Ideal;
-			var list = Bone.ExtTes(Ideal ? 0.005 : 0.5, D);
-			var ps = list.Base;
-			Bone = ps.Value;
-			if (IsRoundM) { Bone.AddArcM(this); }
-			while (ps != null) {
-				Bone = ps.Value;
-				ps = ps.Next;
-				if (Ideal) { Bone.IdealAddA(this); } else { Bone.NormalAddA(this); }
-				if ((Ideal||ps == null) && IsRoundE)
-					Bone.AddArcE(this);
-				if (Ideal) { Bone.IdealAddB(this); } else { Bone.NormalAddB(this); }
-				if (ps != null) Union();
-			}
+			var V = new Line(x0, y0, x1, y1).ToArcC();
+			AddCubicT(V.MX,V.MY, V.cmX, V.cmY, V.ceX, V.ceY, V.EX, V.EY);
 		}
 		#endregion
-		#region #method# AddItemYrc(x0, y0, x1, y1, cw) 
-		public Item AddItemYrc(double x0, double y0, double x1, double y1, bool cw = false) {
+		#region #method# AddYrc00(x0, y0, x1, y1) 
+		public void AddYrc00(double x0, double y0, double x1, double y1, bool cw = false) {
 			var x00 = x0;
 			var y00 = y0;
 			var x11 = x1;
@@ -2889,11 +2806,11 @@ namespace Wholemy {
 				y00 += ((x1 - x0) * Arc14);
 				y11 += ((x0 - x1) * Arc14);
 			}
-			return AddItem(x0, y0, x00, y00, x11, y11, x1, y1);
+			AddCubicT(x0, y0, x00, y00, x11, y11, x1, y1);
 		}
 		#endregion
-		#region #method# AddItemXrc(x0, y0, x1, y1, cw) 
-		public Item AddItemXrc(double x0, double y0, double x1, double y1, bool cw = false) {
+		#region #method# AddXrc00(x0, y0, x1, y1) 
+		public void AddXrc00(double x0, double y0, double x1, double y1, bool cw = false) {
 			var x00 = x0;
 			var y00 = y0;
 			var x11 = x1;
@@ -2905,53 +2822,7 @@ namespace Wholemy {
 				x00 += ((y1 - y0) * Arc14);
 				x11 += ((y0 - y1) * Arc14);
 			}
-			return AddItem(x0, y0, x00, y00, x11, y11, x1, y1);
-		}
-		#endregion
-		#region #method# AddYrc00(x0, y0, x1, y1) 
-		public void AddYrc00(double x0, double y0, double x1, double y1) {
-			var D = this.Thickness;
-			D /= 2;
-			if (x0 < x1) {
-				if (y0 < y1) { // Право верх
-					AddItemYrc(x0 + D, y0, x1 + D, y1);
-					AddItemYrc(x1 - D, y1, x0 - D, y0, true);
-				} else { // Лево верх
-					AddItemYrc(x0 + D, y0, x1 + D, y1);
-					AddItemYrc(x1 - D, y1, x0 - D, y0, true);
-				}
-			} else {
-				if (y0 < y1) { // Право низ
-					AddItemYrc(x0 + D, y0, x1 + D, y1);
-					AddItemYrc(x1 - D, y1, x0 - D, y0, true);
-				} else { // Лево низ
-					AddItemYrc(x0 + D, y0, x1 + D, y1);
-					AddItemYrc(x1 - D, y1, x0 - D, y0, true);
-				}
-			}
-		}
-		#endregion
-		#region #method# AddXrc00(x0, y0, x1, y1) 
-		public void AddXrc00(double x0, double y0, double x1, double y1) {
-			var D = this.Thickness;
-			D /= 2;
-			if (x0 < x1) {
-				if (y0 < y1) { // Право верх
-					AddItemXrc(x0, y0 + D, x1, y1 + D);
-					AddItemXrc(x1, y1 - D, x0, y0 - D, true);
-				} else { // Лево верх
-					AddItemXrc(x0, y0 + D, x1, y1 + D);
-					AddItemXrc(x1, y1 - D, x0, y0 - D, true);
-				}
-			} else {
-				if (y0 < y1) { // Право низ
-					AddItemXrc(x0, y0 + D, x1, y1 + D);
-					AddItemXrc(x1, y1 - D, x0, y0 - D, true);
-				} else { // Лево низ
-					AddItemXrc(x0, y0 + D, x1, y1 + D);
-					AddItemXrc(x1, y1 - D, x0, y0 - D, true);
-				}
-			}
+			AddCubicT(x0, y0, x00, y00, x11, y11, x1, y1);
 		}
 		#endregion
 		#region #struct# DOT 
@@ -3439,7 +3310,7 @@ namespace Wholemy {
 			var Bone = new Cubic(x0, y0, x1, y1, x2, y2, x3, y3).CutedCubic(RootM, RootE);
 			if (IsBonesUse) { AddBone(Bone); }
 			var Ideal = this.Ideal;
-			var list = Bone.ExtTes(Ideal ? 0.005 : 0.5, D);
+			var list = Bone.ExtTes(Ideal ? IdealPrecision : NormalPrecision, D);
 			var ps = list.Base;
 			Bone = ps.Value;
 			if (IsRoundM) {

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.DirectoryServices;
 using System.Linq;
 using System.Runtime.Intrinsics.Arm;
@@ -1823,47 +1824,228 @@ namespace Wholemy {
 				P.AddItem(a3);
 			}
 			#endregion
-			public bool AddA(PathSource P) {
+			#region #method# NormalAddA(P) 
+			public bool NormalAddA(PathSource P) {
+				var Size = P.Thickness / 2.0;
 				var DIV = 0.5;
 				var TES = this;
 				Cubic NOW;
 				Cubic RAM;
+				Cubic SET = null;
 				DIV = 0.5;
-				TESNEXTA:
-				if (!TES.TesAddA(P)) {
-					NOWNEXTA:
+				NEXT:
+				if (TES.NormalExtA(Size, ref SET)) {
+					P.AddItem(SET);
+				} else {
+					LESS:
 					TES.Div(DIV, out NOW, out RAM);
-					if (NOW.TesAddA(P)) {
+					if (NOW.NormalExtA(Size, ref SET)) {
+						P.AddItem(SET);
 						TES = RAM;
 						DIV = 0.5;
-						goto TESNEXTA;
+						goto NEXT;
 					} else {
 						DIV /= 2.0;
-						if (DIV > 0) goto NOWNEXTA;
+						if (DIV > 0) goto LESS;
 					}
 				}
 				return false;
 			}
-			public bool AddB(PathSource P) {
+			#endregion
+			#region #method# NormalAddB(P) 
+			public bool NormalAddB(PathSource P) {
+				var Size = P.Thickness / 2.0;
 				var TES = this;
 				var DIV = 0.5;
 				Cubic NOW;
 				Cubic RAM;
-				TESNEXTB:
-				if (!TES.TesAddB(P)) {
-					NOWNEXTB:
+				Cubic SET = null;
+				NEXT:
+				if (TES.NormalExtB(Size, ref SET)) {
+					P.AddItem(SET);
+				} else {
+					LESS:
 					TES.Div(1.0 - DIV, out RAM, out NOW);
-					if (NOW.TesAddB(P)) {
+					if (NOW.NormalExtB(Size, ref SET)) {
+						P.AddItem(SET);
 						TES = RAM;
 						DIV = 0.5;
-						goto TESNEXTB;
+						goto NEXT;
 					} else {
 						DIV /= 2.0;
-						if (DIV > 0) goto NOWNEXTB;
+						if (DIV > 0) goto LESS;
 					}
 				}
 				return false;
 			}
+			#endregion
+			#region #method# NormalExtA(S, R) 
+			public bool NormalExtA(double S, ref Cubic R) {
+				if (this.Ext(S, out var Item)) {
+					this.Div(0.5, out var BA, out var BB);
+					Item.Div(0.5, out var AA, out var AB);
+					if (BB.Ext(S, out var B)) {
+						var cmcL = Mat.Sqrt(AB.MX - B.MX, AB.MY - B.MY);
+						if (cmcL < 0.5) {
+							R = Item;
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+			#endregion
+			#region #method# NormalExtB(S, R) 
+			public bool NormalExtB(double S, ref Cubic R) {
+				if (this.Ext(S, out var Item, true)) {
+					this.Div(0.5, out var RA, out var RB);
+					Item.Div(0.5, out var BA, out var BB);
+					if (RB.Ext(S, out var B, true)) {
+						var cecL = Mat.Sqrt(BA.EX - B.EX, BA.EY - B.EY);
+						if (cecL < 0.5) {
+							R = Item;
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+			#endregion
+			#region #method# IdealAddA(P) 
+			public bool IdealAddA(PathSource P) {
+				var Size = P.Thickness / 2.0;
+				var DIV = 0.5;
+				var TES = this;
+				Cubic NOW;
+				Cubic RAM;
+				Cubic PRENOW;
+				Cubic PRERAM;
+				var PREDIV = 0.0;
+				Cubic PRESET = null;
+				Cubic PRETES = null;
+				Cubic SET = null;
+				Cubic NEWSET = null;
+				DIV = 0.5;
+				NEXT:
+				if (TES.IdealExtA(Size, ref SET)) {
+					if (PRETES != null)
+						P.AddItem(PRESET);
+					P.AddItem(SET);
+				} else {
+					LESS:
+					TES.Div(DIV, out NOW, out RAM);
+					if (NOW.IdealExtA(Size, ref SET)) {
+						if (PRETES != null) {
+							var NEWDIV = PREDIV + (1.0 - PREDIV) * DIV;
+							PRETES.Div(NEWDIV, out PRENOW, out PRERAM);
+							if (PRENOW.IdealExtA(Size, ref NEWSET)) {
+								PREDIV = NEWDIV;
+								PRESET = NEWSET;
+							} else {
+								P.AddItem(PRESET);
+								PRETES = TES;
+								PREDIV = DIV;
+								PRESET = SET;
+							}
+						} else {
+							PRETES = TES;
+							PREDIV = DIV;
+							PRESET = SET;
+						}
+						TES = RAM;
+						DIV = 0.5;
+						goto NEXT;
+					} else {
+						DIV /= 2.0;
+						if (DIV > 0) goto LESS;
+					}
+				}
+				return false;
+			}
+			#endregion
+			#region #method# IdealAddB(P) 
+			public bool IdealAddB(PathSource P) {
+				var Size = P.Thickness / 2.0;
+				var TES = this;
+				var DIV = 0.5;
+				Cubic NOW;
+				Cubic RAM;
+				Cubic PRENOW;
+				Cubic PRERAM;
+				var PREDIV = 0.0;
+				Cubic PRESET = null;
+				Cubic PRETES = null;
+				Cubic SET = null;
+				Cubic NEWSET = null;
+				NEXT:
+				if (TES.IdealExtB(Size, ref SET)) {
+					if (PRETES != null)
+						P.AddItem(PRESET);
+					P.AddItem(SET);
+				} else {
+					LESS:
+					TES.Div(1.0 - DIV, out RAM, out NOW);
+					if (NOW.IdealExtB(Size, ref SET)) {
+						if (PRETES != null) {
+							var NEWDIV = PREDIV + (1.0 - PREDIV) * DIV;
+							PRETES.Div(1.0 - NEWDIV, out PRERAM, out PRENOW);
+							if (PRENOW.IdealExtB(Size, ref NEWSET)) {
+								PREDIV = NEWDIV;
+								PRESET = NEWSET;
+							} else {
+								P.AddItem(PRESET);
+								PRETES = TES;
+								PREDIV = DIV;
+								PRESET = SET;
+							}
+						} else {
+							PRETES = TES;
+							PREDIV = DIV;
+							PRESET = SET;
+						}
+						TES = RAM;
+						DIV = 0.5;
+						goto NEXT;
+					} else {
+						DIV /= 2.0;
+						if (DIV > 0) goto LESS;
+					}
+				}
+				return false;
+			}
+			#endregion
+			#region #method# IdealExtA(S, R) 
+			public bool IdealExtA(double S, ref Cubic R) {
+				if (this.Ext(S, out var Item)) {
+					this.Div(0.5, out var BA, out var BB);
+					Item.Div(0.5, out var AA, out var AB);
+					if (BB.Ext(S, out var B)) {
+						var cmcL = Mat.Sqrt(AB.MX - B.MX, AB.MY - B.MY);
+						if (cmcL < 0.005) {
+							R = Item;
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+			#endregion
+			#region #method# IdealExtB(S, R) 
+			public bool IdealExtB(double S, ref Cubic R) {
+				if (this.Ext(S, out var Item, true)) {
+					this.Div(0.5, out var RA, out var RB);
+					Item.Div(0.5, out var BA, out var BB);
+					if (RB.Ext(S, out var B, true)) {
+						var cecL = Mat.Sqrt(BA.EX - B.EX, BA.EY - B.EY);
+						if (cecL < 0.005) {
+							R = Item;
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+			#endregion
 			#region #method# TesAddA(P) 
 			public bool TesAddA(PathSource P) {
 				var S = P.Thickness / 2;
@@ -2678,7 +2860,6 @@ namespace Wholemy {
 			var RootE = this.RootE; this.RootE = null;
 			var Bone = new Line(x0, y0, x1, y1).ToArcC().CutedCubic(RootM, RootE);
 			if (IsBonesUse) AddBone(Bone);
-			double POS = 0.0;
 			var list = Bone.ExtTes(D);
 			var ps = list.Base;
 			Bone = ps.Value;
@@ -2689,10 +2870,10 @@ namespace Wholemy {
 			while (ps != null) {
 				Bone = ps.Value;
 				ps = ps.Next;
-				Bone.AddA(this);
+				Bone.NormalAddA(this);
 				if (ps == null && IsRoundE)
 					Bone.AddArcE(this);
-				Bone.AddB(this);
+				Bone.NormalAddB(this);
 				if (ps != null) Union();
 			}
 		}
@@ -3421,10 +3602,10 @@ namespace Wholemy {
 			while (ps != null) {
 				Bone = ps.Value;
 				ps = ps.Next;
-				Bone.AddA(this);
+				Bone.NormalAddA(this);
 				if (ps == null && IsRoundE)
 					Bone.AddArcE(this);
-				Bone.AddB(this);
+				Bone.NormalAddB(this);
 				if (ps != null) Union();
 			}
 		}

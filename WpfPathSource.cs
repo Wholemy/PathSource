@@ -1,5 +1,61 @@
+using System;
+using static Wholemy.Pomax;
+
 namespace Wholemy {
 	public class PathSource {
+		public static double[] ForDivRoots(double[] Roots) {
+			if (Roots != null) {
+				var L = Roots.Length;
+				var R = new double[L];
+				var I = 0;
+				var P = 0.0;
+				while (I < L) {
+					var A = Roots[I];
+					var S = (A - P) / (1.0 - P);
+					R[I] = S;
+					P = A;
+					I++;
+				}
+				return R;
+			}
+			return null;
+		}
+		public static double[] AddRoots(double A, double[] Roots = null) {
+			if (double.IsNaN(A) || A <= 0.0 || A >= 1.0) return Roots;
+			if (Roots == null) Roots = new double[] { A };
+			var L = Roots.Length;
+			var I = 0;
+			var R = 0;
+			if (L == 0) Roots = new double[] { A };
+			while (I < L) {
+				var B = Roots[I];
+				if (A == B) return Roots;
+				if (B < A) { R = I + 1; } else { break; }
+				I++;
+			}
+			var NewRoots = new double[L + 1];
+			if (R > 0) Array.Copy(Roots, NewRoots, R);
+			NewRoots[I] = A;
+			if (I < L) Array.Copy(Roots, I, NewRoots, I + 1, L - I);
+			return NewRoots;
+		}
+		public static double[] AddRoots(double A, double B, double C, double[] Roots = null) {
+			var D = A - 2.0 * B + C;
+			if (D != 0.0) {
+				var m1 = -System.Math.Sqrt(B * B - A * C);
+				var m2 = -A + B;
+				var v1 = -(m1 + m2) / D;
+				var v2 = -(-m1 + m2) / D;
+				Roots = AddRoots(v1, Roots);
+				Roots = AddRoots(v2, Roots);
+			} else if (B != C && D == 0.0)
+				Roots = AddRoots((2.0 * B - C) / (2.0 * (B - C)), Roots);
+			return Roots;
+		}
+		public static double[] AddRoots(double A, double B, double[] Roots = null) {
+			if (A != B) Roots = AddRoots(A / (A - B), Roots);
+			return Roots;
+		}
 		#region #class# Lot 
 		public class Lot {
 			public int Fl;
@@ -2081,6 +2137,78 @@ namespace Wholemy {
 				return true;
 			}
 			#endregion
+			#region #method# TesReturn(Size, PA, PB, Reset) 
+			public bool TesReturn(double Size, ref Cubic PA, ref Cubic PB, out bool Reset) {
+				Reset = false;
+				if (this.Ext(Size, out var A, out var B)) {
+					this.Div(0.5, out var RA, out var T);
+					if (T.Ext(Size, out var TA, out var TB)) {
+						A.Div(0.5, out var AA, out var AB);
+						B.Div(0.5, out var BA, out var BB);
+						var AL = Mat.Sqrt(AB.MX - TA.MX, AB.MY - TA.MY);
+						var BL = Mat.Sqrt(BA.EX - TB.EX, BA.EY - TB.EY);
+						if (AL < 0.5 && BL < 0.5) {
+							if (PA != null && PB != null) {
+								var Aa = Mat.GetA1(PA.EX, PA.EY, PA.MX, PA.MY, A.EX, A.EY);
+								var Bb = Mat.GetA1(PB.MX, PB.MY, PB.EX, PB.EY, B.MX, B.MY);
+								if (Aa < 0.0) Aa += 1.0;
+								if ((Aa < 0.25) || (Aa > 0.75)) Reset = true;
+								if (Bb < 0.0) Bb += 1.0;
+								if ((Bb < 0.25) || (Bb > 0.75)) Reset = true;
+							}
+							PA = A;
+							PB = B;
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+			#endregion
+			#region #method# ExtReturn(Size, Pos) 
+			private bool ExtReturn(double Size, out double Pos) {
+				var DIV = 0.5;
+				var POS = 0.0;
+				var TES = this;
+				var Reset = false;
+				Cubic NOW;
+				Cubic RAM;
+				Cubic PA = null;
+				Cubic PB = null;
+				RTES:
+				if (TES.TesReturn(Size, ref PA, ref PB, out Reset)) {
+					POS = 1.0;
+				} else {
+					NEXT:
+					TES.Div(DIV, out NOW, out RAM);
+					if (NOW.TesReturn(Size, ref PA, ref PB, out Reset)) {
+						TES = RAM;
+						if (Reset) { Pos = POS; return true; }
+						POS += (1.0 - POS) * DIV;
+						DIV = 0.5;
+						goto RTES;
+					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
+				}
+				Pos = POS;
+				return false;
+			}
+			#endregion
+			#region #method# ReturnRoots(Size, Roots) 
+			public double[] ReturnRoots(double Size, double[] Roots = null) {
+				var P = 0.0;
+				var R = 0.0;
+				var S = 0.0;
+				var V = this;
+				while (V.ExtReturn(Size, out P)) {
+					V.Div(P, out V, out var Next);
+					S = (1.0 - R) * P;
+					R += S;
+					Roots = AddRoots(R, Roots);
+					V = Next;
+				}
+				return Roots;
+			}
+			#endregion
 			#region #method# TesArc(Size, PA, PB, Reset) 
 			public bool TesArc(double Size, ref Cubic PA, ref Cubic PB, out bool Reset) {
 				var Need = 0.005 * Size;
@@ -2291,6 +2419,150 @@ namespace Wholemy {
 				P.AddItem(new Line(AX, AY, BX, BY));
 			}
 			#endregion
+			public double[] ExtremaFull {
+				get {
+					var MX = this.MX;
+					var MY = this.MY;
+					var cmX = this.cmX;
+					var cmY = this.cmY;
+					var ceX = this.ceX;
+					var ceY = this.ceY;
+					var EX = this.EX;
+					var EY = this.EY;
+					var l0X = cmX - MX;
+					var l0Y = cmY - MY;
+					var l1X = ceX - cmX;
+					var l1Y = ceY - cmY;
+					var l2X = EX - ceX;
+					var l2Y = EY - ceY;
+					double[] roots = null;
+					var L0 = Mat.Sqrt(l0X, l0Y);
+					var L2 = Mat.Sqrt(l2X, l2Y);
+					if (L0 != 0.0 && L2 != 0.0) {
+						roots = AddRoots(l0X * 3, l1X * 3, l2X * 3, roots);
+						roots = AddRoots(l0Y * 3, l1Y * 3, l2Y * 3, roots);
+					}
+					var L1 = Mat.Sqrt(l1X, l1Y);
+					if (L1 != 0) {
+						if (L0 != 0.0) {
+							roots = AddRoots(l0X * 2, l1X * 2, roots);
+							roots = AddRoots(l0Y * 2, l1Y * 2, roots);
+						}
+						if (L2 != 0.0) {
+							roots = AddRoots(l1X * 2, l2X * 2, roots);
+							roots = AddRoots(l1Y * 2, l2Y * 2, roots);
+						}
+					}
+					return roots;
+				}
+			}
+			public double[] ExtremaOnce {
+				get {
+					var MX = this.MX;
+					var MY = this.MY;
+					var cmX = this.cmX;
+					var cmY = this.cmY;
+					var ceX = this.ceX;
+					var ceY = this.ceY;
+					var EX = this.EX;
+					var EY = this.EY;
+					var l0X = cmX - MX;
+					var l0Y = cmY - MY;
+					var l1X = ceX - cmX;
+					var l1Y = ceY - cmY;
+					var l2X = EX - ceX;
+					var l2Y = EY - ceY;
+					double[] roots = null;
+					var L0 = Mat.Sqrt(l0X, l0Y);
+					var L2 = Mat.Sqrt(l2X, l2Y);
+					if (L0 != 0.0 && L2 != 0.0) {
+						roots = AddRoots(l0X * 3, l1X * 3, l2X * 3, roots);
+						roots = AddRoots(l0Y * 3, l1Y * 3, l2Y * 3, roots);
+					} else {
+						var L1 = Mat.Sqrt(l1X, l1Y);
+						if (L1 != 0) {
+							if (L0 != 0.0) {
+								roots = AddRoots(l0X * 2, l1X * 2, roots);
+								roots = AddRoots(l0Y * 2, l1Y * 2, roots);
+							}
+							if (L2 != 0.0) {
+								roots = AddRoots(l1X * 2, l2X * 2, roots);
+								roots = AddRoots(l1Y * 2, l2Y * 2, roots);
+							}
+						}
+					}
+					return roots;
+				}
+			}
+			public double[] ExtremaRoots(double[] Roots = null) {
+				var MX = this.MX;
+				var MY = this.MY;
+				var cmX = this.cmX;
+				var cmY = this.cmY;
+				var ceX = this.ceX;
+				var ceY = this.ceY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var l0X = cmX - MX;
+				var l0Y = cmY - MY;
+				var l1X = ceX - cmX;
+				var l1Y = ceY - cmY;
+				var l2X = EX - ceX;
+				var l2Y = EY - ceY;
+				var L0 = Mat.Sqrt(l0X, l0Y);
+				var L2 = Mat.Sqrt(l2X, l2Y);
+				if (L0 != 0.0 && L2 != 0.0) {
+					Roots = AddRoots(l0X * 3, l1X * 3, l2X * 3, Roots);
+					Roots = AddRoots(l0Y * 3, l1Y * 3, l2Y * 3, Roots);
+				} else {
+					var L1 = Mat.Sqrt(l1X, l1Y);
+					if (L1 != 0) {
+						if (L0 != 0.0) {
+							Roots = AddRoots(l0X * 2, l1X * 2, Roots);
+							Roots = AddRoots(l0Y * 2, l1Y * 2, Roots);
+						}
+						if (L2 != 0.0) {
+							Roots = AddRoots(l1X * 2, l2X * 2, Roots);
+							Roots = AddRoots(l1Y * 2, l2Y * 2, Roots);
+						}
+					}
+				}
+				return Roots;
+			}
+			public double[] ExtremaOnceA {
+				get {
+					var Extrema = this.ExtremaOnce;
+					if (Extrema != null) {
+						var L = Extrema.Length;
+						var I = 0;
+						var P = 0.0;
+						while (I < L) {
+							var A = Extrema[I];
+							Extrema[I] = A - P;
+							P = A;
+							I++;
+						}
+					}
+					return Extrema;
+				}
+			}
+			public double[] ExtremaFullA {
+				get {
+					var Extrema = this.ExtremaFull;
+					if (Extrema != null) {
+						var L = Extrema.Length;
+						var I = 0;
+						var P = 0.0;
+						while (I < L) {
+							var A = Extrema[I];
+							Extrema[I] = A - P;
+							P = A;
+							I++;
+						}
+					}
+					return Extrema;
+				}
+			}
 		}
 		#endregion
 		#region #class# Quadratic 
@@ -3314,7 +3586,7 @@ namespace Wholemy {
 		#endregion
 		#region #method# AddCubicT(x0, y0, x1, y1, x2, y2, x3, y3) 
 		public void AddCubicT(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) {
-			var D = this.Thickness / 2;
+			var Size = this.Thickness / 2;
 			var IsRoundM = this.IsRoundM;
 			var IsRoundE = this.IsRoundE;
 			var RootM = this.RootM; this.RootM = null;
@@ -3323,23 +3595,25 @@ namespace Wholemy {
 			if (IsBonesUse) { AddBone(Bone); }
 			var Ideal = this.Ideal;
 
-			var P = Bone.ExtTes(D).Base;
-			Bone = P.Value;
 			if (IsRoundM) Bone.AddArcM(this);
-			if (P != null) {
-				while (P != null) {
-					Bone = P.Value;
-					P = P.Next;
-					if (Ideal) { Bone.IdealAddA(this); } else { Bone.NormalAddA(this); }
-					if ((Ideal || P == null) && IsRoundE)
-						Bone.AddArcE(this);
-					if (Ideal) { Bone.IdealAddB(this); } else { Bone.NormalAddB(this); }
-					if (P != null) Union();
-				}
-			} else {
-				if (IsRoundE)
-					Bone.AddArcE(this);
+			var Roots = new double[0];
+			Roots = Bone.ReturnRoots(Size, Roots);
+			Roots = Bone.ExtremaRoots(Roots);
+			Roots = AddRoots(0.5, Roots);
+			Roots = ForDivRoots(Roots);
+			Cubic NOW;
+			Cubic RAM = Bone;
+			var L = Roots.Length;
+			for (var I = 0; I < L; I++) {
+				RAM.Div(Roots[I], out NOW, out RAM);
+				NOW.NormalAddA(this);
+				NOW.NormalAddB(this);
+				Union();
 			}
+			RAM.NormalAddA(this);
+			if (IsRoundE)
+				Bone.AddArcE(this);
+			RAM.NormalAddB(this);
 		}
 		#endregion
 		#region #class# List 

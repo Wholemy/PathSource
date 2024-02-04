@@ -1,12 +1,15 @@
 namespace Wholemy {
 	public class PathSource {
+		#region #static# #method#  In(X0, Y0, X1, Y1, X2, Y2) 
 		public static bool In(double X0, double Y0, double X1, double Y1, double X2, double Y2) {
 			var l01 = Mat.Sqrt(X0 - X1, Y0 - Y1);
 			var l02 = Mat.Sqrt(X0 - X2, Y0 - Y2);
 			var X = X0 + (X1 - X0) / l01 * l02;
 			var Y = Y0 + (Y1 - Y0) / l01 * l02;
-			return (X2 - X < 0.00000000001 && Y2 - Y < 0.00000000001);
+			return (X2 - X < 0.000000001 && Y2 - Y < 0.000000001);
 		}
+		#endregion
+		#region #static# #method# Inline(X0, Y0, X1, Y1, X2, Y2) 
 		public static bool Inline(double X0, double Y0, double X1, double Y1, double X2, double Y2) {
 			if ((X0 < X1 && X1 < X2) || (Y0 < Y1 && Y1 < Y2))
 				return In(X0, Y0, X1, Y1, X2, Y2);
@@ -22,6 +25,8 @@ namespace Wholemy {
 				return In(X0, Y0, X2, Y2, X1, Y1);
 			return false;
 		}
+		#endregion
+		#region #static# #method# ForDivRoots(Roots) 
 		public static double[] ForDivRoots(double[] Roots) {
 			if (Roots != null) {
 				var L = Roots.Length;
@@ -39,17 +44,8 @@ namespace Wholemy {
 			}
 			return null;
 		}
-		public static int IndexRoots(double R, double[] Roots) {
-			if (Roots != null) {
-				var L = Roots.Length;
-				var I = 0;
-				while (I < L) {
-					if (Roots[I] == R) return I;
-					I++;
-				}
-			}
-			return -1;
-		}
+		#endregion
+		#region #static# #method# AddRoots(A, Roots) 
 		public static double[] AddRoots(double A, double[] Roots = null) {
 			if (double.IsNaN(A) || A <= 0.0 || A >= 1.0) return Roots;
 			if (Roots == null) Roots = new double[] { A };
@@ -69,6 +65,8 @@ namespace Wholemy {
 			if (I < L) System.Array.Copy(Roots, I, NewRoots, I + 1, L - I);
 			return NewRoots;
 		}
+		#endregion
+		#region #static# #method# AddRoots 
 		public static double[] AddRoots(double A, double B, double C, double[] Roots = null) {
 			var D = A - 2.0 * B + C;
 			if (D != 0.0) {
@@ -86,6 +84,7 @@ namespace Wholemy {
 			if (A != B) Roots = AddRoots(A / (A - B), Roots);
 			return Roots;
 		}
+		#endregion
 		#region #class# Lot 
 		public class Lot {
 			public int Fl;
@@ -381,6 +380,8 @@ namespace Wholemy {
 		/// <summary>Истинное значение устанавливает точность 0.005 при обнаружении разворотов в кривых,
 		/// а так же добавляет излишние операции для нормальной точности, которая эквивалентна значению 0.5)</summary>
 		public bool Ideal;
+		public const double IdealPrecision = 0.005;
+		public const double NormalPrecision = 0.5;
 		#region #property# Figures 
 		private Figure[] Figures {
 			#region #through# 
@@ -1917,6 +1918,7 @@ namespace Wholemy {
 				var TES = this;
 				Cubic NOW;
 				Cubic RAM;
+				
 				Cubic SET = null;
 				DIV = 0.5;
 				NEXT:
@@ -1940,6 +1942,7 @@ namespace Wholemy {
 			#endregion
 			#region #method# NormalAddB(P) 
 			public bool NormalAddB(PathSource P) {
+				//return NorAddB(P);
 				var Size = P.Thickness / 2.0;
 				var S = 0.05 * Size;
 				if (S < 0.0005) S = 0.0005; else if (S > 0.5) S = 0.5;
@@ -2168,6 +2171,8 @@ namespace Wholemy {
 			#region #method# TesReturn(Size, PA, PB, Reset) 
 			public bool TesReturn(double Size, ref Cubic PA, ref Cubic PB, out bool Reset) {
 				Reset = false;
+				var S = 0.05 * Size;
+				if (S < 0.005) S = 0.005; //else if (S > 0.5) S = 0.5;
 				if (this.Ext(Size, out var A, out var B)) {
 					this.Div(0.5, out var RA, out var T);
 					if (T.Ext(Size, out var TA, out var TB)) {
@@ -2175,7 +2180,7 @@ namespace Wholemy {
 						B.Div(0.5, out var BA, out var BB);
 						var AL = Mat.Sqrt(AB.MX - TA.MX, AB.MY - TA.MY);
 						var BL = Mat.Sqrt(BA.EX - TB.EX, BA.EY - TB.EY);
-						if (AL < 0.5 && BL < 0.5) {
+						if (AL < S && BL < S) {
 							if (PA != null && PB != null) {
 								var Aa = Mat.GetA1(PA.EX, PA.EY, PA.MX, PA.MY, A.EX, A.EY);
 								var Bb = Mat.GetA1(PB.MX, PB.MY, PB.EX, PB.EY, B.MX, B.MY);
@@ -2213,8 +2218,34 @@ namespace Wholemy {
 					TES.Div(DIV, out NOW, out RAM);
 					if (NOW.TesReturn(Size, ref PA, ref PB, out Reset)) {
 						TES = RAM;
+						POS += (1.0 - POS) * DIV; // Если ниже возвращения возникает отсечение
 						if (Reset) { Pos = POS; return true; }
-						POS += (1.0 - POS) * DIV;
+						DIV = 0.5;
+						goto RTES;
+					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
+				}
+				Pos = POS;
+				return false;
+			}
+			#endregion
+			#region #method# ExtReturn(Size, Pos, PA, PB) 
+			private bool ExtReturn(double Size, out double Pos, ref Cubic PA, ref Cubic PB) {
+				var DIV = 0.5;
+				var POS = 0.0;
+				var TES = this;
+				var Reset = false;
+				Cubic NOW;
+				Cubic RAM;
+				RTES:
+				if (TES.TesReturn(Size, ref PA, ref PB, out Reset)) {
+					POS = 1.0;
+				} else {
+					NEXT:
+					TES.Div(DIV, out NOW, out RAM);
+					if (NOW.TesReturn(Size, ref PA, ref PB, out Reset)) {
+						TES = RAM;
+						POS += (1.0 - POS) * DIV; // Если ниже возвращения возникает отсечение
+						if (Reset) { Pos = POS; return true; }
 						DIV = 0.5;
 						goto RTES;
 					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
@@ -2224,6 +2255,10 @@ namespace Wholemy {
 			}
 			#endregion
 			#region #method# ReturnRoots(Size, Roots) 
+			/// <summary>Возвращает массив корней разворотов кубической кривой)</summary>
+			/// <param name="Size">Толщина линии кривой, для которой вычисляются развороты)</param>
+			/// <param name="Roots">Исходный массив корней, как правило результат метода Extrema)</param>
+			/// <returns>Возвращаемый массив корней)</returns>
 			public double[] ReturnRoots(double Size, double[] Roots = null) {
 				var P = 0.0;
 				var R = 0.0;
@@ -2239,96 +2274,50 @@ namespace Wholemy {
 				return Roots;
 			}
 			#endregion
-			#region #method# TesArc(Size, PA, PB, Reset) 
-			public bool TesArc(double Size, ref Cubic PA, ref Cubic PB, out bool Reset) {
-				var Need = 0.005 * Size;
-				if (Need < 0.0005) Need = 0.0005; else if (Need > 0.5) Need = 0.5;
-				Reset = false;
-				if (this.Ext(Size, out var A, out var B)) {
-					this.Div(0.5, out var RA, out var T);
-					if (T.Ext(Size, out var TA, out var TB)) {
-						A.Div(0.5, out var AA, out var AB);
-						B.Div(0.5, out var BA, out var BB);
-						var AL = Mat.Sqrt(AB.MX - TA.MX, AB.MY - TA.MY);
-						var BL = Mat.Sqrt(BA.EX - TB.EX, BA.EY - TB.EY);
-						if (AL < Need && BL < Need) {
-							if (PA != null && PB != null) {
-								var Aa = Mat.GetA1(PA.EX, PA.EY, PA.MX, PA.MY, A.EX, A.EY);
-								var Bb = Mat.GetA1(PB.MX, PB.MY, PB.EX, PB.EY, B.MX, B.MY);
-								var S = Size * 0.05;
-								if (S > 0.05) S = 0.05; if (S < 0.005) S = 0.005;
-								var Min = 0.5 - S;
-								var Max = 0.5 + S;
-								if (Aa < 0.0) Aa += 1.0;
-								if (Aa >= Min && Aa <= Max) Reset = true;
-								if (Bb < 0.0) Bb += 1.0;
-								if (Bb >= Min && Bb <= Max) Reset = true;
-							}
-							PA = A;
-							PB = B;
-							return true;
-						}
-					}
-				}
-				return false;
-			}
-			#endregion
-			#region #private# #method# ExtTes(Size, #out# Pos) 
-			private bool ExtTes(double Size, out double Pos) {
-				var DIV = 0.5;
-				var POS = 0.0;
-				var TES = this;
-				var Reset = false;
-				Cubic NOW;
-				Cubic RAM;
-				Cubic PA = null;
-				Cubic PB = null;
-				RTES:
-				if (TES.TesArc(Size, ref PA, ref PB, out Reset)) {
-					POS = 1.0;
-				} else {
-					NEXT:
-					TES.Div(DIV, out NOW, out RAM);
-					if (NOW.TesArc(Size, ref PA, ref PB, out Reset)) {
-						TES = RAM;
-						if (Reset) { Pos = POS; return true; }
-						POS += (1.0 - POS) * DIV;
-						DIV = 0.5;
-						goto RTES;
-					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
-				}
-				Pos = POS;
-				return false;
-			}
-			#endregion
-			#region #method# ExtTes(Size) 
-			public List<Cubic> ExtTes(double Size) {
-				var L = new List<Cubic>();
+			#region #method# ReturnInRoots(Size, Roots) 
+			/// <summary>Возвращает массив корней разворотов кубической кривой, использует корни)</summary>
+			/// <param name="Size">Толщина линии кривой, для которой вычисляются развороты)</param>
+			/// <param name="Roots">Исходный массив корней, как правило результат метода Extrema)</param>
+			/// <returns>Возвращаемый массив корней)</returns>
+			public double[] ReturnInRoots(double Size, double[] Roots = null) {
 				var P = 0.0;
 				var R = 0.0;
 				var S = 0.0;
-				var V = this;
-				List<Cubic>.Item U;
-				while (V.ExtTes(Size, out P)) {
-					V.Div(P, out V, out var Next);
-					S = (1.0 - R) * P;
-					U = L.Add(V, R, S);
-					if (R < 0.5 && R + S > 0.5) {
-						P = (0.5 - R) * S;
-						U.Value.Div(P, out var A, out var B);
-						U.Add(A, P, B);
+				var roots = ForDivRoots(Roots);
+				var RAM = this;
+				Cubic NOW;
+				Cubic AP = null;
+				Cubic BP = null;
+				if (roots != null) {
+					var L = roots.Length;
+					if (L > 0) {
+						var I = 0;
+						var r = roots[I];
+						while (I < L) {
+							r = roots[I];
+							RAM.Div(r, out NOW, out RAM);
+							while (NOW.ExtReturn(Size, out P, ref AP, ref BP)) {
+								NOW.Div(P, out NOW, out var NEX);
+								S = (1.0 - R) * (r * P);
+								R += S;
+								Roots = AddRoots(R, Roots);
+								NOW = NEX;
+							}
+							S = (1.0 - R) * r;
+							R += S;
+							I++;
+						}
 					}
-					V = Next;
+				}
+				NOW = RAM;
+				while (NOW.ExtReturn(Size, out P, ref AP, ref BP)) {
+					NOW.Div(P, out NOW, out var NEX);
+					S = (1.0 - R) * P;
 					R += S;
+					Roots = AddRoots(R, Roots);
+					NOW = NEX;
 				}
-				S = 1.0 - R;
-				U = L.Add(V, R, S);
-				if (R < 0.5 && R + S > 0.5) {
-					P = (0.5 - R) * S;
-					U.Value.Div(P, out var A, out var B);
-					U.Add(A, P, B);
-				}
-				return L;
+				return Roots;
 			}
 			#endregion
 			#region #method# AddArcE(P) 
@@ -2447,8 +2436,11 @@ namespace Wholemy {
 				P.AddItem(new Line(AX, AY, BX, BY));
 			}
 			#endregion
-			#region #method# ExtremaRoots(Roots) 
-			public double[] ExtremaRoots(double[] Roots = null) {
+			#region #method# Extrema(Roots) 
+			/// <summary>Возвращает массив корней кубической кривой)</summary>
+			/// <param name="Roots">Исходный массив корней, как правило нулевой)</param>
+			/// <returns>Возвращаемый массив корней)</returns>
+			public double[] Extrema(double[] Roots = null) {
 				var MX = this.MX;
 				var MY = this.MY;
 				var cmX = this.cmX;
@@ -2474,6 +2466,8 @@ namespace Wholemy {
 				return Roots;
 			}
 			#endregion
+			#region #property# Linear 
+			/// <summary>Возвращает линейность кубической кривой)</summary>
 			public bool Linear {
 				get {
 					var lMcm = Mat.Sqrt(cmX - MX, cmY - MY);
@@ -2490,6 +2484,7 @@ namespace Wholemy {
 					return false;
 				}
 			}
+			#endregion
 		}
 		#endregion
 		#region #class# Quadratic 
@@ -3523,8 +3518,8 @@ namespace Wholemy {
 			var Ideal = this.Ideal;
 
 			var Roots = new double[0];
-			Roots = Bone.ExtremaRoots(Roots);
-			Roots = Bone.ReturnRoots(Size, Roots);
+			Roots = Bone.Extrema(Roots);
+			Roots = Bone.ReturnInRoots(Size, Roots);
 			Cubic NOW;
 			Cubic RAM = Bone;
 			Roots = AddRoots(0.5, Roots);

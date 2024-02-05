@@ -7,30 +7,21 @@ namespace Wholemy {
 			EY = MY + (EY - MY) / L * Value;
 			return Value;
 		}
-		#region #static# #method#  In(X0, Y0, X1, Y1, X2, Y2) 
-		public static bool In(double X0, double Y0, double X1, double Y1, double X2, double Y2) {
-			var l01 = Mat.Sqrt(X0 - X1, Y0 - Y1);
-			var l02 = Mat.Sqrt(X0 - X2, Y0 - Y2);
-			var X = X0 + (X1 - X0) / l01 * l02;
-			var Y = Y0 + (Y1 - Y0) / l01 * l02;
-			return (X2 - X < 0.000000001 && Y2 - Y < 0.000000001);
-		}
-		#endregion
 		#region #static# #method# Inline(X0, Y0, X1, Y1, X2, Y2) 
 		public static bool Inline(double X0, double Y0, double X1, double Y1, double X2, double Y2) {
-			if ((X0 < X1 && X1 < X2) || (Y0 < Y1 && Y1 < Y2))
-				return In(X0, Y0, X1, Y1, X2, Y2);
-			if ((X2 < X1 && X1 < X0) || (Y2 < Y1 && Y1 < Y0))
-				return In(X2, Y2, X1, Y1, X0, Y0);
-			if ((X1 < X0 && X0 < X2) || (Y1 < Y0 && Y0 < Y2))
-				return In(X1, Y1, X0, Y0, X2, Y2);
-			if ((X2 < X0 && X0 < X1) || (Y2 < Y0 && Y0 < Y1))
-				return In(X2, Y2, X0, Y0, X1, Y1);
-			if ((X1 < X2 && X2 < X0) || (Y1 < Y2 && Y2 < Y0))
-				return In(X1, Y1, X2, Y2, X0, Y0);
-			if ((X0 < X2 && X2 < X1) || (Y0 < Y2 && Y2 < Y1))
-				return In(X0, Y0, X2, Y2, X1, Y1);
-			return false;
+			var l01 = Mat.Sqrt(X0 - X1, Y0 - Y1);
+			var l02 = Mat.Sqrt(X0 - X2, Y0 - Y2);
+			var l12 = Mat.Sqrt(X1 - X2, Y1 - Y2);
+			var R = 1.0;
+			if (l01 >= l02 && l01 >= l12) { R = l01 - (l02 + l12); }
+			if (l02 >= l01 && l02 >= l12) { R = l02 - (l01 + l12); }
+			if (l12 >= l01 && l12 >= l02) { R = l12 - (l01 + l02); }
+			return R > -0.000001 && R < 0.000001;
+		}
+		#endregion
+		#region #static# #method# Inline(X0, Y0, X1, Y1, X2, Y2, X3, Y3) 
+		public static bool Inline(double X0, double Y0, double X1, double Y1, double X2, double Y2, double X3, double Y3) {
+			return Inline(X0, Y0, X1, Y1, X2, Y2) && Inline(X1, Y1, X2, Y2, X3, Y3);
 		}
 		#endregion
 		#region #static# #method# ForDivRoots(Roots) 
@@ -2419,7 +2410,7 @@ namespace Wholemy {
 					var lMcm = Mat.Sqrt(cmX - MX, cmY - MY);
 					var lEce = Mat.Sqrt(EX - ceX, EY - ceY);
 					if (lMcm != 0.0 && lEce != 0.0) {
-						return Inline(MX, MY, cmX, cmY, ceX, ceY) && Inline(EX, EY, ceX, ceY, cmX, cmY);
+						return Inline(MX, MY, cmX, cmY, ceX, ceY, EX, EY);
 					} else {
 						if (lMcm > 0.0) {
 							return Inline(MX, MY, cmX, cmY, EX, EY);

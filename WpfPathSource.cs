@@ -76,9 +76,10 @@ namespace Wholemy {
 					Roots = AddRoots(v1, Roots);
 					Roots = AddRoots(v2, Roots);
 				}
+			} else {
+				if (A != B) Roots = AddRoots(A / (A - B), Roots);
+				if (B != C) Roots = AddRoots(B / (B - C), Roots);
 			}
-			if (A != B) Roots = AddRoots(A / (A - B), Roots);
-			if (B != C) Roots = AddRoots(B / (B - C), Roots);
 			return Roots;
 		}
 		public static double[] AddRoots(double A, double B, double C, double[] Roots = null) {
@@ -2233,6 +2234,8 @@ namespace Wholemy {
 						var BL = Mat.Sqrt(BA.EX - TB.EX, BA.EY - TB.EY);
 						if (AL < S && BL < S) {
 							if (PA != null && PB != null) {
+								//var Aa = Mat.longGetAR(PA.EX, PA.EY, PA.MX, PA.MY, A.EX, A.EY) / 4.0;
+								//var Bb = Mat.longGetAR(PB.MX, PB.MY, PB.EX, PB.EY, B.MX, B.MY) / 4.0;
 								var Aa = Mat.GetA1(PA.EX, PA.EY, PA.MX, PA.MY, A.EX, A.EY);
 								var Bb = Mat.GetA1(PB.MX, PB.MY, PB.EX, PB.EY, B.MX, B.MY);
 								if (Aa < 0.0) Aa += 1.0;
@@ -2251,8 +2254,8 @@ namespace Wholemy {
 				return false;
 			}
 			#endregion
-			#region #method# ExtReturn(Size, Pos) 
-			private bool ExtReturn(double Size, out double Pos) {
+			#region #method# ExtReturn(Size, Pos, NextPos) 
+			private bool ExtReturn(double Size, out double Pos, out double NextPos) {
 				var DIV = 0.5;
 				var POS = 0.0;
 				var TES = this;
@@ -2269,14 +2272,105 @@ namespace Wholemy {
 					TES.Div(DIV, out NOW, out RAM);
 					if (NOW.TesReturn(Size, ref PA, ref PB, out Reset)) {
 						TES = RAM;
-						if (Reset) { Pos = POS; return true; }
+						Pos = POS;
 						POS += (1.0 - POS) * DIV; // Поправка из-за этого косит, здесь после резета
+						NextPos = POS;
+						if (Reset) { return true; }
 						DIV = 0.5;
 						goto RTES;
 					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
 				}
 				Pos = POS;
+				NextPos = POS;
 				return false;
+			}
+			#endregion
+			#region #method# ExtReturn(Size, Pos, NextPos, PA, PB) 
+			private bool ExtReturn(double Size, out double Pos, out double NextPos, ref Cubic PA, ref Cubic PB) {
+				var DIV = 0.5;
+				var POS = 0.0;
+				var TES = this;
+				var Reset = false;
+				Cubic NOW;
+				Cubic RAM;
+				RTES:
+				if (TES.TesReturn(Size, ref PA, ref PB, out Reset)) {
+					POS = 1.0;
+				} else {
+					NEXT:
+					TES.Div(DIV, out NOW, out RAM);
+					if (NOW.TesReturn(Size, ref PA, ref PB, out Reset)) {
+						TES = RAM;
+						Pos = POS;
+						POS += (1.0 - POS) * DIV; // Если ниже возвращения возникает отсечение
+						NextPos = POS;
+						if (Reset) { return true; }
+						DIV = 0.5;
+						goto RTES;
+					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
+				}
+				Pos = POS;
+				NextPos = POS;
+				return false;
+			}
+			#endregion
+			#region #method# ReturnInRoots(Size, Roots) 
+			/// <summary>Возвращает массив корней разворотов кубической кривой, использует корни)</summary>
+			/// <param name="Size">Толщина линии кривой, для которой вычисляются развороты)</param>
+			/// <param name="Roots">Исходный массив корней, как правило результат метода Extrema)</param>
+			/// <returns>Возвращаемый массив корней)</returns>
+			public double[] ReturnInRoots(double Size, double[] Roots = null) {
+				var P = 0.0;
+				var NextP = 0.0;
+				var R = 0.0;
+				var S = 0.0;
+				var BaseRoots = Roots;
+				var roots = ForDivRoots(Roots);
+				var RAM = this;
+				Cubic NOW;
+				Cubic AP = null;
+				Cubic BP = null;
+				var rr = 0.0;
+				if (roots != null) {
+					var L = roots.Length;
+					if (L > 0) {
+						var I = 0;
+						var r = roots[I];
+						while (I < L) {
+							r = roots[I];
+							RAM.Div(r, out NOW, out RAM);
+							rr = 0.0;
+							while (NOW.ExtReturn(Size, out P, out NextP, ref AP, ref BP)) {
+								var PP = (1.0 - rr) * P;
+								var NextPP = (1.0 - rr) * NextP;
+								if (P != 0.0) {
+									Roots = AddRoots(R + ((1.0 - R) * (r * PP)), Roots);
+								} else {
+									Roots = AddRoots(R, Roots);
+								}
+								NOW.Div(NextP, out NOW, out var NEX);
+								rr+= NextPP;
+								R += (1.0 - R) * (r * NextPP);
+								NOW = NEX;
+							}
+							R = BaseRoots[I];
+							I++;
+						}
+					}
+				}
+				NOW = RAM;
+				while (NOW.ExtReturn(Size, out P, out NextP, ref AP, ref BP)) {
+					if (P != 0.0) {
+						Roots = AddRoots(R + ((1.0 - R) * P), Roots);
+					} else {
+						Roots = AddRoots(R, Roots);
+					}
+					NOW.Div(NextP, out NOW, out var NEX);
+					R += (1.0 - R) * NextP;
+					NOW = NEX;
+				}
+				//Roots = AddRoots(R, Roots);
+				return Roots;
 			}
 			#endregion
 			#region #method# ReturnRoots(Size, Roots) 
@@ -2285,17 +2379,22 @@ namespace Wholemy {
 			/// <param name="Roots">Исходный массив корней, как правило результат метода Extrema)</param>
 			/// <returns>Возвращаемый массив корней)</returns>
 			public double[] ReturnRoots(double Size, double[] Roots = null) {
+				var NextP = 0.0;
 				var P = 0.0;
 				var R = 0.0;
 				var S = 0.0;
 				var V = this;
-				while (V.ExtReturn(Size, out P)) {
-					V.Div(P, out V, out var Next);
-					S = (1.0 - R) * P;
-					R += S;
-					Roots = AddRoots(R, Roots);
+				while (V.ExtReturn(Size, out P, out NextP)) {
+					if (P != 0.0) {
+						Roots = AddRoots(R + ((1.0 - R) * P), Roots);
+					} else {
+						Roots = AddRoots(R, Roots);
+					}
+					V.Div(NextP, out V, out var Next);
+					R += (1.0 - R) * NextP;
 					V = Next;
 				}
+				//Roots = AddRoots(R, Roots);
 				return Roots;
 			}
 			#endregion
@@ -3457,7 +3556,7 @@ namespace Wholemy {
 
 			var Roots = new double[0];
 			Roots = Bone.Extrema(Roots);
-			Roots = Bone.ReturnRoots(Size, Roots);
+			Roots = Bone.ReturnInRoots(Size, Roots);
 			Cubic NOW;
 			Cubic RAM = Bone;
 			Roots = AddRoots(0.5, Roots);
@@ -3480,8 +3579,9 @@ namespace Wholemy {
 			RAM.NormalAddB(this);
 		}
 		#endregion
-		#region #class# List 
-		public class List<T> {
+		#region #class# List<T> 
+		public class List<T> where T : class, new() {
+			#region #field# Base 
 			/// <summary>Начинающий элмент в списке)</summary>
 			#region #invisible# 
 #if TRACE
@@ -3489,6 +3589,8 @@ namespace Wholemy {
 #endif
 			#endregion
 			public Item Base;
+			#endregion
+			#region #field# Last 
 			/// <summary>Завершающий элмент в списке)</summary>
 			#region #invisible# 
 #if TRACE
@@ -3496,22 +3598,37 @@ namespace Wholemy {
 #endif
 			#endregion
 			public Item Last;
-			/// <summary>Число элементов в списке)</summary>
+			#endregion
+			#region #field# Count 
+			/// <summary>Количество элементов в списке)</summary>
 			#region #invisible# 
 #if TRACE
 			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
 			#endregion
 			public int Count;
-			/// <summary>Число преломлений, разворотов)</summary>
-			public int Reset;
+			#endregion
 			#region #class# Item 
 			public class Item {
+				#region #invisible# 
+#if TRACE
+				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+				#endregion
 				public double Root;
+				#region #invisible# 
+#if TRACE
+				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+				#endregion
 				public double Size;
+				#region #invisible# 
+#if TRACE
+				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.RootHidden)]
+#endif
+				#endregion
 				public T Value;
-				/// <summary>Истина определяет, что корень является преломлением, требует деления)</summary>
-				public bool Reset;
+				#region #field# Prev 
 				/// <summary>Предыдущий элмент в списке)</summary>
 				#region #invisible# 
 #if TRACE
@@ -3519,6 +3636,8 @@ namespace Wholemy {
 #endif
 				#endregion
 				public Item Prev;
+				#endregion
+				#region #field# Next 
 				/// <summary>Следующий элмент в списке)</summary>
 				#region #invisible# 
 #if TRACE
@@ -3526,60 +3645,102 @@ namespace Wholemy {
 #endif
 				#endregion
 				public Item Next;
+				#endregion
+				#region #field# List 
+				/// <summary>Связанный список)</summary>
 				public List<T> List;
-				#region #method# Add(Now, Root, End) 
-				public Item Add(T Now, double Root, T End) {
-					var NowSize = this.Root + Root - this.Root;
-					var EndRoot = this.Root + Root;
-					var EndSize = this.Size - Root;
-					this.Size = NowSize;
+				#endregion
+				#region #method# AddPrev(Value, Root) 
+				#region #through# 
+#if TRACE
+				[System.Diagnostics.DebuggerStepThrough]
+#endif
+				#endregion
+				public Item AddPrev(T Value, double Root = double.NaN) {
 					var List = this.List;
-					this.Value = Now;
-					var Item = new Item() { Value = End, List = List, Root = EndRoot, Size = EndSize };
-					var Next = this.Next;
-					if (Next != null) {
-						Next.Prev = Item;
-						Item.Next = Next;
-					} else {
-						List.Last = Item;
-					}
-					this.Next = Item;
-					Item.Prev = this;
+					var Prev = this.Prev;
+					var Next = this.Next = new Item() { Value = Value, Root = Root, List = List, Prev = Prev, Next = this };
+					if (Prev != null) { Prev.Next = Next; } else { List.Base = Next; }
 					List.Count++;
-					return Item;
+					return Next;
 				}
 				#endregion
+				#region #method# AddNext(Value, Root) 
+				#region #through# 
+#if TRACE
+				[System.Diagnostics.DebuggerStepThrough]
+#endif
+				#endregion
+				public Item AddNext(T Value, double Root = double.NaN) {
+					var List = this.List;
+					var Next = this.Next;
+					var Prev = this.Prev = new Item() { Value = Value, Root = Root, List = List, Prev = this, Next = Next };
+					if (Next != null) { Next.Prev = Prev; } else { List.Last = Prev; }
+					List.Count++;
+					return Prev;
+				}
+				#endregion
+				#region #method# ToString 
 				public override string ToString() {
 					var T = System.Globalization.CultureInfo.InvariantCulture;
-					return "Item Root = " + this.Root.ToString(T) + " Size = " + this.Size.ToString(T) + " Bound = " + this.Bound.ToString(T) + "[" + this.Value + "]";
+					var S = "Item<" + typeof(T).Name + ">";
+					var Root = this.Root;
+					var Size = this.Size;
+					var Value = this.Value;
+					if (!double.IsNaN(Root)) S += " Root = " + Root.ToString(T);
+					if (!double.IsNaN(Size)) S += " Size = " + Size.ToString(T);
+					if (!double.IsNaN(Root) && !double.IsNaN(Size)) S += " Bound = " + (Root + Size).ToString(T);
+					if (Value != null) S += " [" + Value.ToString() + "]";
+					return S;
 				}
+				#endregion
+				#region #property# Bound 
 				public double Bound {
-					get { return this.Root + this.Size; }
+					#region #through# 
+#if TRACE
+					[System.Diagnostics.DebuggerStepThrough]
+#endif
+					#endregion
+					get { var Root = this.Root; var Size = this.Size; if (!double.IsNaN(Root)) Root += this.Root; else Root = 0.0; if (!double.IsNaN(Size)) Root += Size; else Root = 1.0; return Root; }
 				}
+				#endregion
 			}
 			#endregion
+			#region #method# AddBase(Value, Root) 
 			#region #through# 
 #if TRACE
 			[System.Diagnostics.DebuggerStepThrough]
 #endif
 			#endregion
-			#region #method# Add(Value, Root,Size) 
-			public Item Add(T Value, double Root, double Size) {
-				var Item = new Item() { Value = Value, Root = Root, Size = Size, List = this };
-				var Last = this.Last;
-				if (Last == null) {
-					this.Last = Item;
-					this.Base = Item;
-				} else {
-					Last.Next = Item;
-					this.Last = Item;
-				}
+			public Item AddBase(T Value, double Root = double.NaN) {
+				var Base = this.Base;
+				var Item = new Item() { Value = Value, Root = Root, List = this, Next = Base };
+				if (Base == null) { this.Last = Item; this.Base = Item; } else { Base.Prev = Item; this.Base = Item; }
 				this.Count++;
 				return Item;
 			}
 			#endregion
-			#region #method# Add(List) 
-			public void Add(List<T> List) {
+			#region #method# AddLast(Value, Root) 
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public Item AddLast(T Value, double Root = double.NaN) {
+				var Last = this.Last;
+				var Item = new Item() { Value = Value, Root = Root, List = this, Prev = Last };
+				if (Last == null) { this.Last = Item; this.Base = Item; } else { Last.Next = Item; this.Last = Item; }
+				this.Count++;
+				return Item;
+			}
+			#endregion
+			#region #method# AddLast(List, Root) 
+			public void AddLast(List<T> List, double Root = double.NaN, double Size = double.NaN) {
+				#region #debug# 
+#if DEBUG
+				if (!double.IsNaN(Root) || !double.IsNaN(Size)) throw new System.NotImplementedException();
+#endif
+				#endregion
 				if (List != null && List.Base != null) {
 					var Last = this.Last;
 					if (Last == null) {
@@ -3626,9 +3787,24 @@ namespace Wholemy {
 				}
 			}
 			#endregion
+			#region #method# ToString 
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
 			public override string ToString() {
-				return "List Count = " + this.Count.ToString();
+				var T = System.Globalization.CultureInfo.InvariantCulture;
+				var S = "List<" + typeof(T).Name + "> Count = " + this.Count.ToString(T);
+				var Base = this.Base;
+				if (Base != null) {
+					S += " Base = [" + Base.ToString() + "]";
+					var Last = this.Last;
+					if (Last != null) S += " Last = [" + Last.ToString() + "]";
+				}
+				return S;
 			}
+			#endregion
 		}
 		#endregion
 	}

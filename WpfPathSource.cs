@@ -2338,10 +2338,10 @@ namespace Wholemy {
 			public List<Stab> ExtReturn(double Size, List<Cubic> Roots = null) {
 				List<Stab> List = new List<Stab>();
 				Stab Stab = new Stab();
-				List.AddLast(Stab, 0.0, 1.0);
 				var DIV = 0.5;
 				var POS = 0.0;
 				var ROOT = 0.0;
+				var SIZE = 1.0;
 				var RES = this;
 				var TES = this;
 				List<Cubic>.Item Item = null;
@@ -2349,9 +2349,14 @@ namespace Wholemy {
 					Item = Roots.Base;
 					if (Item != null) {
 						TES = RES = Item.Value;
+						SIZE = Item.Size;
+						List.AddLast(Stab, Item.Root, Item.Size);
 						Item = Item.Next;
+						goto StartItem;
 					}
 				}
+				List.AddLast(Stab, 0.0, 1.0);
+				StartItem:
 				var Reset = false;
 				Cubic NOW;
 				Cubic RAM;
@@ -2360,15 +2365,15 @@ namespace Wholemy {
 				RTES:
 				if (TES.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
 					if (Reset) { Stab = Stab.New(List, ref ROOT); }
-					Stab.Add(TES, PreA, PreB, List.Last.Root + ROOT, (List.Last.Size - ROOT));
+					Stab.Add(TES, PreA, PreB, List.Last.Root + ROOT * SIZE, (List.Last.Size - ROOT * SIZE));
 					POS = 0.0;
 				} else {
 					NEXT:
 					TES.Div(DIV, out NOW, out RAM);
 					if (NOW.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
-						var S = (1.0 - POS) * DIV;
+						var S = ((1.0 - POS) * DIV);
 						if (Reset) { Stab = Stab.New(List, ref ROOT); }
-						Stab.Add(NOW, PreA, PreB, List.Last.Root + ROOT, ((1.0 - ROOT) * S));
+						Stab.Add(NOW, PreA, PreB, List.Last.Root + ROOT * SIZE, ((1.0 - ROOT) * S * SIZE));
 						POS += S;
 						ROOT += (1.0 - ROOT) * S;
 						DIV = 0.5;
@@ -2384,7 +2389,10 @@ namespace Wholemy {
 					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
 				}
 				if (Item != null) {
-					Stab = Stab.New(List, ref ROOT);
+					Stab = Stab.New(List, Item.Root, Item.Size);
+					SIZE = Item.Size;
+					ROOT = 0.0;
+					POS = 0.0;
 					TES = RES = Item.Value;
 					Item = Item.Next;
 					goto RTES;
@@ -2597,9 +2605,29 @@ namespace Wholemy {
 			#endregion
 			#region #class# Stab 
 			public class Stab {
-				public readonly List<Cubic> S = new List<Cubic>();
-				public readonly List<Cubic> A = new List<Cubic>();
-				public readonly List<Cubic> B = new List<Cubic>();
+				#region #invisible# 
+#if TRACE
+				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.RootHidden)]
+#endif
+				#endregion
+				public readonly List<Cubic> S;
+				#region #invisible# 
+#if TRACE
+				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+				#endregion
+				public readonly List<Cubic> A;
+				#region #invisible# 
+#if TRACE
+				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+				#endregion
+				public readonly List<Cubic> B;
+				public Stab() {
+					S = new List<Cubic>();
+					A = new List<Cubic>();
+					B = new List<Cubic>();
+				}
 				public void Add(Cubic S, Cubic A, Cubic B, double Root, double Size) {
 					this.S.AddLast(S, Root, Size);
 					this.A.AddLast(A, Root, Size);
@@ -2617,6 +2645,13 @@ namespace Wholemy {
 					var Stab = new Stab();
 					List.AddLast(Stab, NewRoot, NewSize);
 					ROOT = 0.0;
+					return Stab;
+				}
+				public Stab New(List<Stab> List, double Root, double Size) {
+					var Last = List.Last;
+					if (Last.Value != this) throw new System.ArgumentOutOfRangeException();
+					var Stab = new Stab();
+					List.AddLast(Stab, Root, Size);
 					return Stab;
 				}
 			}
@@ -4043,17 +4078,7 @@ namespace Wholemy {
 			#endregion
 			#region #class# Item 
 			public class Item {
-				#region #invisible# 
-#if TRACE
-				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-				#endregion
 				public double Root;
-				#region #invisible# 
-#if TRACE
-				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-				#endregion
 				public double Size;
 				#region #invisible# 
 #if TRACE
@@ -4081,6 +4106,11 @@ namespace Wholemy {
 				#endregion
 				#region #field# List 
 				/// <summary>Связанный список)</summary>
+				#region #invisible# 
+#if TRACE
+				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+				#endregion
 				public List<T> List;
 				#endregion
 				#region #method# AddPrev(Value, Root, Size) 
@@ -4134,7 +4164,7 @@ namespace Wholemy {
 					[System.Diagnostics.DebuggerStepThrough]
 #endif
 					#endregion
-					get { var Root = this.Root; var Size = this.Size; if (!double.IsNaN(Root)) Root += this.Root; else Root = 0.0; if (!double.IsNaN(Size)) Root += Size; else Root = 1.0; return Root; }
+					get { return this.Root + this.Size; }
 				}
 				#endregion
 			}

@@ -1515,16 +1515,15 @@ namespace Wholemy {
 			#region #method# RootsList(Roots) 
 			public List<Cubic> RootsList(double[] Roots = null) {
 				List<Cubic> List = new List<Cubic>();
-				var roots = DivRoots(Roots);
 				var A = this;
 				var R = 0.0;
-				if (roots != null) {
-					var L = roots.Length;
+				if (Roots != null) {
+					var L = Roots.Length;
 					if (L > 0) {
 						var I = 0;
 						while (I < L) {
-							A.Div(roots[I], out var B, out A);
 							var r = Roots[I];
+							A.Div((r - R) / (1.0 - R), out var B, out A);
 							List.AddLast(B, R, r - R);
 							R = r;
 							I++;
@@ -2275,88 +2274,28 @@ namespace Wholemy {
 				return false;
 			}
 			#endregion
-			#region #method# ExtReturn(Size, Pos, NextPos) 
-			private bool ExtReturn(double Size, out double Pos, out double NextPos) {
-				var DIV = 0.5;
-				var POS = 0.0;
-				var TES = this;
-				var Reset = false;
-				Cubic NOW;
-				Cubic RAM;
-				Cubic PA = null;
-				Cubic PB = null;
-				RTES:
-				if (TES.TesReturn(Size, ref PA, ref PB, out Reset)) {
-					POS = 1.0;
-				} else {
-					NEXT:
-					TES.Div(DIV, out NOW, out RAM);
-					if (NOW.TesReturn(Size, ref PA, ref PB, out Reset)) {
-						TES = RAM;
-						Pos = POS;
-						POS += (1.0 - POS) * DIV;
-						NextPos = POS;
-						if (Reset) { return true; }
-						DIV = 0.5;
-						goto RTES;
-					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
-				}
-				Pos = POS;
-				NextPos = POS;
-				return false;
-			}
-			#endregion
-			#region #method# ExtReturn(Size, Pos, NextPos, PA, PB) 
-			private bool ExtReturn(double Size, out double Pos, out double NextPos, ref Cubic PA, ref Cubic PB) {
-				var DIV = 0.5;
-				var POS = 0.0;
-				var TES = this;
-				var Reset = false;
-				Cubic NOW;
-				Cubic RAM;
-				RTES:
-				if (TES.TesReturn(Size, ref PA, ref PB, out Reset)) {
-					POS = 1.0;
-				} else {
-					NEXT:
-					TES.Div(DIV, out NOW, out RAM);
-					if (NOW.TesReturn(Size, ref PA, ref PB, out Reset)) {
-						TES = RAM;
-						Pos = POS;
-						POS += (1.0 - POS) * DIV;
-						NextPos = POS;
-						if (Reset) { return true; }
-						DIV = 0.5;
-						goto RTES;
-					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
-				}
-				Pos = POS;
-				NextPos = POS;
-				return false;
-			}
-			#endregion
+			#region #method# ExtReturn(Size, Roots) 
 			public List<Stab> ExtReturn(double Size, List<Cubic> Roots = null) {
 				List<Stab> List = new List<Stab>();
 				Stab Stab = new Stab();
 				var DIV = 0.5;
 				var POS = 0.0;
 				var ROOT = 0.0;
-				var SIZE = 1.0;
 				var RES = this;
 				var TES = this;
+				var LastRoot = 0.0;
+				var LastSize = 1.0;
 				List<Cubic>.Item Item = null;
 				if (Roots != null) {
 					Item = Roots.Base;
 					if (Item != null) {
 						TES = RES = Item.Value;
-						SIZE = Item.Size;
-						List.AddLast(Stab, Item.Root, Item.Size);
+						LastRoot = Item.Root;
+						LastSize = Item.Size;
 						Item = Item.Next;
-						goto StartItem;
 					}
 				}
-				List.AddLast(Stab, 0.0, 1.0);
-				StartItem:
+				List.AddLast(Stab, LastRoot, LastSize);
 				var Reset = false;
 				Cubic NOW;
 				Cubic RAM;
@@ -2364,18 +2303,25 @@ namespace Wholemy {
 				Cubic PreB = null;
 				RTES:
 				if (TES.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
-					if (Reset) { Stab = Stab.New(List, ref ROOT); }
-					Stab.Add(TES, PreA, PreB, List.Last.Root + ROOT * SIZE, (List.Last.Size - ROOT * SIZE));
+					if (Reset && Stab.IsUsed) {
+						Stab = Stab.AddLastTo(List, ROOT, out LastRoot, out LastSize);
+						ROOT = 0.0;
+					}
+					Stab.Add(PreA, PreB, TES, LastRoot + (ROOT * LastSize), LastSize - (ROOT * LastSize));
 					POS = 0.0;
 				} else {
 					NEXT:
 					TES.Div(DIV, out NOW, out RAM);
 					if (NOW.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
-						var S = ((1.0 - POS) * DIV);
-						if (Reset) { Stab = Stab.New(List, ref ROOT); }
-						Stab.Add(NOW, PreA, PreB, List.Last.Root + ROOT * SIZE, ((1.0 - ROOT) * S * SIZE));
-						POS += S;
-						ROOT += (1.0 - ROOT) * S;
+						var PDIV = ((1.0 - POS) * DIV);
+						var RPDIV = ((1.0 - ROOT) * PDIV);
+						if (Reset && Stab.IsUsed) {
+							Stab = Stab.AddLastTo(List, ROOT, out LastRoot, out LastSize);
+							ROOT = 0.0;
+						}
+						Stab.Add(PreA, PreB, NOW, LastRoot + (ROOT * LastSize), RPDIV * LastSize);
+						POS += PDIV;
+						ROOT += RPDIV;
 						DIV = 0.5;
 						if (Reset) {
 							RES.Div(POS, out var CUT, out RES);
@@ -2389,8 +2335,7 @@ namespace Wholemy {
 					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
 				}
 				if (Item != null) {
-					Stab = Stab.New(List, Item.Root, Item.Size);
-					SIZE = Item.Size;
+					List.AddLast(Stab = new Stab(), LastRoot = Item.Root, LastSize = Item.Size);
 					ROOT = 0.0;
 					POS = 0.0;
 					TES = RES = Item.Value;
@@ -2399,218 +2344,9 @@ namespace Wholemy {
 				}
 				return List;
 			}
-			#region #method# ExtReturn(Size, Roots) 
-			public List<Stab> ExtReturn(double Size, double[] Roots) {
-				List<Stab> List = new List<Stab>();
-				List.AddLast(new Stab(), 0.0, 1.0);
-				var DIV = 0.5;
-				var POS = 0.0;
-				var ROOT = 0.0;
-				var RES = this;
-				var TES = this;
-				var Reset = false;
-				Cubic NOW;
-				Cubic RAM;
-				Cubic PreA = null;
-				Cubic PreB = null;
-				RTES:
-				var Stab = List.Last.Value;
-				if (TES.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
-					if (Reset) {
-						var Last = List.Last;
-						var NewRoot = Last.Root;
-						var NewSize = Last.Size;
-						var PosSize = NewSize * ROOT;
-						NewSize -= PosSize;
-						NewRoot += PosSize;
-						Last.Size = PosSize;
-						List.AddLast(Stab = new Stab(), NewRoot, NewSize);
-						ROOT = 0.0;
-					}
-					Stab.Add(TES, PreA, PreB, List.Last.Root + ROOT, (List.Last.Size - ROOT));
-					POS = 1.0;
-				} else {
-					NEXT:
-					TES.Div(DIV, out NOW, out RAM);
-					if (NOW.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
-						var S = (1.0 - POS) * DIV;
-						if (Reset) {
-							var Last = List.Last;
-							var NewRoot = Last.Root;
-							var NewSize = Last.Size;
-							var PosSize = NewSize * ROOT;
-							NewSize -= PosSize;
-							NewRoot += PosSize;
-							Last.Size = PosSize;
-							List.AddLast(Stab = new Stab(), NewRoot, NewSize);
-							ROOT = 0.0;
-						}
-						Stab.Add(NOW, PreA, PreB, List.Last.Root + ROOT, ((1.0 - ROOT) * S));
-						POS += S;
-						ROOT += (1.0 - ROOT) * S;
-						DIV = 0.5;
-						if (Reset) {
-							RES.Div(POS, out var CUT, out RES);
-							TES = RES;
-							POS = 0.0;
-							goto RTES;
-						} else {
-							TES = RAM;
-						}
-						goto RTES;
-					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
-				}
-				return List;
-			}
-			#endregion
-			#region #method# ExtReturn(Size, Root, BasePos, NextPos, PreA, PreB, List) 
-			private bool ExtReturn(double Size, double Root, out double BasePos, out double NextPos, ref Cubic PreA, ref Cubic PreB, List<Stab> List) {
-				var DIV = 0.5;
-				var POS = 0.0;
-				var ROOT = Root;
-				var TES = this;
-				var Reset = false;
-				Cubic NOW;
-				Cubic RAM;
-				RTES:
-				var Stab = List.Last.Value;
-				if (TES.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
-					if (Reset) {
-						var Last = List.Last;
-						if (Last.Value.S.Base == null) throw new System.InvalidOperationException();
-						var NewRoot = Last.Root;
-						var NewSize = Last.Size;
-						var PosSize = NewSize * ROOT;
-						NewSize -= PosSize;
-						NewRoot += PosSize;
-						Last.Size = PosSize;
-						List.AddLast(Stab = new Stab(), NewRoot, NewSize);
-						ROOT = 0.0;
-					}
-					Stab.Add(TES, PreA, PreB, List.Last.Root + ROOT, (List.Last.Size - ROOT));
-					POS = 1.0;
-				} else {
-					NEXT:
-					TES.Div(DIV, out NOW, out RAM);
-					if (NOW.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
-						var S = (1.0 - POS) * DIV;
-						if (Reset) {
-							var Last = List.Last;
-							if (Last.Value.S.Base == null) throw new System.InvalidOperationException();
-							var NewRoot = Last.Root;
-							var NewSize = Last.Size;
-							var PosSize = NewSize * ROOT;
-							NewSize -= PosSize;
-							NewRoot += PosSize;
-							Last.Size = PosSize;
-							List.AddLast(Stab = new Stab(), NewRoot, NewSize);
-							ROOT = 0.0;
-						}
-						Stab.Add(NOW, PreA, PreB, List.Last.Root + ROOT, ((1.0 - ROOT) * S));
-						ROOT += (1.0 - ROOT) * S;
-						TES = RAM;
-						BasePos = POS;
-						POS += S;
-						NextPos = POS;
-						if (Reset) { return true; }
-						DIV = 0.5;
-						goto RTES;
-					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
-				}
-				BasePos = POS;
-				NextPos = POS;
-				return false;
-			}
-			#endregion
-			#region #method# ExtReturn(Size, BasePos, NextPos, PreA, PreB, List) 
-			private bool ExtReturn(double Size, out double BasePos, out double NextPos, ref Cubic PreA, ref Cubic PreB, List<Stab> List) {
-				var DIV = 0.5;
-				var POS = 0.0;
-				var TES = this;
-				var Reset = false;
-				Cubic NOW;
-				Cubic RAM;
-				var Stab = List.Last.Value;
-				RTES:
-				if (TES.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
-					POS = 1.0;
-					Stab.A.AddLast(PreA);
-					Stab.S.AddLast(TES);
-					Stab.B.AddBase(PreB);
-				} else {
-					NEXT:
-					TES.Div(DIV, out NOW, out RAM);
-					if (NOW.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
-						if (Reset && POS != 0.0) {
-							var Last = List.Last;
-							var NewRoot = Last.Root;
-							var NewSize = Last.Size;
-							var PosSize = NewSize * POS;
-							NewSize -= PosSize;
-							NewRoot += PosSize;
-							Last.Size = PosSize;
-							List.AddLast(Stab = new Stab(), NewRoot, NewSize);
-						}
-						Stab.A.AddLast(PreA);
-						Stab.S.AddLast(NOW);
-						Stab.B.AddBase(PreB);
-						TES = RAM;
-						BasePos = POS;
-						POS += (1.0 - POS) * DIV;
-						NextPos = POS;
-						if (Reset) { return true; }
-						DIV = 0.5;
-						goto RTES;
-					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
-				}
-				BasePos = POS;
-				NextPos = POS;
-				return false;
-			}
-			#endregion
-			#region #method# ExtReturn(Size, BasePos, NextPos, PreA, PreB, List) 
-			private bool ExtReturn(double Size, out double BasePos, out double NextPos, ref Cubic PreA, ref Cubic PreB, Stab List) {
-				var DIV = 0.5;
-				var POS = 0.0;
-				var TES = this;
-				var Reset = false;
-				Cubic NOW;
-				Cubic RAM;
-				RTES:
-				if (TES.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
-					POS = 1.0;
-					List.A.AddLast(PreA);
-					List.S.AddLast(TES);
-					List.B.AddBase(PreB);
-				} else {
-					NEXT:
-					TES.Div(DIV, out NOW, out RAM);
-					if (NOW.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
-						List.A.AddLast(PreA);
-						List.S.AddLast(NOW);
-						List.B.AddBase(PreB);
-						TES = RAM;
-						BasePos = POS;
-						POS += (1.0 - POS) * DIV;
-						NextPos = POS;
-						if (Reset) { return true; }
-						DIV = 0.5;
-						goto RTES;
-					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
-				}
-				BasePos = POS;
-				NextPos = POS;
-				return false;
-			}
 			#endregion
 			#region #class# Stab 
 			public class Stab {
-				#region #invisible# 
-#if TRACE
-				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.RootHidden)]
-#endif
-				#endregion
-				public readonly List<Cubic> S;
 				#region #invisible# 
 #if TRACE
 				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
@@ -2623,229 +2359,81 @@ namespace Wholemy {
 #endif
 				#endregion
 				public readonly List<Cubic> B;
+				#region #invisible# 
+#if TRACE
+				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.RootHidden)]
+#endif
+				#endregion
+				public readonly List<Cubic> C;
+				#region #through# 
+#if TRACE
+				[System.Diagnostics.DebuggerStepThrough]
+#endif
+				#endregion
 				public Stab() {
-					S = new List<Cubic>();
-					A = new List<Cubic>();
-					B = new List<Cubic>();
+					this.A = new List<Cubic>();
+					this.B = new List<Cubic>();
+					this.C = new List<Cubic>();
 				}
-				public void Add(Cubic S, Cubic A, Cubic B, double Root, double Size) {
-					this.S.AddLast(S, Root, Size);
-					this.A.AddLast(A, Root, Size);
-					this.B.AddBase(B, Root, Size);
+				#region #through# 
+#if TRACE
+				[System.Diagnostics.DebuggerStepThrough]
+#endif
+				#endregion
+				public Stab(bool A, bool B, bool C) {
+					if (!A && !B && !C) throw new System.ArgumentOutOfRangeException();
+					if (A) this.A = new List<Cubic>();
+					if (B) this.B = new List<Cubic>();
+					if (C) this.C = new List<Cubic>();
 				}
-				public Stab New(List<Stab> List, ref double ROOT) {
+				#region #invisible# 
+#if TRACE
+				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+				#endregion
+				public bool IsUsed {
+					#region #through# 
+#if TRACE
+					[System.Diagnostics.DebuggerStepThrough]
+#endif
+					#endregion
+					get {
+						if (this.A != null && this.A.Base != null) return true;
+						if (this.B != null && this.B.Base != null) return true;
+						if (this.C != null && this.C.Base != null) return true;
+						return false;
+					}
+				}
+				#region #through# 
+#if TRACE
+				[System.Diagnostics.DebuggerStepThrough]
+#endif
+				#endregion
+				public void Add(Cubic A, Cubic B, Cubic C, double Root, double Size) {
+					if (this.A != null) this.A.AddLast(A, Root, Size);
+					if (this.B != null) this.B.AddBase(B, Root, Size);
+					if (this.C != null) this.C.AddLast(C, Root, Size);
+				}
+				#region #through# 
+#if TRACE
+				[System.Diagnostics.DebuggerStepThrough]
+#endif
+				#endregion
+				public Stab AddLastTo(List<Stab> List, double ROOT, out double Root, out double Size) {
 					var Last = List.Last;
 					if (Last.Value != this) throw new System.ArgumentOutOfRangeException();
-					var NewRoot = Last.Root;
-					var NewSize = Last.Size;
-					var PosSize = NewSize * ROOT;
-					NewSize -= PosSize;
-					NewRoot += PosSize;
-					Last.Size = PosSize;
-					var Stab = new Stab();
-					List.AddLast(Stab, NewRoot, NewSize);
-					ROOT = 0.0;
+					var LastRoot = Last.Root;
+					var LastSize = Last.Size;
+					var PrevSize = LastSize * ROOT;
+					LastSize -= PrevSize;
+					LastRoot += PrevSize;
+					Last.Size = PrevSize;
+					var Stab = new Stab(this.A != null, this.B != null, this.C != null);
+					List.AddLast(Stab, LastRoot, LastSize);
+					Root = LastRoot;
+					Size = LastSize;
 					return Stab;
 				}
-				public Stab New(List<Stab> List, double Root, double Size) {
-					var Last = List.Last;
-					if (Last.Value != this) throw new System.ArgumentOutOfRangeException();
-					var Stab = new Stab();
-					List.AddLast(Stab, Root, Size);
-					return Stab;
-				}
-			}
-			#endregion
-			#region #class# Ston 
-			public class Ston {
-				public readonly List<Cubic> S = new List<Cubic>();
-				public readonly List<Cubic> V = new List<Cubic>();
-			}
-			#endregion
-			#region #method# ReturnInRootsList(Size, Roots) 
-			public List<Stab> ReturnInRootsList(double Size, List<Cubic> Roots = null) {
-				List<Stab> ListPair = new List<Stab>();
-				Stab Pair;
-				var P = 0.0;
-				var NextP = 0.0;
-				var R = 0.0;
-				var S = 0.0;
-				Cubic NOW;
-				Cubic AP = null;
-				Cubic BP = null;
-				if (Roots != null) {
-					var Item = Roots.Base;
-					ListPair.AddLast(Pair = new Stab(), 0, 1);
-					while (Item != null) {
-						NOW = Item.Value;
-						R = Item.Root;
-						while (NOW.ExtReturn(Size, R, out P, out NextP, ref AP, ref BP, ListPair)) {
-							R = (NextP - P);
-							NOW.Div(NextP, out var CUT, out NOW);
-						}
-						Item = Item.Next;
-					}
-				}
-				return ListPair;
-			}
-			#endregion
-			#region #method# ReturnInRootsList(Size, Roots) 
-			public List<Stab> ReturnInRootsList(double Size, double[] Roots = null) {
-				List<Stab> ListPair = new List<Stab>();
-				Stab Pair;
-				var P = 0.0;
-				var NextP = 0.0;
-				var R = 0.0;
-				var S = 0.0;
-				var BaseRoots = Roots;
-				var roots = DivRoots(Roots);
-				var RAM = this;
-				Cubic NOW;
-				Cubic AP = null;
-				Cubic BP = null;
-				var rr = 0.0;
-
-				if (roots != null) {
-					var L = roots.Length;
-					if (L > 0) {
-						var I = 0;
-						var r = roots[I];
-						while (I < L) {
-							r = roots[I];
-							RAM.Div(r, out NOW, out RAM);
-							ListPair.AddLast(Pair = new Stab());
-							rr = 0.0;
-							while (NOW.ExtReturn(Size, out P, out NextP, ref AP, ref BP, Pair)) {
-								ListPair.AddLast(Pair = new Stab());
-								var PP = (1.0 - rr) * P;
-								var NextPP = (1.0 - rr) * NextP;
-								if (P != 0.0) {
-									Roots = AddRoots(R + ((1.0 - R) * (r * PP)), Roots);
-								} else {
-									Roots = AddRoots(R, Roots);
-								}
-								NOW.Div(NextP, out NOW, out var NEX);
-								rr += NextPP;
-								R += (1.0 - R) * (r * NextPP);
-								NOW = NEX;
-							}
-							R = BaseRoots[I];
-							I++;
-						}
-					}
-				}
-				ListPair.AddLast(Pair = new Stab());
-				NOW = RAM;
-				while (NOW.ExtReturn(Size, out P, out NextP, ref AP, ref BP, Pair)) {
-					ListPair.AddLast(Pair = new Stab());
-					if (P != 0.0) {
-						Roots = AddRoots(R + ((1.0 - R) * P), Roots);
-					} else {
-						Roots = AddRoots(R, Roots);
-					}
-					NOW.Div(NextP, out NOW, out var NEX);
-					R += (1.0 - R) * NextP;
-					NOW = NEX;
-				}
-				//Roots = AddRoots(R, Roots);
-				return ListPair;
-			}
-			#endregion
-			#region #method# ReturnInRoots(Size, Roots) 
-			/// <summary>Возвращает массив корней разворотов кубической кривой, использует корни)</summary>
-			/// <param name="Size">Толщина линии кривой, для которой вычисляются развороты)</param>
-			/// <param name="Roots">Исходный массив корней, как правило результат метода Extrema)</param>
-			/// <returns>Возвращаемый массив корней)</returns>
-			public double[] ReturnInRoots(double Size, double[] Roots = null) {
-				var P = 0.0;
-				var NextP = 0.0;
-				var R = 0.0;
-				var S = 0.0;
-				var BaseRoots = Roots;
-				var roots = DivRoots(Roots);
-				var RAM = this;
-				Cubic NOW;
-				Cubic AP = null;
-				Cubic BP = null;
-				var rr = 0.0;
-				if (roots != null) {
-					var L = roots.Length;
-					if (L > 0) {
-						var I = 0;
-						var r = roots[I];
-						while (I < L) {
-							r = roots[I];
-							RAM.Div(r, out NOW, out RAM);
-							rr = 0.0;
-							while (NOW.ExtReturn(Size, out P, out NextP, ref AP, ref BP)) {
-								var PP = (1.0 - rr) * P;
-								var NextPP = (1.0 - rr) * NextP;
-								if (P != 0.0) {
-									Roots = AddRoots(R + ((1.0 - R) * (r * PP)), Roots);
-								} else {
-									Roots = AddRoots(R, Roots);
-								}
-								NOW.Div(NextP, out NOW, out var NEX);
-								rr += NextPP;
-								R += (1.0 - R) * (r * NextPP);
-								NOW = NEX;
-							}
-							R = BaseRoots[I];
-							I++;
-						}
-					}
-				}
-				NOW = RAM;
-				while (NOW.ExtReturn(Size, out P, out NextP, ref AP, ref BP)) {
-					if (P != 0.0) {
-						Roots = AddRoots(R + ((1.0 - R) * P), Roots);
-					} else {
-						Roots = AddRoots(R, Roots);
-					}
-					NOW.Div(NextP, out NOW, out var NEX);
-					R += (1.0 - R) * NextP;
-					NOW = NEX;
-				}
-				//Roots = AddRoots(R, Roots);
-				return Roots;
-			}
-			#endregion
-			#region #method# ReturnRoots(Size, Roots) 
-			/// <summary>Возвращает массив корней разворотов кубической кривой)</summary>
-			/// <param name="Size">Толщина линии кривой, для которой вычисляются развороты)</param>
-			/// <param name="Roots">Исходный массив корней, как правило результат метода Extrema)</param>
-			/// <returns>Возвращаемый массив корней)</returns>
-			public double[] ReturnRoots(double Size, double[] Roots = null) {
-				var NextP = 0.0;
-				var P = 0.0;
-				var R = 0.0;
-				var S = 0.0;
-				var V = this;
-				Cubic AP = null;
-				Cubic BP = null;
-				List<Stab> ListPair = new List<Stab>();
-				ListPair.AddLast(new Stab(), 0.0, 1.0);
-				while (V.ExtReturn(Size, out P, out NextP, ref AP, ref BP, ListPair)) {
-					var Last = ListPair.Last;
-					var NextSize = Last.Size;
-					Last.Size *= NextP - P;
-					NextSize -= Last.Size;
-					ListPair.AddLast(new Stab(), Last.Root + Last.Size, NextSize);
-					if (P != 0.0) {
-						Roots = AddRoots(R + ((1.0 - R) * P), Roots);
-					} else {
-						Roots = AddRoots(R, Roots);
-					}
-					V.Div(NextP, out V, out var Next);
-					R += (1.0 - R) * NextP;
-					V = Next;
-				}
-				//Roots = AddRoots(R, Roots);
-				return Roots;
-			}
-			public List<Stab> ReturnRootsList(double Size, double[] Roots = null) {
-
-				return ExtReturn(Size, Roots);
 			}
 			#endregion
 			#region #method# AddLinM(P) 
@@ -2965,7 +2553,6 @@ namespace Wholemy {
 				}
 			}
 			#endregion
-
 		}
 		#endregion
 		#region #class# Quadratic 
@@ -4009,15 +3596,15 @@ namespace Wholemy {
 			//var Li = Bone.ExtReturn(Size, Roots).Base;
 			bool first = true;
 			while (Li != null) {
-				if (Li.Value.S.Base != null && (Linear && (IsRoundM || IsRoundE)) || (!Linear && IsRoundM && first)) {
-					Li.Value.S.Base.Value.AddArcM(this); if (!Linear) first = false;
+				if ((Linear && (IsRoundM || IsRoundE)) || (!Linear && IsRoundM && first)) {
+					Li.Value.C.Base.Value.AddArcM(this); if (!Linear) first = false;
 				}
 				var La = Li.Value.A.Base;
 				while (La != null) {
 					AddItem(La.Value);
 					La = La.Next;
 				}
-				if (Li.Value.S.Last != null && Linear && (IsRoundM || IsRoundE) || (!Linear && IsRoundE && Li.Next == null)) Li.Value.S.Last.Value.AddArcE(this);
+				if (Linear && (IsRoundM || IsRoundE) || (!Linear && IsRoundE && Li.Next == null)) Li.Value.C.Last.Value.AddArcE(this);
 				var Lb = Li.Value.B.Base;
 				while (Lb != null) {
 					AddItem(Lb.Value);

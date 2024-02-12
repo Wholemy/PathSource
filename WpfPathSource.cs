@@ -1,17 +1,74 @@
 namespace Wholemy {
 	public class PathSource {
+		#region #method# Rotate1(CX, CY, BX, BY, AR) 
+		/// <summary>Поворачивает координаты #double# вокруг центра по корню четверти круга
+		/// где 90 градусов равно значению 0.25, а 360 градусов равно значению 1)</summary>
+		/// <param name="CX">Центр по оси X)</param>
+		/// <param name="CY">Центр по оси Y)</param>
+		/// <param name="BX">Старт и возвращаемый результат поворота по оси X)</param>
+		/// <param name="BY">Старт и возвращаемый результат поворота по оси Y)</param>
+		/// <param name="AR">Корень четверти от 0.0 до 1.0 отрицательная в обратную сторону)</param>
+		public static void Rotate1(double CX, double CY, ref double BX, ref double BY, double AR) {
+			if (AR == 0.0) return;
+			var TX = BX - CX;
+			var TY = BY - CY;
+			if (TX == 0.0 && TY == 0.0) return;
+			var PI = System.Math.PI / 0.5 * AR;
+			var Cos = System.Math.Cos(PI);
+			var Sin = System.Math.Sin(PI);
+			var X = (Cos * TX - Sin * TY + CX);
+			var Y = (Sin * TX + Cos * TY + CY);
+			BX = X;
+			BY = Y;
+		}
+		#endregion
+		#region #method# GetaR1(CX, CY, BX, BY, AX, AY) 
+		/// <summary>Возвращает корень поворота от 0.0 до 1.0)</summary>
+		/// <param name="CX">Центр по оси X)</param>
+		/// <param name="CY">Центр по оси Y)</param>
+		/// <param name="BX">Старт по оси X)</param>
+		/// <param name="BY">Старт по оси Y)</param>
+		/// <param name="AX">Конец по оси X)</param>
+		/// <param name="AY">Конец по оси Y)</param>
+		/// <returns>Возвращает корень поворота от 0.0 до 1.0)</returns>
+		public static double GetaR1(double CX, double CY, double BX, double BY, double AX, double AY) {
+			var a = 0.5 / System.Math.PI;
+			var b = System.Math.PI * 2;
+			return (0.5 / System.Math.PI) * (System.Math.Atan2(AY - CY, AX - CX) - System.Math.Atan2(BY - CY, BX - CX));
+		}
+		#endregion
+		#region #method# Sqrt(X, Y) 
+		#region #through# 
+#if TRACE
+		[System.Diagnostics.DebuggerStepThrough]
+#endif
+		#endregion
+		public static double Sqrt(double X, double Y) {
+			return System.Math.Sqrt(X * X + Y * Y);
+		}
+		#endregion
+		#region #method# RootOffset(x, y, X, Y) 
+		public static double RootOffset(double x, double y, out double X, out double Y) {
+			var L = System.Math.Sqrt(x * x + y * y);
+			X = -y / L;
+			Y = x / L;
+			return L;
+		}
+		#endregion
+		#region #method# SetMulLen(MX, MY, EX, EY, Value) 
 		public static double SetMulLen(double MX, double MY, ref double EX, ref double EY, double Value) {
-			var L = Mat.Sqrt(MX - EX, MY - EY);
+			var L = Sqrt(MX - EX, MY - EY);
 			Value *= L;
 			EX = MX + (EX - MX) / L * Value;
 			EY = MY + (EY - MY) / L * Value;
 			return Value;
 		}
+		#endregion
 		#region #static# #method# Inline(X0, Y0, X1, Y1, X2, Y2) 
 		public static bool Inline(double X0, double Y0, double X1, double Y1, double X2, double Y2) {
-			var l01 = Mat.Sqrt(X0 - X1, Y0 - Y1);
-			var l02 = Mat.Sqrt(X0 - X2, Y0 - Y2);
-			var l12 = Mat.Sqrt(X1 - X2, Y1 - Y2);
+			var l01 = Sqrt(X0 - X1, Y0 - Y1);
+			var l02 = Sqrt(X0 - X2, Y0 - Y2);
+			var l12 = Sqrt(X1 - X2, Y1 - Y2);
 			var R = 1.0;
 			if (l01 >= l02 && l01 >= l12) { R = l01 - (l02 + l12); }
 			if (l02 >= l01 && l02 >= l12) { R = l02 - (l01 + l12); }
@@ -66,7 +123,8 @@ namespace Wholemy {
 		#endregion
 		#region #static# #method# AddRoots 
 		public static double[] AddCubicRoots(double A, double B, double C, double[] Roots = null) {
-			var D = A - (B * 2.0) + C;
+			var B2 = B * 2;
+			var D = A - B2 + C;
 			if (D != 0.0) {
 				var m1 = -System.Math.Sqrt(B * B - A * C);
 				if (!double.IsNaN(m1)) {
@@ -76,10 +134,15 @@ namespace Wholemy {
 					Roots = AddRoots(v1, Roots);
 					Roots = AddRoots(v2, Roots);
 				}
-			} else {
-				if (A != B) Roots = AddRoots(A / (A - B), Roots);
-				if (B != C) Roots = AddRoots(B / (B - C), Roots);
 			}
+			//if (A != B) {
+			//	Roots = AddRoots(A - B2 / ((A - B) * 2), Roots);
+			//	Roots = AddRoots(A / (A - B), Roots);
+			//}
+			//if (B != C) {
+			//	Roots = AddRoots(B / (B - C), Roots);
+			//	Roots = AddRoots(B2 - C / ((B - C) * 2), Roots);
+			//}
 			return Roots;
 		}
 		public static double[] AddRoots(double A, double B, double C, double[] Roots = null) {
@@ -246,7 +309,7 @@ namespace Wholemy {
 			#endregion
 			#region #method# LenTo(Dot) 
 			public double LenTo(Dot Dot) {
-				return Mat.Sqrt(this.X - Dot.X, this.Y - Dot.Y);
+				return Sqrt(this.X - Dot.X, this.Y - Dot.Y);
 			}
 			#endregion
 			#region #method# AddPrev 
@@ -339,22 +402,25 @@ namespace Wholemy {
 			#endregion
 		}
 		#endregion
-		public static readonly double ArcTan = System.Math.Tan(System.Math.PI / 8);
 		public static readonly double Arc14 = 4.0 / 3.0 * System.Math.Tan(System.Math.PI / 8);
 		private System.Windows.Media.Geometry HoldPath;
 		private System.Windows.Media.GeometryCombineMode HoldMode;
 		private System.Windows.Media.Geometry LastPath;
 		private System.Windows.Media.GeometryCombineMode LastMode;
+		public System.Windows.Media.Geometry Geometry {
+			get {
+				var G = this.LastPath;
+				if (G == null && FigureSize != 0) { this.LastPath = G = FiguresToGeometry(); }
+				return G;
+			}
+		}
 		public PathSource() { }
-		public System.Windows.Media.Geometry Last => this.LastPath;
-		public System.Windows.Media.Geometry Hold => this.HoldPath;
-		public double Tolerance = 0.25;
+		public double Tolerance = 0.5;
 		public System.Windows.Media.ToleranceType ToleranceType = System.Windows.Media.ToleranceType.Absolute;
-		public string Final;
-		private bool FillRule;
-		private bool IsFilled;
-		private bool IsClozed;
-		private bool Inverted;
+		public bool IsUnited = true;
+		public bool IsFilled = true;
+		public bool IsClozed = true;
+		public bool Inverted;
 		private Preset RootM;
 		private Preset RootE;
 		#region #class# Preset 
@@ -384,19 +450,32 @@ namespace Wholemy {
 		}
 		#endregion
 		private Change Mod;
-		private int FigureCount;
-		private Figure FigureBase;
-		private Figure FigureLast;
+		#region #invisible# 
+#if TRACE
+		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+		#endregion
+		public int FigureSize;
+		#region #invisible# 
+#if TRACE
+		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+		#endregion
+		public Figure FigureBase;
+		#region #invisible# 
+#if TRACE
+		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+		#endregion
+		public Figure FigureLast;
 		/// <summary>Толщина линий)</summary>
 		public double Thickness;
-		public bool IsBonesUse;
+		public bool IsBoned;
 		public bool IsRoundM;
 		public bool IsRoundE;
 		/// <summary>Истинное значение устанавливает точность 0.005 при обнаружении разворотов в кривых,
 		/// а так же добавляет излишние операции для нормальной точности, которая эквивалентна значению 0.5)</summary>
 		public bool Ideal;
-		public const double IdealPrecision = 0.005;
-		public const double NormalPrecision = 0.5;
 		#region #property# Figures 
 		private Figure[] Figures {
 			#region #through# 
@@ -405,7 +484,7 @@ namespace Wholemy {
 #endif
 			#endregion
 			get {
-				var Count = this.FigureCount;
+				var Count = this.FigureSize;
 				var Array = new Figure[Count--];
 				var Cache = this.FigureLast;
 				while (Count >= 0) {
@@ -418,162 +497,114 @@ namespace Wholemy {
 		#endregion
 		#region #method# FiguresToGeometry 
 		private System.Windows.Media.Geometry FiguresToGeometry() {
-			if (FigureCount > 0) {
-				var Stream = new System.Windows.Media.StreamGeometry();
-				Stream.FillRule = FillRule ? System.Windows.Media.FillRule.Nonzero : System.Windows.Media.FillRule.EvenOdd;
-				var Context = Stream.Open();
-				var Figure = FigureBase;
-				while (Figure != null) {
-					if (Figure.ItemCount > 0) {
-						var Cache = Figure.ItemBase;
-						var Value = Cache.Value;
-						Context.BeginFigure(new System.Windows.Point(Value.MX, Value.MY), Figure.IsFilled, Figure.IsClozed);
+			if (FigureSize == 0) return null;
+			var Stream = new System.Windows.Media.StreamGeometry();
+			Stream.FillRule = IsUnited ? System.Windows.Media.FillRule.Nonzero : System.Windows.Media.FillRule.EvenOdd;
+			var Context = Stream.Open();
+			var Figure = FigureBase;
+			while (Figure != null) {
+				if (Figure.ItemCount > 0) {
+					var Cache = Figure.ItemBase;
+					var Value = Cache.Line;
+					Context.BeginFigure(new System.Windows.Point(Value.MX, Value.MY), Figure.IsFilled, Figure.IsClozed);
+					Value.To(Context);
+					var PreX = Value.EX;
+					var PreY = Value.EY;
+					Cache = Cache.Next;
+					while (Cache != null) {
+						Value = Cache.Line;
+						Value.If(Context, PreX, PreY);
 						Value.To(Context);
-						var PreX = Value.EX;
-						var PreY = Value.EY;
+						PreX = Value.EX;
+						PreY = Value.EY;
 						Cache = Cache.Next;
-						while (Cache != null) {
-							Value = Cache.Value;
-							Value.If(Context, PreX, PreY);
-							Value.To(Context);
-							PreX = Value.EX;
-							PreY = Value.EY;
-							Cache = Cache.Next;
-						}
 					}
-					Figure = Figure.Next;
 				}
-				Context.Close();
-				return Stream;
+				Figure = Figure.Next;
 			}
-			return null;
+			Context.Close();
+			return Stream;
 		}
 		#endregion
 		#region #method# CombineToGeometry 
 		public System.Windows.Media.Geometry CombineToGeometry() {
 			var Path = FiguresToGeometry();
-			var Prev = this.LastPath;
-			if (Prev != null) {
-				if (Path != null) {
-					Path = System.Windows.Media.Geometry.Combine(Prev, Path, this.LastMode, null, this.Tolerance, this.ToleranceType);
-				} else {
-					Path = Prev;
-				}
-				this.LastPath = null;
-			}
-			var Part = this.HoldPath;
-			if (Part != null) {
-				if (Path != null) {
-					Path = System.Windows.Media.Geometry.Combine(Part, Path, this.HoldMode, null, this.Tolerance, this.ToleranceType);
-				} else {
-					Path = Part;
-				}
-				this.HoldPath = null;
-			}
-			FigureCount = 0;
-			FigureBase = null;
-			FigureLast = null;
 			return Path;
+		}
+		#endregion
+		#region #method# AddGeometry(Geometry) 
+		public void AddGeometry(System.Windows.Media.Geometry Geometry) {
+			var Path = Geometry as System.Windows.Media.PathGeometry;
+			if (Path == null) Path = Geometry.GetFlattenedPathGeometry();
+			var Figures = Path.Figures;
+			foreach (var Figure in Figures) {
+				var F = new Figure(this);
+				F.IsClozed = Figure.IsClosed;
+				F.IsFilled = Figure.IsFilled;
+				var P0 = Figure.StartPoint;
+				var Segments = Figure.Segments;
+				foreach (var Segment in Segments) {
+					var MX = P0.X;
+					var MY = P0.Y;
+					if (Segment is System.Windows.Media.LineSegment) {
+						var S = (System.Windows.Media.LineSegment)Segment;
+						var P1 = S.Point;
+						AddCurve(P0.X, P0.Y, P1.X, P1.Y);
+						P0 = P1;
+					} else if (Segment is System.Windows.Media.PolyLineSegment) {
+						var Poly = (System.Windows.Media.PolyLineSegment)Segment;
+						var Points = Poly.Points;
+						var C = Points.Count;
+						for (var I = 0; I < C; I++) {
+							var P1 = Points[I];
+							AddCurve(P0.X, P0.Y, P1.X, P1.Y);
+							P0 = P1;
+						}
+					} else if (Segment is System.Windows.Media.QuadraticBezierSegment) {
+						var S = (System.Windows.Media.QuadraticBezierSegment)Segment;
+						var P1 = S.Point1;
+						var P2 = S.Point2;
+						AddCurve(P0.X, P0.Y, P1.X, P1.Y, P2.X, P2.Y);
+						P0 = P2;
+					} else if (Segment is System.Windows.Media.PolyQuadraticBezierSegment) {
+						var Poly = (System.Windows.Media.PolyQuadraticBezierSegment)Segment;
+						var Points = Poly.Points;
+						var C = Points.Count;
+						for (var I = 0; I < C; I += 2) {
+							var P1 = Points[I];
+							var P2 = Points[I + 1];
+							AddCurve(P0.X, P0.Y, P1.X, P1.Y, P2.X, P2.Y);
+							P0 = P2;
+						}
+					} else if (Segment is System.Windows.Media.BezierSegment) {
+						var S = (System.Windows.Media.BezierSegment)Segment;
+						var P1 = S.Point1;
+						var P2 = S.Point2;
+						var P3 = S.Point3;
+						AddCurve(P0.X, P0.Y, P1.X, P1.Y, P2.X, P2.Y, P3.X, P3.Y);
+						P0 = P3;
+					} else if (Segment is System.Windows.Media.PolyBezierSegment) {
+						var Poly = (System.Windows.Media.PolyBezierSegment)Segment;
+						var Points = Poly.Points;
+						var C = Points.Count;
+						for (var I = 0; I < C; I += 3) {
+							var P1 = Points[I];
+							var P2 = Points[I + 1];
+							var P3 = Points[I + 2];
+							AddCurve(P0.X, P0.Y, P1.X, P1.Y, P2.X, P2.Y, P3.X, P3.Y);
+							P0 = P3;
+						}
+					} else {
+						throw new System.NotSupportedException();
+					}
+				}
+			}
 		}
 		#endregion
 		#region #method# Combine 
 		public PathSource Combine() {
 			var Path = FiguresToGeometry();
-			var Last = this.LastPath;
-			if (Last != null) {
-				if (Path != null) {
-					Path = System.Windows.Media.Geometry.Combine(Last, Path, this.LastMode, null, this.Tolerance, this.ToleranceType);
-				} else {
-					Path = Last;
-				}
-				this.LastPath = null;
-			}
-			var Hold = this.HoldPath;
-			if (Hold != null) {
-				if (Path != null) {
-					Path = System.Windows.Media.Geometry.Combine(Hold, Path, this.HoldMode, null, this.Tolerance, this.ToleranceType);
-				} else {
-					Path = Hold;
-				}
-				this.HoldPath = null;
-			}
-			this.LastPath = Path;
-			FigureCount = 0;
-			FigureBase = null;
-			FigureLast = null;
 			return this;
-		}
-		#endregion
-		#region #property# Current 
-		public System.Windows.Media.Geometry Current {
-			get {
-				var Path = FiguresToGeometry();
-				var Last = this.LastPath;
-				if (Last != null) {
-					if (Path != null) {
-						Path = System.Windows.Media.Geometry.Combine(Last, Path, this.LastMode, null, this.Tolerance, this.ToleranceType);
-					} else {
-						Path = Last;
-					}
-				}
-				var Part = this.HoldPath;
-				if (Part != null) {
-					if (Path != null) {
-						Path = System.Windows.Media.Geometry.Combine(Part, Path, this.HoldMode, null, this.Tolerance, this.ToleranceType);
-					} else {
-						Path = Part;
-					}
-				}
-				return Path;
-			}
-		}
-		#endregion
-		#region #method# CombineLast 
-		private void CombineLast() {
-			var Path = FiguresToGeometry();
-			if (Path != null) {
-				this.FigureCount = 0;
-				this.FigureBase = null;
-				this.FigureLast = null;
-				this.FillRule = false;
-			}
-			var Last = this.LastPath;
-			if (Last != null) {
-				if (Path != null) {
-					Path = System.Windows.Media.Geometry.Combine(Last, Path, this.LastMode, null, this.Tolerance, this.ToleranceType);
-				} else {
-					Path = Last;
-				}
-			}
-			this.LastPath = Path;
-		}
-		#endregion
-		#region #method# CombineHold 
-		private void CombineHold() {
-			var Path = FiguresToGeometry();
-			if (Path != null) {
-				this.FigureCount = 0;
-				this.FigureBase = null;
-				this.FigureLast = null;
-				this.FillRule = false;
-			}
-			var Last = this.LastPath;
-			if (Last != null) {
-				if (Path != null) {
-					Path = System.Windows.Media.Geometry.Combine(Last, Path, this.LastMode, null, this.Tolerance, this.ToleranceType);
-				} else {
-					Path = Last;
-				}
-			}
-			var Hold = this.HoldPath;
-			if (Hold != null) {
-				if (Path != null) {
-					Path = System.Windows.Media.Geometry.Combine(Hold, Path, this.HoldMode, null, this.Tolerance, this.ToleranceType);
-				} else {
-					Path = Hold;
-				}
-			}
-			this.HoldPath = Path;
 		}
 		#endregion
 		#region #method# Begin[Part = P][Hollow = H|Filled = F][Closed = z] 
@@ -583,88 +614,40 @@ namespace Wholemy {
 		public void BeginFz() { this.IsFilled = true; this.IsClozed = true; new Figure(this); }
 		public void BeginF() { this.IsFilled = true; this.IsClozed = false; new Figure(this); }
 		#endregion
-		#region #method# Union[Part = P][Hollow = H|Filled = F][Closed = z] 
-		public void Union() { this.CombineLast(); this.LastMode = System.Windows.Media.GeometryCombineMode.Union; }
-		public void UnionHz() { this.IsFilled = false; this.IsClozed = true; this.Union(); }
-		public void UnionH() { this.IsFilled = false; this.IsClozed = false; this.Union(); }
-		public void UnionFz() { this.IsFilled = true; this.IsClozed = true; this.Union(); }
-		public void UnionF() { this.IsFilled = true; this.IsClozed = false; this.Union(); }
-		public void UnionP() { this.CombineHold(); this.HoldMode = System.Windows.Media.GeometryCombineMode.Union; }
-		public void UnionPHz() { this.IsFilled = false; this.IsClozed = true; this.UnionP(); }
-		public void UnionPH() { this.IsFilled = false; this.IsClozed = false; this.UnionP(); }
-		public void UnionPFz() { this.IsFilled = true; this.IsClozed = true; this.UnionP(); }
-		public void UnionPF() { this.IsFilled = true; this.IsClozed = false; this.UnionP(); }
+		#region #method# AddCurve(Line) 
+		public Curve AddCurve(Line Line) {
+			var Fig = this.FigureLast ?? new Figure(this);
+			Line.Change(this.Mod, (this.Inverted && Fig.Inverted));
+			return new Curve(Fig, Line);
+		}
 		#endregion
-		#region #method# Intersect[Part = P][Hollow = H|Filled = F][Closed = z] 
-		public void Intersect() { this.CombineLast(); this.LastMode = System.Windows.Media.GeometryCombineMode.Intersect; }
-		public void IntersectHz() { this.IsFilled = false; this.IsClozed = true; this.Intersect(); }
-		public void IntersectH() { this.IsFilled = false; this.IsClozed = false; this.Intersect(); }
-		public void IntersectFz() { this.IsFilled = true; this.IsClozed = true; this.Intersect(); }
-		public void IntersectF() { this.IsFilled = true; this.IsClozed = false; this.Intersect(); }
-		public void IntersectP() { this.CombineHold(); this.HoldMode = System.Windows.Media.GeometryCombineMode.Intersect; }
-		public void IntersectPHz() { this.IsFilled = false; this.IsClozed = true; this.IntersectP(); }
-		public void IntersectPH() { this.IsFilled = false; this.IsClozed = false; this.IntersectP(); }
-		public void IntersectPFz() { this.IsFilled = true; this.IsClozed = true; this.IntersectP(); }
-		public void IntersectPF() { this.IsFilled = true; this.IsClozed = false; this.IntersectP(); }
+		#region #method# AddCurve(MX, MY, EX, EY) 
+		public Curve AddCurve(double MX, double MY, double EX, double EY) {
+			return AddCurve(new Line(MX, MY, EX, EY));
+		}
 		#endregion
-		#region #method# Xor[Part = P][Hollow = H|Filled = F][Closed = z] 
-		public void Xor() { this.CombineLast(); this.LastMode = System.Windows.Media.GeometryCombineMode.Xor; }
-		public void XorHz() { this.IsFilled = false; this.IsClozed = true; this.Xor(); }
-		public void XorH() { this.IsFilled = false; this.IsClozed = false; this.Xor(); }
-		public void XorFz() { this.IsFilled = true; this.IsClozed = true; this.Xor(); }
-		public void XorF() { this.IsFilled = true; this.IsClozed = false; this.Xor(); }
-		public void XorP() { this.CombineHold(); this.HoldMode = System.Windows.Media.GeometryCombineMode.Xor; }
-		public void XorPHz() { this.IsFilled = false; this.IsClozed = true; this.XorP(); }
-		public void XorPH() { this.IsFilled = false; this.IsClozed = false; this.XorP(); }
-		public void XorPFz() { this.IsFilled = true; this.IsClozed = true; this.XorP(); }
-		public void XorPF() { this.IsFilled = true; this.IsClozed = false; this.XorP(); }
-		#endregion
-		#region #method# Exclude[Part = P][Hollow = H|Filled = F][Closed = z] 
-		public void Exclude() { this.CombineLast(); this.LastMode = System.Windows.Media.GeometryCombineMode.Exclude; }
-		public void ExcludeHz() { this.IsFilled = false; this.IsClozed = true; this.Exclude(); }
-		public void ExcludeH() { this.IsFilled = false; this.IsClozed = false; this.Exclude(); }
-		public void ExcludeFz() { this.IsFilled = true; this.IsClozed = true; this.Exclude(); }
-		public void ExcludeF() { this.IsFilled = true; this.IsClozed = false; this.Exclude(); }
-		public void ExcludeP() { this.CombineHold(); this.HoldMode = System.Windows.Media.GeometryCombineMode.Exclude; }
-		public void ExcludePHz() { this.IsFilled = false; this.IsClozed = true; this.ExcludeP(); }
-		public void ExcludePH() { this.IsFilled = false; this.IsClozed = false; this.ExcludeP(); }
-		public void ExcludePFz() { this.IsFilled = true; this.IsClozed = true; this.ExcludeP(); }
-		public void ExcludePF() { this.IsFilled = true; this.IsClozed = false; this.ExcludeP(); }
-		#endregion
-		#region #method# AddItem(Val) 
-		public Item AddItem(Line Val) {
+		#region #method# AddCurve(Val) 
+		public Curve AddCurve(Quadratic Val) {
 			var Fig = this.FigureLast ?? new Figure(this);
 			Val.Change(this.Mod, (this.Inverted && Fig.Inverted));
-			return new Item(Fig, Val);
+			return new Curve(Fig, Val);
 		}
 		#endregion
-		#region #method# AddItem(MX, MY, EX, EY) 
-		public Item AddItem(double MX, double MY, double EX, double EY) {
-			return AddItem(new Line(MX, MY, EX, EY));
+		#region #method# AddCurve(MX, MY, QX, QY, EX, EY) 
+		public Curve AddCurve(double MX, double MY, double QX, double QY, double EX, double EY) {
+			return AddCurve(new Quadratic(MX, MY, QX, QY, EX, EY));
 		}
 		#endregion
-		#region #method# AddItem(Val) 
-		public Item AddItem(Quadratic Val) {
+		#region #method# AddCurve(Val) 
+		public Curve AddCurve(Cubic Val) {
 			var Fig = this.FigureLast ?? new Figure(this);
 			Val.Change(this.Mod, (this.Inverted && Fig.Inverted));
-			return new Item(Fig, Val);
+			return new Curve(Fig, Val);
 		}
 		#endregion
-		#region #method# AddItem(MX, MY, QX, QY, EX, EY) 
-		public Item AddItem(double MX, double MY, double QX, double QY, double EX, double EY) {
-			return AddItem(new Quadratic(MX, MY, QX, QY, EX, EY));
-		}
-		#endregion
-		#region #method# AddItem(Val) 
-		public Item AddItem(Cubic Val) {
-			var Fig = this.FigureLast ?? new Figure(this);
-			Val.Change(this.Mod, (this.Inverted && Fig.Inverted));
-			return new Item(Fig, Val);
-		}
-		#endregion
-		#region #method# AddItem(MX, MY, cmX, cmY, ceX, ceY, EX, EY) 
-		public Item AddItem(double MX, double MY, double cmX, double cmY, double ceX, double ceY, double EX, double EY) {
-			return AddItem(new Cubic(MX, MY, cmX, cmY, ceX, ceY, EX, EY));
+		#region #method# AddCurve(MX, MY, cmX, cmY, ceX, ceY, EX, EY) 
+		public Curve AddCurve(double MX, double MY, double cmX, double cmY, double ceX, double ceY, double EX, double EY) {
+			return AddCurve(new Cubic(MX, MY, cmX, cmY, ceX, ceY, EX, EY));
 		}
 		#endregion
 		#region #method# AddBone(Val) 
@@ -929,7 +912,7 @@ namespace Wholemy {
 				this.CY = CY;
 			}
 			public RotateMod(Change Next, double CX, double CY, double BX, double BY, double AX, double AY, Mods Mods = Mods.All) : base(Next, Mods) {
-				this.AR = AR = Mat.GetAR(CX, CY, BX, BY, AX, AY);
+				this.AR = AR = GetaR1(CX, CY, BX, BY, AX, AY);
 				this.CX = CX;
 				this.CY = CY;
 			}
@@ -937,7 +920,7 @@ namespace Wholemy {
 				if (x || y) {
 					var AX = X;
 					var AY = Y;
-					Mat.Rotate(this.CX, this.CY, ref AX, ref AY, this.AR);
+					Rotate1(this.CX, this.CY, ref AX, ref AY, this.AR);
 					if (x) X = AX;
 					if (y) Y = AY;
 				}
@@ -1035,15 +1018,15 @@ namespace Wholemy {
 			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
 			#endregion
-			public Item ItemBase;
+			public Curve ItemBase;
 			#region #invisible# 
 #if TRACE
 			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
 			#endregion
-			public Item ItemLast;
-			#region #property# Items 
-			public Line[] Items {
+			public Curve ItemLast;
+			#region #property# Curves 
+			public Line[] Curves {
 				#region #through# 
 #if TRACE
 				[System.Diagnostics.DebuggerStepThrough]
@@ -1054,7 +1037,7 @@ namespace Wholemy {
 					var Array = new Line[Count--];
 					var Item = this.ItemLast;
 					while (Count >= 0) {
-						Array[Count--] = Item.Value;
+						Array[Count--] = Item.Line;
 						Item = Item.Prev;
 					}
 					return Array;
@@ -1104,14 +1087,14 @@ namespace Wholemy {
 				this.IsClozed = Owner.IsClozed;
 				this.Inverted = Owner.Inverted;
 				this.Owner = Owner;
-				if (Owner.FigureCount == 0) {
-					Owner.FigureCount = 1;
+				if (Owner.FigureSize == 0) {
+					Owner.FigureSize = 1;
 					Owner.FigureBase = this;
 					Owner.FigureLast = this;
 				} else {
 					(this.Prev = Owner.FigureLast).Next = this;
 					Owner.FigureLast = this;
-					Owner.FigureCount++;
+					Owner.FigureSize++;
 				}
 			}
 			#endregion
@@ -1121,9 +1104,9 @@ namespace Wholemy {
 				var S = "";
 				if (ItemCount > 0) {
 					var Cache = ItemBase;
-					S = "M" + Cache.Value.MX.ToString(I) + "," + Cache.Value.MY.ToString(I);
+					S = "M" + Cache.Line.MX.ToString(I) + "," + Cache.Line.MY.ToString(I);
 					while (Cache != null) {
-						S += Cache.Value.ToPathString();
+						S += Cache.Line.ToPathString();
 						Cache = Cache.Next;
 					}
 				}
@@ -1181,26 +1164,26 @@ namespace Wholemy {
 			#endregion
 		}
 		#endregion
-		#region #class# Item 
-		public class Item {
+		#region #class# Curve 
+		public class Curve {
 			public Figure Figure;
 			#region #invisible# 
 #if TRACE
 			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
 			#endregion
-			public Item Prev;
+			public Curve Prev;
 			#region #invisible# 
 #if TRACE
 			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
 			#endregion
-			public Item Next;
-			public Line Value;
+			public Curve Next;
+			public Line Line;
 			#region #new# (Figure, Value) 
-			public Item(Figure Figure, Line Value) {
+			public Curve(Figure Figure, Line Line) {
 				this.Figure = Figure;
-				this.Value = Value;
+				this.Line = Line;
 				if (Figure.ItemCount == 0) {
 					Figure.ItemCount = 1;
 					Figure.ItemBase = this;
@@ -1224,7 +1207,7 @@ namespace Wholemy {
 #endif
 			#endregion
 			public override string ToString() {
-				return Value.ToString();
+				return Line.ToString();
 			}
 			#endregion
 		}
@@ -1270,8 +1253,12 @@ namespace Wholemy {
 			#endregion
 			#region #method# If(Context, X, Y) 
 			public virtual void If(System.Windows.Media.StreamGeometryContext Context, double X, double Y) {
-				if (!double.Equals(X, MX) || !double.Equals(Y, MY))
+				if (!double.Equals(X, MX) || !double.Equals(Y, MY)) {
+					if (Sqrt(X - MX, Y - MY) > 10.0) {
+
+					}
 					Context.LineTo(new System.Windows.Point(MX, MY), true, true);
+				}
 			}
 			#endregion
 			#region #method# To(Context) 
@@ -1417,7 +1404,7 @@ namespace Wholemy {
 				var MY = this.MY;
 				var EX = this.EX;
 				var EY = this.EY;
-				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				var meL = Sqrt(MX - EX, MY - EY);
 				var YX = (EY - MY) / meL * S;
 				var XY = (MX - EX) / meL * S;
 				var AX = MX + YX;
@@ -1428,10 +1415,10 @@ namespace Wholemy {
 				var CY = MY + (MY - EY) / meL * S;
 				new Cubic(BX, BY, (BX + (MY - BY) / S * A), (BY + (BX - MX) / S * A), (CX + (CY - MY) / S * A), (CY + (MX - CX) / S * A), CX, CY).DivArc(out var a0, out var a1);
 				new Cubic(CX, CY, (CX + (MY - CY) / S * A), (CY + (CX - MX) / S * A), (AX + (AY - MY) / S * A), (AY + (MX - AX) / S * A), AX, AY).DivArc(out var a2, out var a3);
-				P.AddItem(a0);
-				P.AddItem(a1);
-				P.AddItem(a2);
-				P.AddItem(a3);
+				P.AddCurve(a0);
+				P.AddCurve(a1);
+				P.AddCurve(a2);
+				P.AddCurve(a3);
 			}
 			#endregion
 			#region #method# AddArcE(P) 
@@ -1442,7 +1429,7 @@ namespace Wholemy {
 				var MY = this.MY;
 				var EX = this.EX;
 				var EY = this.EY;
-				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				var meL = Sqrt(MX - EX, MY - EY);
 				var YX = (EY - MY) / meL * S;
 				var XY = (MX - EX) / meL * S;
 				var AX = EX + YX;
@@ -1453,10 +1440,10 @@ namespace Wholemy {
 				var CY = EY + (EY - MY) / meL * S;
 				new Cubic(AX, AY, (AX + (EY - AY) / S * A), (AY + (AX - EX) / S * A), (CX + (CY - EY) / S * A), (CY + (EX - CX) / S * A), CX, CY).DivArc(out var a0, out var a1);
 				new Cubic(CX, CY, (CX + (EY - CY) / S * A), (CY + (CX - EX) / S * A), (BX + (BY - EY) / S * A), (BY + (EX - BX) / S * A), BX, BY).DivArc(out var a2, out var a3);
-				P.AddItem(a0);
-				P.AddItem(a1);
-				P.AddItem(a2);
-				P.AddItem(a3);
+				P.AddCurve(a0);
+				P.AddCurve(a1);
+				P.AddCurve(a2);
+				P.AddCurve(a3);
 			}
 			#endregion
 			#region #method# AddLinM(P) 
@@ -1467,14 +1454,14 @@ namespace Wholemy {
 				var MY = this.MY;
 				var EX = this.EX;
 				var EY = this.EY;
-				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				var meL = Sqrt(MX - EX, MY - EY);
 				var YX = (EY - MY) / meL * S;
 				var XY = (MX - EX) / meL * S;
 				var AX = MX + YX;
 				var AY = MY + XY;
 				var BX = MX - YX;
 				var BY = MY - XY;
-				P.AddItem(new Line(BX, BY, AX, AY));
+				P.AddCurve(new Line(BX, BY, AX, AY));
 			}
 			#endregion
 			#region #method# AddLinE(P) 
@@ -1485,14 +1472,14 @@ namespace Wholemy {
 				var MY = this.MY;
 				var EX = this.EX;
 				var EY = this.EY;
-				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				var meL = Sqrt(MX - EX, MY - EY);
 				var YX = (EY - MY) / meL * S;
 				var XY = (MX - EX) / meL * S;
 				var AX = EX + YX;
 				var AY = EY + XY;
 				var BX = EX - YX;
 				var BY = EY - XY;
-				P.AddItem(new Line(AX, AY, BX, BY));
+				P.AddCurve(new Line(AX, AY, BX, BY));
 			}
 			#endregion
 			#region #method# Dot(root) 
@@ -1508,6 +1495,12 @@ namespace Wholemy {
 				return new Dot(root, x01, y01, x00, y00, x11, y11);
 			}
 			#endregion
+			public virtual List<Line> HalfArcM(double Size) {
+				return null;
+			}
+			public virtual List<Line> HalfArcE(double Size) {
+				return null;
+			}
 		}
 		#endregion
 		#region #class# Cubic 
@@ -1634,6 +1627,82 @@ namespace Wholemy {
 				var y03 = (y13 - y02) * R + y02;
 				A = new Cubic(x00, y00, x01, y01, x02, y02, x03, y03);
 				B = new Cubic(x03, y03, x13, y13, x23, y23, x33, y33);
+			}
+			#endregion
+			#region #method# DivA(R) 
+			public Cubic DivA(double R) {
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = cmX;
+				var y11 = cmY;
+				var x22 = ceX;
+				var y22 = ceY;
+				var x33 = EX;
+				var y33 = EY;
+				var x01 = (x11 - x00) * R + x00;
+				var y01 = (y11 - y00) * R + y00;
+				var x12 = (x22 - x11) * R + x11;
+				var y12 = (y22 - y11) * R + y11;
+				var x23 = (x33 - x22) * R + x22;
+				var y23 = (y33 - y22) * R + y22;
+				var x02 = (x12 - x01) * R + x01;
+				var y02 = (y12 - y01) * R + y01;
+				var x13 = (x23 - x12) * R + x12;
+				var y13 = (y23 - y12) * R + y12;
+				var x03 = (x13 - x02) * R + x02;
+				var y03 = (y13 - y02) * R + y02;
+				return new Cubic(x00, y00, x01, y01, x02, y02, x03, y03);
+			}
+			#endregion
+			#region #method# DivB(R) 
+			public Cubic DivB(double R) {
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = cmX;
+				var y11 = cmY;
+				var x22 = ceX;
+				var y22 = ceY;
+				var x33 = EX;
+				var y33 = EY;
+				var x01 = (x11 - x00) * R + x00;
+				var y01 = (y11 - y00) * R + y00;
+				var x12 = (x22 - x11) * R + x11;
+				var y12 = (y22 - y11) * R + y11;
+				var x23 = (x33 - x22) * R + x22;
+				var y23 = (y33 - y22) * R + y22;
+				var x02 = (x12 - x01) * R + x01;
+				var y02 = (y12 - y01) * R + y01;
+				var x13 = (x23 - x12) * R + x12;
+				var y13 = (y23 - y12) * R + y12;
+				var x03 = (x13 - x02) * R + x02;
+				var y03 = (y13 - y02) * R + y02;
+				return new Cubic(x03, y03, x13, y13, x23, y23, x33, y33);
+			}
+			#endregion
+			#region #method# DivC(R, X, Y) 
+			public void DivC(double R, out double X, out double Y) {
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = cmX;
+				var y11 = cmY;
+				var x22 = ceX;
+				var y22 = ceY;
+				var x33 = EX;
+				var y33 = EY;
+				var x01 = (x11 - x00) * R + x00;
+				var y01 = (y11 - y00) * R + y00;
+				var x12 = (x22 - x11) * R + x11;
+				var y12 = (y22 - y11) * R + y11;
+				var x23 = (x33 - x22) * R + x22;
+				var y23 = (y33 - y22) * R + y22;
+				var x02 = (x12 - x01) * R + x01;
+				var y02 = (y12 - y01) * R + y01;
+				var x13 = (x23 - x12) * R + x12;
+				var y13 = (y23 - y12) * R + y12;
+				var x03 = (x13 - x02) * R + x02;
+				var y03 = (y13 - y02) * R + y02;
+				X = x03;
+				Y = y03;
 			}
 			#endregion
 			#region #method# Dot(root) 
@@ -1924,9 +1993,9 @@ namespace Wholemy {
 				var ceY = this.ceY;
 				var EX = this.EX;
 				var EY = this.EY;
-				var l0 = Mat.Path(cmX - MX, cmY - MY, out var l0X, out var l0Y);
-				var l1 = Mat.Path(ceX - cmX, ceY - cmY, out var l1X, out var l1Y);
-				var l2 = Mat.Path(EX - ceX, EY - ceY, out var l2X, out var l2Y);
+				var l0 = RootOffset(cmX - MX, cmY - MY, out var l0X, out var l0Y);
+				var l1 = RootOffset(ceX - cmX, ceY - cmY, out var l1X, out var l1Y);
+				var l2 = RootOffset(EX - ceX, EY - ceY, out var l2X, out var l2Y);
 				if (l0 == 0.0 && l1 == 0.0 && l2 == 0.0) return;
 				if (l0 == 0.0) if (l1 > 0.0) { l0X = l1X; l0Y = l1Y; } else { l0X = l2X; l0Y = l2Y; }
 				if (l2 == 0.0) if (l1 > 0.0) { l2X = l1X; l2Y = l1Y; } else { l2X = l0X; l2Y = l0Y; }
@@ -1940,11 +2009,11 @@ namespace Wholemy {
 				var baY = MY;
 				var cbX = MX;
 				var cbY = MY;
-				Mat.SetA1(MX, MY, ref bX, ref bY, 0.25);
-				Mat.SetA1(bX, bY, ref baX, ref baY, 0.25);
-				Mat.SetA1(bX, bY, ref cbX, ref cbY, 0.75);
-				P.AddItem(new Cubic(cX, cY, cbX, cbY, bX, bY));
-				P.AddItem(new Cubic(bX, bY, baX, baY, aX, aY));
+				Rotate1(MX, MY, ref bX, ref bY, 0.25);
+				Rotate1(bX, bY, ref baX, ref baY, 0.25);
+				Rotate1(bX, bY, ref cbX, ref cbY, 0.75);
+				P.AddCurve(new Cubic(cX, cY, cbX, cbY, bX, bY));
+				P.AddCurve(new Cubic(bX, bY, baX, baY, aX, aY));
 			}
 			#endregion
 			#region #method# AddArcE(P) 
@@ -1960,9 +2029,9 @@ namespace Wholemy {
 				var ceY = this.ceY;
 				var EX = this.EX;
 				var EY = this.EY;
-				var l0 = Mat.Path(cmX - MX, cmY - MY, out var l0X, out var l0Y);
-				var l1 = Mat.Path(ceX - cmX, ceY - cmY, out var l1X, out var l1Y);
-				var l2 = Mat.Path(EX - ceX, EY - ceY, out var l2X, out var l2Y);
+				var l0 = RootOffset(cmX - MX, cmY - MY, out var l0X, out var l0Y);
+				var l1 = RootOffset(ceX - cmX, ceY - cmY, out var l1X, out var l1Y);
+				var l2 = RootOffset(EX - ceX, EY - ceY, out var l2X, out var l2Y);
 				if (l0 == 0.0 && l1 == 0.0 && l2 == 0.0) return;
 				if (l0 == 0.0) if (l1 > 0.0) { l0X = l1X; l0Y = l1Y; } else { l0X = l2X; l0Y = l2Y; }
 				if (l2 == 0.0) if (l1 > 0.0) { l2X = l1X; l2Y = l1Y; } else { l2X = l0X; l2Y = l0Y; }
@@ -1976,11 +2045,87 @@ namespace Wholemy {
 				var abY = EY;
 				var bcX = EX;
 				var bcY = EY;
-				Mat.SetA1(EX, EY, ref bX, ref bY, -0.25);
-				Mat.SetA1(bX, bY, ref abX, ref abY, -0.25);
-				Mat.SetA1(bX, bY, ref bcX, ref bcY, -0.75);
-				P.AddItem(new Cubic(aX, aY, abX, abY, bX, bY));
-				P.AddItem(new Cubic(bX, bY, bcX, bcY, cX, cY));
+				Rotate1(EX, EY, ref bX, ref bY, -0.25);
+				Rotate1(bX, bY, ref abX, ref abY, -0.25);
+				Rotate1(bX, bY, ref bcX, ref bcY, -0.75);
+				P.AddCurve(new Cubic(aX, aY, abX, abY, bX, bY));
+				P.AddCurve(new Cubic(bX, bY, bcX, bcY, cX, cY));
+			}
+			#endregion
+			#region #method# HalfArcM(P) 
+			public override List<Line> HalfArcM(double Size) {
+				var List = new List<Line>();
+				var SA = Size;
+				var SB = -SA;
+				var A = SA * Arc14;
+				var MX = this.MX;
+				var MY = this.MY;
+				var cmX = this.cmX;
+				var cmY = this.cmY;
+				var ceX = this.ceX;
+				var ceY = this.ceY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var l0 = RootOffset(cmX - MX, cmY - MY, out var l0X, out var l0Y);
+				var l1 = RootOffset(ceX - cmX, ceY - cmY, out var l1X, out var l1Y);
+				var l2 = RootOffset(EX - ceX, EY - ceY, out var l2X, out var l2Y);
+				if (l0 == 0.0 && l1 == 0.0 && l2 == 0.0) return List;
+				if (l0 == 0.0) if (l1 > 0.0) { l0X = l1X; l0Y = l1Y; } else { l0X = l2X; l0Y = l2Y; }
+				if (l2 == 0.0) if (l1 > 0.0) { l2X = l1X; l2Y = l1Y; } else { l2X = l0X; l2Y = l0Y; }
+				var aX = MX + SA * l0X;
+				var aY = MY + SA * l0Y;
+				var bX = aX;
+				var bY = aY;
+				var cX = MX + SB * l0X;
+				var cY = MY + SB * l0Y;
+				var baX = MX;
+				var baY = MY;
+				var cbX = MX;
+				var cbY = MY;
+				Rotate1(MX, MY, ref bX, ref bY, 0.25);
+				Rotate1(bX, bY, ref baX, ref baY, 0.25);
+				Rotate1(bX, bY, ref cbX, ref cbY, 0.75);
+				List.AddLast(new Cubic(cX, cY, cbX, cbY, bX, bY));
+				List.AddLast(new Cubic(bX, bY, baX, baY, aX, aY));
+				return List;
+			}
+			#endregion
+			#region #method# HalfArcE(P) 
+			public override List<Line> HalfArcE(double Size) {
+				var List = new List<Line>();
+				var SA = Size;
+				var SB = -SA;
+				var A = SA * Arc14;
+				var MX = this.MX;
+				var MY = this.MY;
+				var cmX = this.cmX;
+				var cmY = this.cmY;
+				var ceX = this.ceX;
+				var ceY = this.ceY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var l0 = RootOffset(cmX - MX, cmY - MY, out var l0X, out var l0Y);
+				var l1 = RootOffset(ceX - cmX, ceY - cmY, out var l1X, out var l1Y);
+				var l2 = RootOffset(EX - ceX, EY - ceY, out var l2X, out var l2Y);
+				if (l0 == 0.0 && l1 == 0.0 && l2 == 0.0) return List;
+				if (l0 == 0.0) if (l1 > 0.0) { l0X = l1X; l0Y = l1Y; } else { l0X = l2X; l0Y = l2Y; }
+				if (l2 == 0.0) if (l1 > 0.0) { l2X = l1X; l2Y = l1Y; } else { l2X = l0X; l2Y = l0Y; }
+				var aX = EX + SA * l2X;
+				var aY = EY + SA * l2Y;
+				var bX = aX;
+				var bY = aY;
+				var cX = EX + SB * l2X;
+				var cY = EY + SB * l2Y;
+				var abX = EX;
+				var abY = EY;
+				var bcX = EX;
+				var bcY = EY;
+				Rotate1(EX, EY, ref bX, ref bY, -0.25);
+				Rotate1(bX, bY, ref abX, ref abY, -0.25);
+				Rotate1(bX, bY, ref bcX, ref bcY, -0.75);
+				List.AddLast(new Cubic(aX, aY, abX, abY, bX, bY));
+				List.AddLast(new Cubic(bX, bY, bcX, bcY, cX, cY));
+				return List;
 			}
 			#endregion
 			#region #method# NormalAddA(P) 
@@ -1997,12 +2142,12 @@ namespace Wholemy {
 				DIV = 0.5;
 				NEXT:
 				if (TES.ExtA(S, Size, ref SET)) {
-					P.AddItem(SET);
+					P.AddCurve(SET);
 				} else {
 					LESS:
 					TES.Div(DIV, out NOW, out RAM);
 					if (NOW.ExtA(S, Size, ref SET)) {
-						P.AddItem(SET);
+						P.AddCurve(SET);
 						TES = RAM;
 						DIV = 0.5;
 						goto NEXT;
@@ -2027,12 +2172,12 @@ namespace Wholemy {
 				Cubic SET = null;
 				NEXT:
 				if (TES.ExtB(S, Size, ref SET)) {
-					P.AddItem(SET);
+					P.AddCurve(SET);
 				} else {
 					LESS:
 					TES.Div(1.0 - DIV, out RAM, out NOW);
 					if (NOW.ExtB(S, Size, ref SET)) {
-						P.AddItem(SET);
+						P.AddCurve(SET);
 						TES = RAM;
 						DIV = 0.5;
 						goto NEXT;
@@ -2050,7 +2195,7 @@ namespace Wholemy {
 					this.Div(0.5, out var BA, out var BB);
 					Item.Div(0.5, out var AA, out var AB);
 					if (BB.Ext(Size, out var B)) {
-						var cmcL = Mat.Sqrt(AB.MX - B.MX, AB.MY - B.MY);
+						var cmcL = Sqrt(AB.MX - B.MX, AB.MY - B.MY);
 						if (cmcL < Need) {
 							Result = Item;
 							return true;
@@ -2066,7 +2211,7 @@ namespace Wholemy {
 					this.Div(0.5, out var RA, out var RB);
 					Item.Div(0.5, out var BA, out var BB);
 					if (RB.Ext(Size, out var B, true)) {
-						var cecL = Mat.Sqrt(BA.EX - B.EX, BA.EY - B.EY);
+						var cecL = Sqrt(BA.EX - B.EX, BA.EY - B.EY);
 						if (cecL < Need) {
 							Result = Item;
 							return true;
@@ -2096,8 +2241,8 @@ namespace Wholemy {
 				NEXT:
 				if (TES.ExtA(S, Size, ref SET)) {
 					if (PRETES != null)
-						P.AddItem(PRESET);
-					P.AddItem(SET);
+						P.AddCurve(PRESET);
+					P.AddCurve(SET);
 				} else {
 					LESS:
 					TES.Div(DIV, out NOW, out RAM);
@@ -2109,7 +2254,7 @@ namespace Wholemy {
 								PREDIV = NEWDIV;
 								PRESET = NEWSET;
 							} else {
-								P.AddItem(PRESET);
+								P.AddCurve(PRESET);
 								PRETES = TES;
 								PREDIV = DIV;
 								PRESET = SET;
@@ -2149,8 +2294,8 @@ namespace Wholemy {
 				NEXT:
 				if (TES.ExtB(S, Size, ref SET)) {
 					if (PRETES != null)
-						P.AddItem(PRESET);
-					P.AddItem(SET);
+						P.AddCurve(PRESET);
+					P.AddCurve(SET);
 				} else {
 					LESS:
 					TES.Div(1.0 - DIV, out RAM, out NOW);
@@ -2162,7 +2307,7 @@ namespace Wholemy {
 								PREDIV = NEWDIV;
 								PRESET = NEWSET;
 							} else {
-								P.AddItem(PRESET);
+								P.AddCurve(PRESET);
 								PRETES = TES;
 								PREDIV = DIV;
 								PRESET = SET;
@@ -2198,9 +2343,9 @@ namespace Wholemy {
 				var ceY = this.ceY;
 				var EX = this.EX;
 				var EY = this.EY;
-				var l0 = Mat.Path(cmX - MX, cmY - MY, out var l0X, out var l0Y);
-				var l1 = Mat.Path(ceX - cmX, ceY - cmY, out var l1X, out var l1Y);
-				var l2 = Mat.Path(EX - ceX, EY - ceY, out var l2X, out var l2Y);
+				var l0 = RootOffset(cmX - MX, cmY - MY, out var l0X, out var l0Y);
+				var l1 = RootOffset(ceX - cmX, ceY - cmY, out var l1X, out var l1Y);
+				var l2 = RootOffset(EX - ceX, EY - ceY, out var l2X, out var l2Y);
 				//var l = l0 + l1 + l2;
 				//if (l == 0.0) { A = null; B = null; return false; }
 				if (l0 == 0.0) if (l1 > 0.0) { l0X = l1X; l0Y = l1Y; } else { l0X = l2X; l0Y = l2Y; }
@@ -2208,6 +2353,42 @@ namespace Wholemy {
 				A = new Cubic(MX + S * l0X, MY + S * l0Y, cmX + S * l1X, cmY + S * l1Y, ceX + S * l1X, ceY + S * l1Y, EX + S * l2X, EY + S * l2Y);
 				S = -S;
 				B = new Cubic(EX + S * l2X, EY + S * l2Y, ceX + S * l1X, ceY + S * l1Y, cmX + S * l1X, cmY + S * l1Y, MX + S * l0X, MY + S * l0Y);
+				return true;
+			}
+			#endregion
+			#region #method# DivBExtAMBE(S, AMX, AMY, BEX, BEY) 
+			public bool DivBExtAMBE(double S, out double AMX, out double AMY, out double BEX, out double BEY) {
+				var MX = this.MX; var MY = this.MY;
+				var cmX = this.cmX; var cmY = this.cmY;
+				var ceX = this.ceX; var ceY = this.ceY;
+				var EX = this.EX; var EY = this.EY;
+				var x01 = (cmX - MX) * 0.5 + MX;
+				var y01 = (cmY - MY) * 0.5 + MY;
+				var x12 = (ceX - cmX) * 0.5 + cmX;
+				var y12 = (ceY - cmY) * 0.5 + cmY;
+				var x23 = (EX - ceX) * 0.5 + ceX;
+				var y23 = (EY - ceY) * 0.5 + ceY;
+				var x02 = (x12 - x01) * 0.5 + x01;
+				var y02 = (y12 - y01) * 0.5 + y01;
+				var x13 = (x23 - x12) * 0.5 + x12;
+				var y13 = (y23 - y12) * 0.5 + y12;
+				var x03 = (x13 - x02) * 0.5 + x02;
+				var y03 = (y13 - y02) * 0.5 + y02;
+				MX = x03; MY = y03;
+				cmX = x13; cmY = y13;
+				ceX = x23; ceY = y23;
+				var l0 = RootOffset(cmX - MX, cmY - MY, out var l0X, out var l0Y);
+				var l1 = RootOffset(ceX - cmX, ceY - cmY, out var l1X, out var l1Y);
+				var l2 = RootOffset(EX - ceX, EY - ceY, out var l2X, out var l2Y);
+				//var l = l0 + l1 + l2;
+				//if (l == 0.0) { A = null; B = null; return false; }
+				if (l0 == 0.0) if (l1 > 0.0) { l0X = l1X; l0Y = l1Y; } else { l0X = l2X; l0Y = l2Y; }
+				if (l2 == 0.0) if (l1 > 0.0) { l2X = l1X; l2Y = l1Y; } else { l2X = l0X; l2Y = l0Y; }
+				AMX = MX + S * l0X;
+				AMY = MY + S * l0Y;
+				S = -S;
+				BEX = MX + S * l0X;
+				BEY = MY + S * l0Y;
 				return true;
 			}
 			#endregion
@@ -2226,9 +2407,9 @@ namespace Wholemy {
 				var ceY = this.ceY;
 				var EX = this.EX;
 				var EY = this.EY;
-				var l0 = Mat.Path(cmX - MX, cmY - MY, out var l0X, out var l0Y);
-				var l1 = Mat.Path(ceX - cmX, ceY - cmY, out var l1X, out var l1Y);
-				var l2 = Mat.Path(EX - ceX, EY - ceY, out var l2X, out var l2Y);
+				var l0 = RootOffset(cmX - MX, cmY - MY, out var l0X, out var l0Y);
+				var l1 = RootOffset(ceX - cmX, ceY - cmY, out var l1X, out var l1Y);
+				var l2 = RootOffset(EX - ceX, EY - ceY, out var l2X, out var l2Y);
 				//var l = l0 + l1 + l2;
 				//if (l == 0.0) { R = null; return false; }
 				if (l0 == 0.0) if (l1 > 0.0) { l0X = l1X; l0Y = l1Y; } else { l0X = l2X; l0Y = l2Y; }
@@ -2248,16 +2429,15 @@ namespace Wholemy {
 				var S = 0.05 * Size;
 				if (S < 0.005) S = 0.005; else if (S > 0.5) S = 0.5;
 				if (this.Ext(Size, out var A, out var B)) {
-					this.Div(0.5, out var RA, out var T);
-					if (T.Ext(Size, out var TA, out var TB)) {
-						A.Div(0.5, out var AA, out var AB);
-						B.Div(0.5, out var BA, out var BB);
-						var AL = Mat.Sqrt(AB.MX - TA.MX, AB.MY - TA.MY);
-						var BL = Mat.Sqrt(BA.EX - TB.EX, BA.EY - TB.EY);
+					if (this.DivBExtAMBE(Size, out var TAMX, out var TAMY, out var TBEX, out var TBEY)) {
+						A.DivC(0.5, out var ABMX, out var ABMY);
+						B.DivC(0.5, out var BAEX, out var BAEY);
+						var AL = Sqrt(ABMX - TAMX, ABMY - TAMY);
+						var BL = Sqrt(BAEX - TBEX, BAEY - TBEY);
 						if (AL < S && BL < S) {
 							if (PA != null && PB != null) {
-								var Aa = Mat.GetA1(PA.EX, PA.EY, PA.MX, PA.MY, A.EX, A.EY);
-								var Bb = Mat.GetA1(PB.MX, PB.MY, PB.EX, PB.EY, B.MX, B.MY);
+								var Aa = GetaR1(PA.EX, PA.EY, PA.MX, PA.MY, A.EX, A.EY);
+								var Bb = GetaR1(PB.MX, PB.MY, PB.EX, PB.EY, B.MX, B.MY);
 								if (Aa < 0.0) Aa += 1.0;
 								if (Bb < 0.0) Bb += 1.0;
 								if ((Aa < 0.375) || (Aa > 0.625))
@@ -2352,28 +2532,28 @@ namespace Wholemy {
 				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
 				#endregion
-				public readonly List<Cubic> A;
+				public readonly List<Line> A;
 				#region #invisible# 
 #if TRACE
 				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
 				#endregion
-				public readonly List<Cubic> B;
+				public readonly List<Line> B;
 				#region #invisible# 
 #if TRACE
 				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.RootHidden)]
 #endif
 				#endregion
-				public readonly List<Cubic> C;
+				public readonly List<Line> C;
 				#region #through# 
 #if TRACE
 				[System.Diagnostics.DebuggerStepThrough]
 #endif
 				#endregion
 				public Stab() {
-					this.A = new List<Cubic>();
-					this.B = new List<Cubic>();
-					this.C = new List<Cubic>();
+					this.A = new List<Line>();
+					this.B = new List<Line>();
+					this.C = new List<Line>();
 				}
 				#region #through# 
 #if TRACE
@@ -2382,9 +2562,9 @@ namespace Wholemy {
 				#endregion
 				public Stab(bool A, bool B, bool C) {
 					if (!A && !B && !C) throw new System.ArgumentOutOfRangeException();
-					if (A) this.A = new List<Cubic>();
-					if (B) this.B = new List<Cubic>();
-					if (C) this.C = new List<Cubic>();
+					if (A) this.A = new List<Line>();
+					if (B) this.B = new List<Line>();
+					if (C) this.C = new List<Line>();
 				}
 				#region #invisible# 
 #if TRACE
@@ -2409,7 +2589,7 @@ namespace Wholemy {
 				[System.Diagnostics.DebuggerStepThrough]
 #endif
 				#endregion
-				public void Add(Cubic A, Cubic B, Cubic C, double Root, double Size) {
+				public void Add(Line A, Line B, Line C, double Root, double Size) {
 					if (this.A != null) this.A.AddLast(A, Root, Size);
 					if (this.B != null) this.B.AddBase(B, Root, Size);
 					if (this.C != null) this.C.AddLast(C, Root, Size);
@@ -2448,20 +2628,20 @@ namespace Wholemy {
 				var ceY = this.ceY;
 				var EX = this.EX;
 				var EY = this.EY;
-				var cmL = Mat.Sqrt(MX - cmX, MY - cmY);
-				var ceL = Mat.Sqrt(EX - ceX, EY - ceY);
-				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				var cmL = Sqrt(MX - cmX, MY - cmY);
+				var ceL = Sqrt(EX - ceX, EY - ceY);
+				var meL = Sqrt(MX - EX, MY - EY);
 				if (cmL > 0.0) {
-					if (Mat.Sqrt(EX - cmX, EY - cmY) > 0.0) {
+					if (Sqrt(EX - cmX, EY - cmY) > 0.0) {
 						EX = cmX;
 						EY = cmY;
 						meL = cmL;
 					}
 				} else if (ceL > 0.0) {
-					if (Mat.Sqrt(MX - ceX, MY - ceY) > 0.0) {
+					if (Sqrt(MX - ceX, MY - ceY) > 0.0) {
 						EX = ceX;
 						EY = ceY;
-						meL = Mat.Sqrt(MX - EX, MY - EY);
+						meL = Sqrt(MX - EX, MY - EY);
 					}
 				}
 				var YX = (EY - MY) / meL * S;
@@ -2470,7 +2650,7 @@ namespace Wholemy {
 				var AY = MY + XY;
 				var BX = MX - YX;
 				var BY = MY - XY;
-				P.AddItem(new Line(BX, BY, AX, AY));
+				P.AddCurve(new Line(BX, BY, AX, AY));
 			}
 			#endregion
 			#region #method# AddLinE(P) 
@@ -2485,20 +2665,20 @@ namespace Wholemy {
 				var ceY = this.ceY;
 				var EX = this.EX;
 				var EY = this.EY;
-				var cmL = Mat.Sqrt(MX - cmX, MY - cmY);
-				var ceL = Mat.Sqrt(EX - ceX, EY - ceY);
-				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				var cmL = Sqrt(MX - cmX, MY - cmY);
+				var ceL = Sqrt(EX - ceX, EY - ceY);
+				var meL = Sqrt(MX - EX, MY - EY);
 				if (ceL > 0.0) {
-					if (Mat.Sqrt(MX - ceX, MY - ceY) > 0.0) {
+					if (Sqrt(MX - ceX, MY - ceY) > 0.0) {
 						MX = ceX;
 						MY = ceY;
 						meL = ceL;
 					}
 				} else if (cmL > 0.0) {
-					if (Mat.Sqrt(EX - cmX, EY - cmY) > 0.0) {
+					if (Sqrt(EX - cmX, EY - cmY) > 0.0) {
 						MX = cmX;
 						MY = cmY;
-						meL = Mat.Sqrt(MX - EX, MY - EY);
+						meL = Sqrt(MX - EX, MY - EY);
 					}
 				}
 				var YX = (EY - MY) / meL * S;
@@ -2507,7 +2687,7 @@ namespace Wholemy {
 				var AY = EY + XY;
 				var BX = EX - YX;
 				var BY = EY - XY;
-				P.AddItem(new Line(AX, AY, BX, BY));
+				P.AddCurve(new Line(AX, AY, BX, BY));
 			}
 			#endregion
 			#region #method# Extrema(Roots) 
@@ -2538,8 +2718,8 @@ namespace Wholemy {
 			/// <summary>Возвращает линейность кубической кривой)</summary>
 			public bool Linear {
 				get {
-					var lMcm = Mat.Sqrt(cmX - MX, cmY - MY);
-					var lEce = Mat.Sqrt(EX - ceX, EY - ceY);
+					var lMcm = Sqrt(cmX - MX, cmY - MY);
+					var lEce = Sqrt(EX - ceX, EY - ceY);
 					if (lMcm != 0.0 && lEce != 0.0) {
 						return Inline(MX, MY, cmX, cmY, ceX, ceY, EX, EY);
 					} else {
@@ -2697,9 +2877,9 @@ namespace Wholemy {
 				var QY = this.QY;
 				var EX = this.EX;
 				var EY = this.EY;
-				var cmL = Mat.Sqrt(MX - QX, MY - QY);
-				var ceL = Mat.Sqrt(EX - QX, EY - QY);
-				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				var cmL = Sqrt(MX - QX, MY - QY);
+				var ceL = Sqrt(EX - QX, EY - QY);
+				var meL = Sqrt(MX - EX, MY - EY);
 				if (cmL > 0.0 && ceL > 0.0) { EX = QX; EY = QY; meL = cmL; }
 				var YX = (EY - MY) / meL * S;
 				var XY = (MX - EX) / meL * S;
@@ -2711,10 +2891,10 @@ namespace Wholemy {
 				var CY = MY + (MY - EY) / meL * S;
 				new Cubic(BX, BY, (BX + (MY - BY) / S * A), (BY + (BX - MX) / S * A), (CX + (CY - MY) / S * A), (CY + (MX - CX) / S * A), CX, CY).DivArc(out var a0, out var a1);
 				new Cubic(CX, CY, (CX + (MY - CY) / S * A), (CY + (CX - MX) / S * A), (AX + (AY - MY) / S * A), (AY + (MX - AX) / S * A), AX, AY).DivArc(out var a2, out var a3);
-				P.AddItem(a0);
-				P.AddItem(a1);
-				P.AddItem(a2);
-				P.AddItem(a3);
+				P.AddCurve(a0);
+				P.AddCurve(a1);
+				P.AddCurve(a2);
+				P.AddCurve(a3);
 			}
 			#endregion
 			#region #method# AddArcE(P) 
@@ -2727,9 +2907,9 @@ namespace Wholemy {
 				var QY = this.QY;
 				var EX = this.EX;
 				var EY = this.EY;
-				var cmL = Mat.Sqrt(MX - QX, MY - QY);
-				var ceL = Mat.Sqrt(EX - QX, EY - QY);
-				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				var cmL = Sqrt(MX - QX, MY - QY);
+				var ceL = Sqrt(EX - QX, EY - QY);
+				var meL = Sqrt(MX - EX, MY - EY);
 				if (ceL > 0.0 && cmL > 0.0) { MX = QX; MY = QY; meL = ceL; }
 				var YX = (EY - MY) / meL * S;
 				var XY = (MX - EX) / meL * S;
@@ -2741,10 +2921,10 @@ namespace Wholemy {
 				var CY = EY + (EY - MY) / meL * S;
 				new Cubic(AX, AY, (AX + (EY - AY) / S * A), (AY + (AX - EX) / S * A), (CX + (CY - EY) / S * A), (CY + (EX - CX) / S * A), CX, CY).DivArc(out var a0, out var a1);
 				new Cubic(CX, CY, (CX + (EY - CY) / S * A), (CY + (CX - EX) / S * A), (BX + (BY - EY) / S * A), (BY + (EX - BX) / S * A), BX, BY).DivArc(out var a2, out var a3);
-				P.AddItem(a0);
-				P.AddItem(a1);
-				P.AddItem(a2);
-				P.AddItem(a3);
+				P.AddCurve(a0);
+				P.AddCurve(a1);
+				P.AddCurve(a2);
+				P.AddCurve(a3);
 			}
 			#endregion
 			#region #method# AddLinM(P) 
@@ -2756,9 +2936,9 @@ namespace Wholemy {
 				var QY = this.QY;
 				var EX = this.EX;
 				var EY = this.EY;
-				var cmL = Mat.Sqrt(MX - QX, MY - QY);
-				var ceL = Mat.Sqrt(EX - QX, EY - QY);
-				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				var cmL = Sqrt(MX - QX, MY - QY);
+				var ceL = Sqrt(EX - QX, EY - QY);
+				var meL = Sqrt(MX - EX, MY - EY);
 				if (cmL > 0.0 && ceL > 0.0) { EX = QX; EY = QY; meL = cmL; }
 				var YX = (EY - MY) / meL * S;
 				var XY = (MX - EX) / meL * S;
@@ -2766,7 +2946,7 @@ namespace Wholemy {
 				var AY = MY + XY;
 				var BX = MX - YX;
 				var BY = MY - XY;
-				P.AddItem(new Line(BX, BY, AX, AY));
+				P.AddCurve(new Line(BX, BY, AX, AY));
 			}
 			#endregion
 			#region #method# AddLinE(P) 
@@ -2778,9 +2958,9 @@ namespace Wholemy {
 				var QY = this.QY;
 				var EX = this.EX;
 				var EY = this.EY;
-				var cmL = Mat.Sqrt(MX - QX, MY - QY);
-				var ceL = Mat.Sqrt(EX - QX, EY - QY);
-				var meL = Mat.Sqrt(MX - EX, MY - EY);
+				var cmL = Sqrt(MX - QX, MY - QY);
+				var ceL = Sqrt(EX - QX, EY - QY);
+				var meL = Sqrt(MX - EX, MY - EY);
 				if (ceL > 0.0 && cmL > 0.0) { MX = QX; MY = QY; meL = ceL; }
 				var YX = (EY - MY) / meL * S;
 				var XY = (MX - EX) / meL * S;
@@ -2788,7 +2968,7 @@ namespace Wholemy {
 				var AY = EY + XY;
 				var BX = EX - YX;
 				var BY = EY - XY;
-				P.AddItem(new Line(AX, AY, BX, BY));
+				P.AddCurve(new Line(AX, AY, BX, BY));
 			}
 			#endregion
 			#region #method# Dot(root) 
@@ -2822,12 +3002,12 @@ namespace Wholemy {
 		}
 		#endregion
 		#region #method# AddItemArc(Val, Acw) 
-		public Item AddItemArc(Line Val, bool Acw = false) {
-			return AddItem(Val.ToArcC(Acw));
+		public Curve AddItemArc(Line Val, bool Acw = false) {
+			return AddCurve(Val.ToArcC(Acw));
 		}
 		#endregion
 		#region #method# AddItemArc(MX, MY, EX, EY, Acw) 
-		public Item AddItemArc(double MX, double MY, double EX, double EY, bool Acw = false) {
+		public Curve AddItemArc(double MX, double MY, double EX, double EY, bool Acw = false) {
 			return AddItemArc(new Line(MX, MY, EX, EY), Acw);
 		}
 		#endregion
@@ -2842,8 +3022,8 @@ namespace Wholemy {
 		}
 		#endregion
 		#region #method# AddItemArc(MX, MY, EX, EY, r0, cw) 
-		public Item AddItemArc(double MX, double MY, double EX, double EY, double r0, bool Acw = false) {
-			return AddItem(new Line(MX, MY, EX, EY).ToArcC(Acw).Cuted(r0));
+		public Curve AddItemArc(double MX, double MY, double EX, double EY, double r0, bool Acw = false) {
+			return AddCurve(new Line(MX, MY, EX, EY).ToArcC(Acw).Cuted(r0));
 		}
 		#endregion
 		#region #method# AddBoneArc(MX, MY, EX, EY, r0, cw) 
@@ -2852,8 +3032,8 @@ namespace Wholemy {
 		}
 		#endregion
 		#region #method# AddItemArc(MX, MY, EX, EY, r0, r1, cw) 
-		public Item AddItemArc(double MX, double MY, double EX, double EY, double r0, double r1, bool Acw = false) {
-			return AddItem(new Line(MX, MY, EX, EY).ToArcC(Acw).Cuted(r0, r1));
+		public Curve AddItemArc(double MX, double MY, double EX, double EY, double r0, double r1, bool Acw = false) {
+			return AddCurve(new Line(MX, MY, EX, EY).ToArcC(Acw).Cuted(r0, r1));
 		}
 		#endregion
 		#region #method# AddBoneArc(MX, MY, EX, EY, r0, r1, cw) 
@@ -2868,6 +3048,7 @@ namespace Wholemy {
 		/// <param name="R">Радиус кольца)</param>
 		/// <param name="hole">Наличие дыры)</param>
 		public void AddOrc(double X, double Y, double R, bool hole = true) {
+			BeginFz();
 			if (R > 0.0) {
 				var x00 = X; var y00 = Y - R; var x01 = X + R; var y01 = Y;
 				var x10 = X + R; var y10 = Y; var x11 = X; var y11 = Y + R;
@@ -2890,7 +3071,7 @@ namespace Wholemy {
 						Invert();
 					}
 				}
-				if (IsBonesUse) {
+				if (IsBoned) {
 					AddBoneArc(x00, y00, x01, y01);
 					AddBoneArc(x10, y10, x11, y11);
 					AddBoneArc(x20, y20, x21, y21);
@@ -2905,11 +3086,12 @@ namespace Wholemy {
 		/// <param name="Y">Вертикальный центр круга)</param>
 		/// <param name="R">Радиус круга)</param>
 		public void AddKrug(double X, double Y, double R) {
+			BeginFz();
 			AddItemArc(X, Y - R, X + R, Y);
 			AddItemArc(X + R, Y, X, Y + R);
 			AddItemArc(X, Y + R, X - R, Y);
 			AddItemArc(X - R, Y, X, Y - R);
-			if (IsBonesUse) {
+			if (IsBoned) {
 				AddBoneArc(X, Y - R, X + R, Y);
 				AddBoneArc(X + R, Y, X, Y + R);
 				AddBoneArc(X, Y + R, X - R, Y);
@@ -2919,50 +3101,50 @@ namespace Wholemy {
 		#endregion
 		#region #method# AddAtr(tx, ty, rx, ry, Inverted) 
 		/// <summary>Добавляет четверть круга где выпуклость сверху справа)</summary>
-		public Item AddAtr(double TX, double TY, double RX, double RY, bool Inverted = false) {
+		public Curve AddAtr(double TX, double TY, double RX, double RY, bool Inverted = false) {
 			var C = new Cubic(TX, TY, TX, TY, RX, RY, RX, RY);
 			var RTX = RX - TX;
 			var RTY = RY - TY;
 			if (TX < RX || RTX == RTY) { C.cmX += (RTX * Arc14); }
 			if (TY < RY || RTX == RTY) { C.ceY -= (RTY * Arc14); }
 			if (Inverted) C.Invert();
-			return AddItem(C);
+			return AddCurve(C);
 		}
 		#endregion
 		#region #method# AddArb(rx, ry, bx, by, Inverted) 
 		/// <summary>Добавляет четверть круга где выпуклость справа снизу)</summary>
-		public Item AddArb(double RX, double RY, double BX, double BY, bool Inverted = false) {
+		public Curve AddArb(double RX, double RY, double BX, double BY, bool Inverted = false) {
 			var C = new Cubic(RX, RY, RX, RY, BX, BY, BX, BY);
 			var BRY = BY - RY;
 			var RBX = RX - BX;
 			if (RY < BY || BRY == RBX) { C.cmY += (BRY * Arc14); }
 			if (BX < RX || BRY == RBX) { C.ceX += (RBX * Arc14); }
 			if (Inverted) C.Invert();
-			return AddItem(C);
+			return AddCurve(C);
 		}
 		#endregion
 		#region #method# AddAbl(bx, by, lx, ly, Inverted) 
 		/// <summary>Добавляет четверть круга где выпуклость снизу слева)</summary>
-		public Item AddAbl(double BX, double BY, double LX, double LY, bool Inverted = false) {
+		public Curve AddAbl(double BX, double BY, double LX, double LY, bool Inverted = false) {
 			var C = new Cubic(BX, BY, BX, BY, LX, LY, LX, LY);
 			var BLX = BX - LX;
 			var BLY = BY - LY;
 			if (LX < BX || BLX == BLY) { C.cmX -= (BLX * Arc14); }
 			if (LY < BY || BLX == BLY) { C.ceY += (BLY * Arc14); }
 			if (Inverted) C.Invert();
-			return AddItem(C);
+			return AddCurve(C);
 		}
 		#endregion
 		#region #method# AddAlt(lx, ly, tx, ty, Inverted) 
 		/// <summary>Добавляет четверть круга где выпуклость слева сверху)</summary>
-		public Item AddAlt(double LX, double LY, double TX, double TY, bool Inverted = false) {
+		public Curve AddAlt(double LX, double LY, double TX, double TY, bool Inverted = false) {
 			var C = new Cubic(LX, LY, LX, LY, TX, TY, TX, TY);
 			var LTY = LY - TY;
 			var TLX = TX - LX;
 			if (TY < LY || LTY == TLX) { C.cmY -= (LTY * Arc14); }
 			if (LX < TX || LTY == TLX) { C.ceX -= (TLX * Arc14); }
 			if (Inverted) C.Invert();
-			return AddItem(C);
+			return AddCurve(C);
 		}
 		#endregion
 		#region #method# GetAtr(tx, ty, rx, ry, Inverted) 
@@ -3129,7 +3311,7 @@ namespace Wholemy {
 					while (Index < Count && char.IsWhiteSpace(Val, Index)) { Index++; }
 					Chr = Val[Index];
 					if (Index == Count || (Chr != '0' && Chr != '1')) throw new System.FormatException("IllegalToken F");
-					this.FillRule = (Chr == '1');
+					this.IsUnited = (Chr == '1');
 					Index++;
 				}
 				Figure Fig = null;
@@ -3145,7 +3327,7 @@ namespace Wholemy {
 								if (ParsePoint(Val, ref Index, Count, ref Base)) {
 									while (ParsePoint(Val, ref Index, Count, ref Last)) {
 										if (Pre) Last += Base;
-										AddItem(Base.X, Base.Y, Last.X, Last.Y);
+										AddCurve(Base.X, Base.Y, Last.X, Last.Y);
 										Base = Last;
 									}
 								}
@@ -3157,7 +3339,7 @@ namespace Wholemy {
 						case 'l': {
 								while (ParsePoint(Val, ref Index, Count, ref Last)) {
 									if (Pre) Last += Base;
-									AddItem(Base.X, Base.Y, Last.X, Last.Y);
+									AddCurve(Base.X, Base.Y, Last.X, Last.Y);
 									Base = Last;
 								}
 								Lot = 'l';
@@ -3168,7 +3350,7 @@ namespace Wholemy {
 						case 'h': {
 								while (ParseNumber(Val, ref Index, Count, ref Last.X)) {
 									if (Pre) Last.X += Base.X;
-									AddItem(Base.X, Base.Y, Last.X, Last.Y);
+									AddCurve(Base.X, Base.Y, Last.X, Last.Y);
 									Base = Last;
 								}
 								Lot = 'l';
@@ -3179,7 +3361,7 @@ namespace Wholemy {
 						case 'v': {
 								while (ParseNumber(Val, ref Index, Count, ref Last.Y)) {
 									if (Pre) Last.Y += Base.Y;
-									AddItem(Base.X, Base.Y, Last.X, Last.Y);
+									AddCurve(Base.X, Base.Y, Last.X, Last.Y);
 									Base = Last;
 								}
 								Lot = 'l';
@@ -3209,7 +3391,7 @@ namespace Wholemy {
 									if (Pre) Prev += Base;
 									ParseCommaPoint(Val, ref Index, Count, ref Last);
 									if (Pre) Last += Base;
-									AddItem(Base.X, Base.Y, Prev.X, Prev.Y, Last.X, Last.Y);
+									AddCurve(Base.X, Base.Y, Prev.X, Prev.Y, Last.X, Last.Y);
 									Base = Last;
 								}
 								Lot = 'q';
@@ -3221,7 +3403,7 @@ namespace Wholemy {
 								if (Lot == 'q') { Prev = Prev - Last; } else { Prev = Last; }
 								while (ParsePoint(Val, ref Index, Count, ref Last)) {
 									if (Pre) Last += Base;
-									AddItem(Base.X, Base.Y, Prev.X, Prev.Y, Last.X, Last.Y);
+									AddCurve(Base.X, Base.Y, Prev.X, Prev.Y, Last.X, Last.Y);
 									Base = Last;
 								}
 								Lot = 'q';
@@ -3237,7 +3419,7 @@ namespace Wholemy {
 									if (Pre) Prev += Base;
 									ParseCommaPoint(Val, ref Index, Count, ref Last);
 									if (Pre) Last += Base;
-									AddItem(Base.X, Base.Y, Next.X, Next.Y, Prev.X, Prev.Y, Last.X, Last.Y);
+									AddCurve(Base.X, Base.Y, Next.X, Next.Y, Prev.X, Prev.Y, Last.X, Last.Y);
 									Base = Last;
 								}
 								Lot = 'c';
@@ -3254,7 +3436,7 @@ namespace Wholemy {
 									if (Pre) Prev += Base;
 									ParseCommaPoint(Val, ref Index, Count, ref Last);
 									if (Pre) Last += Base;
-									AddItem(Base.X, Base.Y, Next.X, Next.Y, Prev.X, Prev.Y, Last.X, Last.Y);
+									AddCurve(Base.X, Base.Y, Next.X, Next.Y, Prev.X, Prev.Y, Last.X, Last.Y);
 									Base = Last;
 								}
 								Lot = 'c';
@@ -3382,7 +3564,7 @@ namespace Wholemy {
 		public string Uncompessed {
 			get {
 				string Result = "";
-				if (FigureCount > 0) {
+				if (FigureSize > 0) {
 					var Figure = FigureBase;
 					while (Figure != null) {
 						if (Figure.ItemCount > 0) {
@@ -3399,14 +3581,14 @@ namespace Wholemy {
 		public string Compessed {
 			get {
 				string Result = "";
-				if (FigureCount > 0) {
+				if (FigureSize > 0) {
 					var Figure = FigureBase;
 					while (Figure != null) {
 						if (Figure.ItemCount > 0) {
 							var Item = Figure.ItemBase;
-							Item Prev = null;
+							Curve Prev = null;
 							while (Item != null) {
-								Result += Item.Value.ToCompessedString(Prev?.Value);
+								Result += Item.Line.ToCompessedString(Prev?.Line);
 								Prev = Item;
 								Item = Item.Next;
 							}
@@ -3469,13 +3651,16 @@ namespace Wholemy {
 		#endregion
 		#region #method# AddLinT(x0, y0, x1, y1) 
 		public void AddLinT(double x0, double y0, double x1, double y1) {
+			//var V = new Line(x0, y0, x1, y1).ToArcC();
+			AddCubicT(x0, y0, x0, y0, x1, y1, x1, y1);
+			return;
 			var D = this.Thickness;
 			var IsRoundM = this.IsRoundM;
 			var IsRoundE = this.IsRoundE;
 			var RootM = this.RootM; this.RootM = null;
 			var RootE = this.RootE; this.RootE = null;
 			var Bone = new Line(x0, y0, x1, y1).Cuted(RootM, RootE);
-			if (IsBonesUse) { AddBone(Bone); }
+			if (IsBoned) { AddBone(Bone); }
 			x0 = Bone.MX;
 			y0 = Bone.MY;
 			x1 = Bone.EX;
@@ -3487,7 +3672,7 @@ namespace Wholemy {
 			var x11 = Bone.EX;
 			var y11 = Bone.EY;
 
-			var L = Mat.Sqrt(x00 - x11, y00 - y11);
+			var L = Sqrt(x00 - x11, y00 - y11);
 			var yx = (y11 - y00) / L * S;
 			var xy = (x00 - x11) / L * S;
 			var ax0 = x00 + yx;
@@ -3503,27 +3688,27 @@ namespace Wholemy {
 				var ty0 = y00 + (y00 - y11) / L * S;
 				new Cubic(bx0, by0, (bx0 + (y00 - by0) / S * A), (by0 + (bx0 - x00) / S * A), (tx0 + (ty0 - y00) / S * A), (ty0 + (x00 - tx0) / S * A), tx0, ty0).DivArc(out var a0, out var a1);
 				new Cubic(tx0, ty0, (tx0 + (y00 - ty0) / S * A), (ty0 + (tx0 - x00) / S * A), (ax0 + (ay0 - y00) / S * A), (ay0 + (x00 - ax0) / S * A), ax0, ay0).DivArc(out var a2, out var a3);
-				AddItem(a0);
-				AddItem(a1);
-				AddItem(a2);
-				AddItem(a3);
+				AddCurve(a0);
+				AddCurve(a1);
+				AddCurve(a2);
+				AddCurve(a3);
 			} else {
-				AddItem(new Line(bx0, by0, ax0, ay0));
+				AddCurve(new Line(bx0, by0, ax0, ay0));
 			}
-			AddItem(new Line(ax0, ay0, ax1, ay1));
+			AddCurve(new Line(ax0, ay0, ax1, ay1));
 			if (IsRoundE) {
 				var tx1 = x11 + (x11 - x00) / L * S;
 				var ty1 = y11 + (y11 - y00) / L * S;
 				new Cubic(ax1, ay1, (ax1 + (y11 - ay1) / S * A), (ay1 + (ax1 - x11) / S * A), (tx1 + (ty1 - y11) / S * A), (ty1 + (x11 - tx1) / S * A), tx1, ty1).DivArc(out var a0, out var a1);
 				new Cubic(tx1, ty1, (tx1 + (y11 - ty1) / S * A), (ty1 + (tx1 - x11) / S * A), (bx1 + (by1 - y11) / S * A), (by1 + (x11 - bx1) / S * A), bx1, by1).DivArc(out var a2, out var a3);
-				AddItem(a0);
-				AddItem(a1);
-				AddItem(a2);
-				AddItem(a3);
+				AddCurve(a0);
+				AddCurve(a1);
+				AddCurve(a2);
+				AddCurve(a3);
 			} else {
-				AddItem(new Line(ax1, ay1, bx1, by1));
+				AddCurve(new Line(ax1, ay1, bx1, by1));
 			}
-			AddItem(new Line(bx1, by1, bx0, by0));
+			AddCurve(new Line(bx1, by1, bx0, by0));
 		}
 		#endregion
 		#region #method# AddCubic00(x0, y0, x1, y1, x2, y2, x3, y3) 
@@ -3582,9 +3767,8 @@ namespace Wholemy {
 			var RootM = this.RootM; this.RootM = null;
 			var RootE = this.RootE; this.RootE = null;
 			var Bone = new Cubic(x0, y0, x1, y1, x2, y2, x3, y3).CutedCubic(RootM, RootE);
-			if (IsBonesUse) { AddBone(Bone); }
-			var Ideal = this.Ideal;
-
+			if (IsBoned) { AddBone(Bone); }
+			BeginFz();
 			var Roots = new double[0];
 			Roots = Bone.Extrema(Roots);
 			Roots = AddRoots(0.5, Roots);
@@ -3593,25 +3777,28 @@ namespace Wholemy {
 
 			var List = Bone.RootsList(Roots);
 			var Li = Bone.ExtReturn(Size, List).Base;
-			//var Li = Bone.ExtReturn(Size, Roots).Base;
 			bool first = true;
 			while (Li != null) {
-				if ((Linear && (IsRoundM || IsRoundE)) || (!Linear && IsRoundM && first)) {
-					Li.Value.C.Base.Value.AddArcM(this); if (!Linear) first = false;
+				if (Li.Value.C.Base != null && ((Linear && (IsRoundM || IsRoundE)) || (!Linear && IsRoundM && first))) {
+					Li.Value.C.Base.Value.AddArcM(this);
+					if (!Linear) first = false;
 				}
 				var La = Li.Value.A.Base;
 				while (La != null) {
-					AddItem(La.Value);
+					AddCurve(La.Value);
 					La = La.Next;
 				}
-				if (Linear && (IsRoundM || IsRoundE) || (!Linear && IsRoundE && Li.Next == null)) Li.Value.C.Last.Value.AddArcE(this);
+				if (Li.Value.C.Last != null && (Linear && (IsRoundM || IsRoundE) || (!Linear && IsRoundE && Li.Next == null))) {
+					Li.Value.C.Last.Value.AddArcE(this);
+					var l = Li.Value.C.Last.Value.HalfArcE(Size);
+				}
 				var Lb = Li.Value.B.Base;
 				while (Lb != null) {
-					AddItem(Lb.Value);
+					AddCurve(Lb.Value);
 					Lb = Lb.Next;
 				}
 				Li = Li.Next;
-				if (Li != null) { UnionFz(); }
+				if (Li != null) { BeginFz(); }
 			}
 			return;
 			//Roots = Bone.ReturnRoots(Size, Roots);
@@ -3635,7 +3822,7 @@ namespace Wholemy {
 		}
 		#endregion
 		#region #class# List<T> 
-		public class List<T> where T : class, new() {
+		public class List<T> {
 			#region #field# Base 
 			/// <summary>Начинающий элмент в списке)</summary>
 			#region #invisible# 
@@ -3765,8 +3952,8 @@ namespace Wholemy {
 			public Item AddBase(T Value, double Root = double.NaN, double Size = double.NaN) {
 				var Base = this.Base;
 				var Item = new Item() { Value = Value, Root = Root, Size = Size, List = this, Next = Base };
-				if (Base == null) { this.Last = Item; this.Base = Item; } else { Base.Prev = Item; this.Base = Item; }
-				this.Count++;
+				if (Base == null) { this.Last = Item; } else { Base.Prev = Item; }
+				this.Base = Item; this.Count++;
 				return Item;
 			}
 			#endregion
@@ -3779,12 +3966,12 @@ namespace Wholemy {
 			public Item AddLast(T Value, double Root = double.NaN, double Size = double.NaN) {
 				var Last = this.Last;
 				var Item = new Item() { Value = Value, Root = Root, Size = Size, List = this, Prev = Last };
-				if (Last == null) { this.Last = Item; this.Base = Item; } else { Last.Next = Item; this.Last = Item; }
-				this.Count++;
+				if (Last == null) { this.Base = Item; } else { Last.Next = Item; }
+				this.Last = Item; this.Count++;
 				return Item;
 			}
 			#endregion
-			#region #method# AddLast(List, Root) 
+			#region #method# AddLast(List, Root, Size) 
 			public void AddLast(List<T> List, double Root = double.NaN, double Size = double.NaN) {
 				#region #debug# 
 #if DEBUG

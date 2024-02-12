@@ -1,18 +1,19 @@
 namespace Wholemy {
-	public partial class WholemyFont : PathFont {
+	//2021.1103.2015.277
+	public partial class Font277 : PathFont {
 		private const double UWH = 1.0;
 		private const double UXY = 100;
 		private const double UD = 2;
 		#region #property# Instance 
-		public static WholemyFont instance;
-		public static WholemyFont Instance {
+		public static Font277 instance;
+		public static Font277 Instance {
 			get {
-				if (instance == null) instance = new WholemyFont(); return instance;
+				if (instance == null) instance = new Font277(); return instance;
 			}
 		}
 		#endregion
 		#region #new# 
-		public WholemyFont() { }
+		public Font277() { }
 		#endregion
 		#region #class# spaceChr 
 		protected class spaceChr : Chr {
@@ -39,21 +40,21 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(X: 50, Y: 100);
 					S.AddLin00(50, 200, 50, 600);
-					S.UnionFz();
+
 					S.AddArc00(50, 200, 200, 50);
-					S.UnionFz();
+
 					S.AddArc00(200, 50, 350, 200);
-					S.UnionFz();
+
 					S.AddLin00(350, 200, 350, 600);
-					S.UnionFz();
+
 					S.AddArc00(350, 600, 200, 750);
-					S.UnionFz();
+
 					S.AddArc00(200, 750, 50, 600);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -67,15 +68,14 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(X: 50, Y: 100);
 					S.AddLin00(200, 50, 200, 750);
-					S.UnionFz();
+
 					S.AddLin11(200, 50, 75, 175);
-					S.UnionFz();
+
 					S.AddLin11(50, 750, 350, 750);
 					S.CutResize();
-					return S.Combine();
 				}
 				return S;
 			}
@@ -89,23 +89,23 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(X: 50, Y: 100);
 					S.AddArc10(50, 200, 200, 50);
-					S.UnionFz();
+
 					S.AddArc00(200, 50, 350, 200);
-					S.UnionFz();
+
 					S.AddLin00(350, 200, 350, 300);
-					S.UnionFz();
+
 					S.AddArc00(350, 300, 200, 450);
-					S.UnionFz();
+
 					S.AddArc00(50, 600, 200, 450);
-					S.UnionFz();
+
 					S.AddLin00(50, 600, 50, 750);
-					S.UnionFz();
+
 					S.AddLin11(50, 750, 350, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -119,27 +119,27 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(X: 50, Y: 100);
 					S.PresetRoot(0.3);
 					S.AddArc10(50, 200, 200, 50/*, 0.3*/);
-					S.UnionFz();
+
 					S.AddArc00(200, 50, 350, 200);
-					S.UnionFz();
+
 					S.AddLin00(350, 200, 350, 250);
-					S.UnionFz();
+
 					S.AddArc01(350, 250, 200, 400);
-					S.UnionFz();
+
 					S.AddArc00(200, 400, 350, 550);
-					S.UnionFz();
+
 					S.AddLin00(350, 550, 350, 600);
-					S.UnionFz();
+
 					S.AddArc00(350, 600, 200, 750);
-					S.UnionFz();
+
 					S.PresetRoot(-0.3);
 					S.AddArc01(200, 750, 50, 600/*, -0.3*/);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -153,19 +153,19 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(X: 50, Y: 100);
 					S.AddArc01(50, 350, 350, 50);
-					S.UnionFz();
+
 					S.AddLin00(50, 350, 50, 425);
-					S.UnionFz();
+
 					S.AddArc00(125, 500, 50, 425);
-					S.UnionFz();
+
 					S.AddLin00(125, 500, 350, 500);
-					S.UnionFz();
+
 					S.AddLin11(350, 300, 350, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -179,19 +179,19 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(X: 50, Y: 100);
 					S.AddLin01(50, 50, 350, 50);
-					S.UnionFz();
+
 					S.AddLin11(50, 50, 50, 300);
-					S.UnionFz();
+
 					S.AddLin00(50, 300, 200, 300);
-					S.UnionFz();
+
 					S.AddArc00(200, 300, 350, 500);
-					S.UnionFz();
+
 					S.AddArc01(350, 500, 100, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -205,23 +205,23 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(X: 50, Y: 100);
 					S.AddArc01(50, 300, 300, 50);
-					S.UnionFz();
+
 					S.AddLin00(50, 300, 50, 600);
-					S.UnionFz();
+
 					S.AddArc00(50, 500, 200, 350);
-					S.UnionFz();
+
 					S.AddArc00(200, 350, 350, 500);
-					S.UnionFz();
+
 					S.AddLin00(350, 500, 350, 600);
-					S.UnionFz();
+
 					S.AddArc00(350, 600, 200, 750);
-					S.UnionFz();
+
 					S.AddArc00(200, 750, 50, 600);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -235,17 +235,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(X: 50, Y: 100);
 					S.AddLin10(50, 50, 350, 50);
-					S.UnionFz();
+
 					S.AddLin10(350, 50, 350, 500);
-					S.UnionFz();
+
 					S.AddLin11(200, 400, 350, 500);
-					S.UnionFz();
+
 					S.AddLin01(200, 400, 200, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -259,33 +259,33 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(X: 50, Y: 100);
 					S.AddLin00(50, 200, 50, 250);
-					S.UnionFz();
+
 					S.AddArc00(50, 200, 200, 50);
-					S.UnionFz();
+
 					S.AddArc00(200, 50, 350, 200);
-					S.UnionFz();
+
 					S.AddLin00(350, 200, 350, 250);
-					S.UnionFz();
+
 					S.AddArc00(350, 250, 200, 400);
-					S.UnionFz();
+
 					S.AddArc00(200, 400, 50, 250);
-					S.UnionFz();
+
 					S.AddLin00(50, 550, 50, 600);
-					S.UnionFz();
+
 					S.AddArc00(50, 550, 200, 400);
-					S.UnionFz();
+
 					S.AddArc00(200, 400, 350, 550);
-					S.UnionFz();
+
 					S.AddLin00(350, 550, 350, 600);
-					S.UnionFz();
+
 					S.AddArc00(350, 600, 200, 750);
-					S.UnionFz();
+
 					S.AddArc00(200, 750, 50, 600);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -299,23 +299,23 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(X: 50, Y: 100);
 					S.AddLin00(50, 200, 50, 300);
-					S.UnionFz();
+
 					S.AddArc00(50, 200, 200, 50);
-					S.UnionFz();
+
 					S.AddArc00(200, 50, 350, 200);
-					S.UnionFz();
+
 					S.AddLin00(350, 200, 350, 500);
-					S.UnionFz();
+
 					S.AddArc00(350, 300, 200, 450);
-					S.UnionFz();
+
 					S.AddArc00(200, 450, 50, 300);
-					S.UnionFz();
+
 					S.AddArc01(350, 500, 100, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -331,15 +331,15 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(50, 750, 175, 500);
-					S.UnionFz();
+
 					S.AddLin11(400, 50, 750, 750);
-					S.UnionFz();
+
 					S.AddLin00(175, 500, 625, 500);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -353,15 +353,15 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin11(50, 750, 175, 500);
-					S.UnionFz();
+
 					S.AddLin11(400, 50, 750, 750);
-					S.UnionFz();
+
 					S.AddLin00(175, 500, 625, 500);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -375,27 +375,27 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc00(275, 50, 525, 275);
-					S.UnionFz();
+
 					S.AddLin00(525, 275, 525, 300);
-					S.UnionFz();
+
 					S.AddArc00(50, 275, 275, 50);
-					S.UnionFz();
+
 					S.AddLin00(50, 275, 50, 525);
-					S.UnionFz();
+
 					S.AddArc00(275, 750, 50, 525);
-					S.UnionFz();
+
 					S.AddLin10(275, 300, 525, 300);
-					S.UnionFz();
+
 					S.AddArc00(525, 300, 750, 525);
-					S.UnionFz();
+
 					S.AddArc00(750, 525, 525, 750);
-					S.UnionFz();
+
 					S.AddLin00(275, 750, 525, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -410,21 +410,21 @@ namespace Wholemy {
 				S.Thickness = D;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc00(275, 750, 50, 525);
-					S.UnionFz();
+
 					S.AddLin10(50, -75, 50, 525);
-					S.UnionFz();
+
 					S.AddLin10(275, 300, 525, 300);
-					S.UnionFz();
+
 					S.AddArc00(525, 300, 750, 525);
-					S.UnionFz();
+
 					S.AddArc00(750, 525, 525, 750);
-					S.UnionFz();
+
 					S.AddLin00(275, 750, 525, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -438,17 +438,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin10(750, 750, 400, 750);
-					S.UnionFz();
+
 					S.AddArc00(400, 750, 50, 400);
-					S.UnionFz();
+
 					S.AddArc00(50, 400, 400, 50);
-					S.UnionFz();
+
 					S.AddLin01(400, 50, 750, 50);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -462,17 +462,17 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin10(750, 750, 400, 750);
-					S.UnionFz();
+
 					S.AddArc00(400, 750, 50, 400);
-					S.UnionFz();
+
 					S.AddArc00(50, 400, 400, 50);
-					S.UnionFz();
+
 					S.AddLin01(400, 50, 750, 50);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -486,31 +486,31 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					//S.AddArc00(275, 750, 50, 525);
-					//S.MzUnion();
+					//
 					//S.AddLin10(750, 50, 750, 525);
-					//S.MzUnion();
+					//
 					//S.AddLin01(275, 300, 525, 300);
-					//S.MzUnion();
+					//
 					//S.AddArc00(50, 525, 275, 300);
-					//S.MzUnion();
+					//
 					//S.AddArc00(750, 525, 525, 750);
-					//S.MzUnion();
+					//
 					//S.AddLin00(275, 750, 525, 750);
 					S.AddLin11(50, 50, 50, 750);
-					S.UnionFz();
+
 					S.AddLin00(50, 50, 400, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 50, 750, 400);
-					S.UnionFz();
+
 					S.AddArc00(750, 400, 400, 750);
-					S.UnionFz();
+
 					S.AddLin00(50, 750, 400, 750);
 
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -524,18 +524,18 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc00(275, 750, 50, 525);
-					S.UnionFz();
+
 					S.AddLin10(750, -75, 750, 525);
-					S.UnionFz();
+
 					S.AddLin01(275, 300, 525, 300);
-					S.UnionFz();
+
 					S.AddArc00(50, 525, 275, 300);
-					S.UnionFz();
+
 					S.AddArc00(750, 525, 525, 750);
-					S.UnionFz();
+
 					S.AddLin00(275, 750, 525, 750);
 					//S.LinE(50, 50, 50, 750);
 					//S.Union();
@@ -546,9 +546,9 @@ namespace Wholemy {
 					//S.ArcE(750, 400, 400, 750);
 					//S.Union();
 					//S.LinE(50, 750, 400, 750);
-					
+
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -562,25 +562,25 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 
 					S.AddArc00(50, 225, 225, 50);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
-					S.UnionFz();
+
 
 					S.AddLin00(50, 225, 50, 575);
-					S.UnionFz();
+
 
 					S.AddLin01(225, 50, 750, 50);
-					S.UnionFz();
+
 					S.AddLin01(50, 400, 400, 400);
-					S.UnionFz();
+
 					S.AddLin01(225, 750, 750, 750);
-					
+
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -594,25 +594,25 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 
 					S.AddArc00(50, 225, 225, 50);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
-					S.UnionFz();
+
 
 					S.AddLin00(50, 225, 50, 575);
-					S.UnionFz();
+
 
 					S.AddLin01(225, 50, 750, 50);
-					S.UnionFz();
+
 					S.AddLin01(50, 400, 400, 400);
-					S.UnionFz();
+
 					S.AddLin01(225, 750, 750, 750);
-					
+
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -626,17 +626,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin10(50, 750, 50, 225);
-					S.UnionFz();
+
 					S.AddLin01(50, 500, 400, 500);
-					S.UnionFz();
+
 					S.AddLin01(225, 50, 750, 50);
-					S.UnionFz();
+
 					S.AddArc00(50, 225, 225, 50);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -650,17 +650,17 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin10(50, 875, 50, 225);
-					S.UnionFz();
+
 					S.AddLin01(50, 500, 400, 500);
-					S.UnionFz();
+
 					S.AddLin01(225, 50, 750, 50);
-					S.UnionFz();
+
 					S.AddArc00(50, 225, 225, 50);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -674,21 +674,21 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin10(750, 750, 750, 400);
-					S.UnionFz();
+
 					S.AddLin11(400, 400, 750, 400);
-					S.UnionFz();
+
 					S.AddLin00(750, 750, 400, 750);
-					S.UnionFz();
+
 					S.AddArc00(400, 750, 50, 400);
-					S.UnionFz();
+
 					S.AddArc00(50, 400, 400, 50);
-					S.UnionFz();
+
 					S.AddLin01(400, 50, 750, 50);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -702,34 +702,34 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					//S.AddLin10(750, 750, 750, 400);
-					//S.MzUnion();
+					//
 					//S.AddLin11(400, 400, 750, 400);
-					//S.MzUnion();
+					//
 					//S.AddLin00(750, 750, 400, 750);
-					//S.MzUnion();
+					//
 					//S.AddArc00(400, 750, 50, 400);
-					//S.MzUnion();
+					//
 					//S.AddArc00(50, 400, 400, 50);
-					//S.MzUnion();
+					//
 					//S.AddLin01(400, 50, 750, 50);
 					S.AddArc00(50, 275, 275, 50);
-					S.UnionFz();
+
 					S.AddLin00(275, 50, 525, 50);
-					S.UnionFz();
+
 					S.AddArc00(525, 50, 750, 275);
-					S.UnionFz();
+
 					S.AddArc00(275, 500, 50, 275);
-					S.UnionFz();
+
 					S.AddLin01(275, 500, 400, 500);
-					S.UnionFz();
+
 					S.AddLin00(750, 275, 750, 575);
-					S.UnionFz();
+
 					S.AddArc01(750, 575, 400, 875);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -743,15 +743,15 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(50, 50, 50, 750);
-					S.UnionFz();
+
 					S.AddArc01(400, 400, 750, 750);
-					S.UnionFz();
+
 					S.AddLin00(50, 400, 400, 400);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -765,15 +765,15 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin11(50, -75, 50, 750);
-					S.UnionFz();
+
 					S.AddArc01(400, 400, 750, 750);
-					S.UnionFz();
+
 					S.AddLin00(50, 400, 400, 400);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -787,15 +787,15 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(50, 50, 750, 50);
-					S.UnionFz();
+
 					S.AddLin00(400, 50, 400, 750);
-					S.UnionFz();
+
 					S.AddLin11(50, 750, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -809,15 +809,15 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin11(50, 50, 750, 50);
-					S.UnionFz();
+
 					S.AddLin10(400, -75, 400, 750);
-					S.UnionFz();
+
 					S.AddLin11(50, 750, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -831,17 +831,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin00(225, 750, 575, 750);
-					S.UnionFz();
+
 					S.AddLin10(750, 50, 750, 575);
-					S.UnionFz();
+
 					S.AddArc00(750, 575, 575, 750);
-					S.UnionFz();
+
 					S.AddArc01(225, 750, 50, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -855,17 +855,17 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin00(225, 750, 575, 750);
-					S.UnionFz();
+
 					S.AddLin10(750, -75, 750, 575);
-					S.UnionFz();
+
 					S.AddArc00(750, 575, 575, 750);
-					S.UnionFz();
+
 					S.AddArc01(225, 750, 50, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -879,17 +879,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(50, 50, 50, 750);
-					S.UnionFz();
+
 					S.AddLin00(50, 400, 400, 400);
-					S.UnionFz();
+
 					S.AddLin01(400, 400, 750, 50);
-					S.UnionFz();
+
 					S.AddLin10(750, 750, 400, 400);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -903,17 +903,17 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin11(50, -75, 50, 750);
-					S.UnionFz();
+
 					S.AddLin00(50, 400, 400, 400);
-					S.UnionFz();
+
 					S.AddLin01(400, 400, 750, 50);
-					S.UnionFz();
+
 					S.AddLin10(750, 750, 400, 400);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -927,15 +927,15 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin10(50, 50, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddLin01(225, 750, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -949,15 +949,15 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin10(50, -75, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddLin01(225, 750, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -971,17 +971,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(50, 50, 50, 750);
-					S.UnionFz();
+
 					S.AddLin01(50, 50, 400, 400);
-					S.UnionFz();
+
 					S.AddLin00(400, 400, 750, 50);
-					S.UnionFz();
+
 					S.AddLin11(750, 50, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -995,17 +995,17 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin11(50, 50, 50, 750);
-					S.UnionFz();
+
 					S.AddLin01(50, 50, 400, 400);
-					S.UnionFz();
+
 					S.AddLin00(400, 400, 750, 50);
-					S.UnionFz();
+
 					S.AddLin11(750, 50, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1019,15 +1019,15 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(50, 50, 50, 750);
-					S.UnionFz();
+
 					S.AddLin00(50, 50, 750, 750);
-					S.UnionFz();
+
 					S.AddLin11(750, 50, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1041,15 +1041,15 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin11(50, 50, 50, 750);
-					S.UnionFz();
+
 					S.AddLin00(50, 50, 750, 750);
-					S.UnionFz();
+
 					S.AddLin11(750, 50, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1064,16 +1064,16 @@ namespace Wholemy {
 					D /= UD;
 					S.Thickness = D;
 					S.AddResizeMovA(XY: UXY, WH: UWH);
-					S.BeginFz();
+
 					S.AddArc00(400, 50, 750, 400);
-					S.UnionFz();
+
 					S.AddArc00(750, 400, 400, 750);
-					S.UnionFz();
+
 					S.AddArc00(400, 750, 50, 400);
-					S.UnionFz();
+
 					S.AddArc00(50, 400, 400, 50);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1087,16 +1087,16 @@ namespace Wholemy {
 				if (D > 0) {
 					S.Thickness = D;
 					S.AddResizeMovA(WH: 0.5, X: 50, Y: 300);
-					S.BeginFz();
+
 					S.AddArc00(400, 50, 750, 400);
-					S.UnionFz();
+
 					S.AddArc00(750, 400, 400, 750);
-					S.UnionFz();
+
 					S.AddArc00(400, 750, 50, 400);
-					S.UnionFz();
+
 					S.AddArc00(50, 400, 400, 50);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1110,21 +1110,21 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin01(50, 275, 50, 750);
-					S.UnionFz();
+
 					S.AddArc00(50, 275, 275, 50);
-					S.UnionFz();
+
 					S.AddLin00(275, 50, 525, 50);
-					S.UnionFz();
+
 					S.AddArc00(525, 50, 750, 275);
-					S.UnionFz();
+
 					S.AddArc00(750, 275, 525, 500);
-					S.UnionFz();
+
 					S.AddLin10(275, 500, 525, 500);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1138,21 +1138,21 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin01(50, 275, 50, 875);
-					S.UnionFz();
+
 					S.AddArc00(50, 275, 275, 50);
-					S.UnionFz();
+
 					S.AddLin00(275, 50, 525, 50);
-					S.UnionFz();
+
 					S.AddArc00(525, 50, 750, 275);
-					S.UnionFz();
+
 					S.AddArc00(750, 275, 525, 500);
-					S.UnionFz();
+
 					S.AddLin10(275, 500, 525, 500);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1166,31 +1166,31 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					//S.AddLin01(750, 275, 750, 750);
-					//S.MzUnion();
+					//
 					//S.AddArc00(50, 275, 275, 50);
-					//S.MzUnion();
+					//
 					//S.AddLin00(275, 50, 525, 50);
-					//S.MzUnion();
+					//
 					//S.AddArc00(525, 50, 750, 275);
-					//S.MzUnion();
+					//
 					//S.AddArc00(275, 500, 50, 275);
-					//S.MzUnion();
+					//
 					//S.AddLin01(275, 500, 525, 500);
 					S.AddArc00(400, 750, 50, 400);
-					S.UnionFz();
+
 					S.AddArc00(50, 400, 400, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 50, 750, 400);
-					S.UnionFz();
+
 					S.AddArc00(750, 400, 400, 750);
-					S.UnionFz();
+
 					S.AddLin11(525, 525, 750, 750);
 
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1204,21 +1204,21 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin01(750, 275, 750, 875);
-					S.UnionFz();
+
 					S.AddArc00(50, 275, 275, 50);
-					S.UnionFz();
+
 					S.AddLin00(275, 50, 525, 50);
-					S.UnionFz();
+
 					S.AddArc00(525, 50, 750, 275);
-					S.UnionFz();
+
 					S.AddArc00(275, 500, 50, 275);
-					S.UnionFz();
+
 					S.AddLin01(275, 500, 525, 500);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1232,23 +1232,23 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin01(50, 275, 50, 750);
-					S.UnionFz();
+
 					S.AddArc00(50, 275, 275, 50);
-					S.UnionFz();
+
 					S.AddLin00(275, 50, 525, 50);
-					S.UnionFz();
+
 					S.AddArc00(525, 50, 750, 275);
-					S.UnionFz();
+
 					S.AddArc00(750, 275, 525, 500);
-					S.UnionFz();
+
 					S.AddLin10(275, 500, 525, 500);
-					S.UnionFz();
+
 					S.AddLin01(275, 500, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1262,23 +1262,23 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin01(50, 275, 50, 875);
-					S.UnionFz();
+
 					S.AddArc00(50, 275, 275, 50);
-					S.UnionFz();
+
 					S.AddLin00(275, 50, 525, 50);
-					S.UnionFz();
+
 					S.AddArc00(525, 50, 750, 275);
-					S.UnionFz();
+
 					S.AddArc00(750, 275, 525, 500);
-					S.UnionFz();
+
 					S.AddLin10(275, 500, 525, 500);
-					S.UnionFz();
+
 					S.AddLin01(275, 500, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1292,29 +1292,29 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.PresetRoot(-0.3);
 					S.AddArc01(575, 50, 750, 225/*, -0.3*/);
-					S.UnionFz();
+
 					S.AddLin00(225, 50, 575, 50);
-					S.UnionFz();
+
 					S.AddArc00(50, 225, 225, 50);
-					S.UnionFz();
+
 					S.AddArc00(225, 400, 50, 225);
-					S.UnionFz();
+
 					S.AddLin00(225, 400, 575, 400);
-					S.UnionFz();
+
 					S.AddArc00(575, 400, 750, 575);
-					S.UnionFz();
+
 					S.AddArc00(750, 575, 575, 750);
-					S.UnionFz();
+
 					S.AddLin00(225, 750, 575, 750);
-					S.UnionFz();
+
 					S.PresetRoot(-0.3);
 					S.AddArc01(225, 750, 50, 575/*, -0.3*/);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1328,29 +1328,29 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.PresetRoot(-0.3);
 					S.AddArc01(575, 50, 750, 225/*, -0.3*/);
-					S.UnionFz();
+
 					S.AddLin00(225, 50, 575, 50);
-					S.UnionFz();
+
 					S.AddArc00(50, 225, 225, 50);
-					S.UnionFz();
+
 					S.AddArc00(225, 400, 50, 225);
-					S.UnionFz();
+
 					S.AddLin00(225, 400, 575, 400);
-					S.UnionFz();
+
 					S.AddArc00(575, 400, 750, 575);
-					S.UnionFz();
+
 					S.AddArc00(750, 575, 575, 750);
-					S.UnionFz();
+
 					S.AddLin00(225, 750, 575, 750);
-					S.UnionFz();
+
 					S.PresetRoot(-0.3);
 					S.AddArc01(225, 750, 50, 575/*, -0.3*/);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1376,12 +1376,12 @@ namespace Wholemy {
 					D /= UD;
 					S.Thickness = D;
 					S.AddResizeMovA(XY: UXY, WH: UWH);
-					S.BeginFz();
+
 					S.AddLin11(50, 50, 750, 50);
-					S.UnionFz();
+
 					S.AddLin01(400, 50, 400, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1406,12 +1406,12 @@ namespace Wholemy {
 				if (D > 0) {
 					S.Thickness = D;
 					S.AddResizeMovA(WH: 0.5, X: 50, Y: 300);
-					S.BeginFz();
+
 					S.AddLin11(50, 50, 750, 50);
-					S.UnionFz();
+
 					S.AddLin11(400, -75, 400, 875);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1425,17 +1425,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin10(750, 50, 750, 400);
-					S.UnionFz();
+
 					S.AddArc00(750, 400, 400, 750);
-					S.UnionFz();
+
 					S.AddArc00(400, 750, 50, 400);
-					S.UnionFz();
+
 					S.AddLin10(50, 50, 50, 400);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1449,17 +1449,17 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin10(750, 50, 750, 400);
-					S.UnionFz();
+
 					S.AddArc00(750, 400, 400, 750);
-					S.UnionFz();
+
 					S.AddArc00(400, 750, 50, 400);
-					S.UnionFz();
+
 					S.AddLin10(50, 50, 50, 400);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1473,13 +1473,13 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(50, 50, 400, 750);
-					S.UnionFz();
+
 					S.AddLin10(750, 50, 400, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1493,13 +1493,13 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin11(50, 50, 400, 750);
-					S.UnionFz();
+
 					S.AddLin10(750, 50, 400, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1513,23 +1513,23 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin10(50, 50, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(400, 575, 225, 750);
-					S.UnionFz();
+
 					S.AddLin10(400, 225, 400, 575);
-					S.UnionFz();
+
 					S.AddArc00(575, 750, 400, 575);
-					S.UnionFz();
+
 					S.AddArc00(750, 575, 575, 750);
-					S.UnionFz();
+
 					S.AddLin10(750, 50, 750, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1543,23 +1543,23 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin10(50, 50, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(400, 575, 225, 750);
-					S.UnionFz();
+
 					S.AddLin10(400, 225, 400, 575);
-					S.UnionFz();
+
 					S.AddArc00(575, 750, 400, 575);
-					S.UnionFz();
+
 					S.AddArc00(750, 575, 575, 750);
-					S.UnionFz();
+
 					S.AddLin10(750, 50, 750, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1573,14 +1573,14 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(50, 50, 750, 750);
-					S.UnionFz();
+
 					S.AddLin11(750, 50, 50, 750);
-					
+
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1594,13 +1594,13 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin11(50, 50, 750, 750);
-					S.UnionFz();
+
 					S.AddLin11(750, 50, 50, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1614,15 +1614,15 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc10(750, 50, 400, 400);
-					S.UnionFz();
+
 					S.AddArc01(400, 400, 50, 50);
-					S.UnionFz();
+
 					S.AddLin01(400, 400, 400, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1636,15 +1636,15 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc10(750, 50, 400, 400);
-					S.UnionFz();
+
 					S.AddArc01(400, 400, 50, 50);
-					S.UnionFz();
+
 					S.AddLin01(400, 400, 400, 875);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1658,15 +1658,15 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(50, 50, 750, 50);
-					S.UnionFz();
+
 					S.AddLin00(50, 750, 750, 50);
-					S.UnionFz();
+
 					S.AddLin11(50, 750, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1680,15 +1680,15 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin11(50, 50, 750, 50);
-					S.UnionFz();
+
 					S.AddLin00(50, 750, 750, 50);
-					S.UnionFz();
+
 					S.AddLin11(50, 750, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1704,17 +1704,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc10(50, 750, 575, 50);
-					S.UnionFz();
+
 					S.AddArc00(575, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddLin01(750, 225, 750, 750);
-					S.UnionFz();
+
 					S.AddLin10(225, 575, 750, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1728,17 +1728,17 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc10(50, 750, 575, 50);
-					S.UnionFz();
+
 					S.AddArc00(575, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddLin01(750, 225, 750, 750);
-					S.UnionFz();
+
 					S.AddLin10(225, 575, 750, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1752,17 +1752,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc10(225, 400, 750, 575);
-					S.UnionFz();
+
 					S.AddArc00(750, 575, 225, 750);
-					S.UnionFz();
+
 					S.AddArc01(50, 575, 575, 50);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1776,17 +1776,17 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc10(225, 400, 750, 575);
-					S.UnionFz();
+
 					S.AddArc00(750, 575, 225, 750);
-					S.UnionFz();
+
 					S.AddArc01(50, 575, 575, 50);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1800,23 +1800,23 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc00(225, 50, 575, 225);
-					S.UnionFz();
+
 					S.AddArc00(575, 225, 225, 400);
-					S.UnionFz();
+
 					S.AddArc10(225, 400, 750, 575);
-					S.UnionFz();
+
 					S.AddArc00(750, 575, 225, 750);
-					S.UnionFz();
+
 					S.AddArc00(50, 225, 225, 50);
-					S.UnionFz();
+
 					S.AddLin00(50, 225, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1830,23 +1830,23 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
-					S.AddResizeMoved(WH:0.5, XY: 100, Y: 500);
+
+					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc00(225, 50, 575, 225);
-					S.UnionFz();
+
 					S.AddArc00(575, 225, 225, 400);
-					S.UnionFz();
+
 					S.AddArc10(225, 400, 750, 575);
-					S.UnionFz();
+
 					S.AddArc00(750, 575, 225, 750);
-					S.UnionFz();
+
 					S.AddArc00(50, 225, 225, 50);
-					S.UnionFz();
+
 					S.AddLin00(50, 225, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1860,15 +1860,15 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc00(50, 225, 400, 50);
-					S.UnionFz();
+
 					S.AddArc01(400, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddLin01(50, 225, 50, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1882,15 +1882,15 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc00(50, 225, 400, 50);
-					S.UnionFz();
+
 					S.AddArc01(400, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddLin01(50, 225, 50, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1904,25 +1904,25 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc00(50, 225, 400, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc00(400, 575, 50, 225);
-					S.UnionFz();
+
 					S.AddArc00(750, 225, 400, 575);
-					S.UnionFz();
+
 					S.AddArc01(400, 575, 50, 750);
-					S.UnionFz();
+
 					S.AddArc10(750, 750, 400, 575);
-					//S.MzUnion();
+					//
 					//S.AddLin10(50, 750, 225, 750);
-					//S.MzUnion();
+					//
 					//S.AddLin01(575, 750, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1936,21 +1936,21 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc00(50, 225, 400, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc00(400, 575, 50, 225);
-					S.UnionFz();
+
 					S.AddArc00(750, 225, 400, 575);
-					S.UnionFz();
+
 					S.AddArc01(400, 575, 50, 750);
-					S.UnionFz();
+
 					S.AddArc10(750, 750, 400, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1964,17 +1964,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc00(50, 225, 400, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc01(750, 225, 225, 400);
-					S.UnionFz();
+
 					S.AddArc10(575, 750, 50, 225);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -1988,17 +1988,17 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc00(50, 225, 400, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc01(750, 225, 225, 400);
-					S.UnionFz();
+
 					S.AddArc10(575, 750, 50, 225);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2012,29 +2012,29 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.PresetRoot(0.5);
 					S.AddArc10(150, -50, 250, -150/*, 0.5*/);
-					S.UnionFz();
+
 					S.PresetRoot(-0.5);
 					S.AddArc01(250, -150, 350, -50/*, -0.5*/);
-					S.UnionFz();
+
 					S.PresetRoot(0.5);
 					S.AddArc10(450, -50, 550, -150/*, 0.5*/);
-					S.UnionFz();
+
 					S.PresetRoot(-0.5);
 					S.AddArc01(550, -150, 650, -50/*, -0.5*/);
-					S.UnionFz();
+
 					S.AddArc00(50, 225, 400, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc01(750, 225, 225, 400);
-					S.UnionFz();
+
 					S.AddArc10(575, 750, 50, 225);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2048,29 +2048,29 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.PresetRoot(0.5);
 					S.AddArc10(150, -175, 250, -275/*, 0.5*/);
-					S.UnionFz();
+
 					S.PresetRoot(-0.5);
 					S.AddArc01(250, -275, 350, -175/*, -0.5*/);
-					S.UnionFz();
+
 					S.PresetRoot(0.5);
 					S.AddArc10(450, -175, 550, -275/*, 0.5*/);
-					S.UnionFz();
+
 					S.PresetRoot(-0.5);
 					S.AddArc01(550, -275, 650, -175/*, -0.5*/);
-					S.UnionFz();
+
 					S.AddArc00(50, 225, 400, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc01(750, 225, 225, 400);
-					S.UnionFz();
+
 					S.AddArc10(575, 750, 50, 225);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2084,28 +2084,28 @@ namespace Wholemy {
 		//		//D *= 2;
 		//		if (D > 0) {
 		//			S.Thickness = D;
-		//			S.MzBegin();
+		//			
 		//			S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 		//			//S.AddArc10(150, -50, 250, -150, D, 0.5);
-		//			//S.MzUnion();
+		//			//
 		//			//S.AddArc01(250, -150, 350, -50, D, -0.5);
-		//			//S.MzUnion();
+		//			//
 		//			//S.AddArc10(450, -50, 550, -150, D, 0.5);
-		//			//S.MzUnion();
+		//			//
 		//			//S.AddArc01(550, -150, 650, -50, D, -0.5);
 		//			S.AddLin11(250, -150, 250, -100);
-		//			S.MzUnion();
+		//			
 		//			S.AddLin11(550, -150, 550, -100);
-		//			S.MzUnion();
+		//			
 		//			S.AddArc00(50, 225, 400, 50);
-		//			S.MzUnion();
+		//			
 		//			S.AddArc00(400, 50, 750, 225);
-		//			S.MzUnion();
+		//			
 		//			S.AddArc01(750, 225, 225, 400);
-		//			S.MzUnion();
+		//			
 		//			S.AddArc10(575, 750, 50, 225);
 		//			S.CutResize();
-		//			return S.DxCombine();
+		//			
 		//		}
 		//		return S;
 		//	}
@@ -2119,19 +2119,19 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc10(750, 50, 400, 400);
-					S.UnionFz();
+
 					S.AddArc01(400, 400, 50, 50);
-					S.UnionFz();
+
 					S.AddLin11(400, 50, 400, 750);
-					S.UnionFz();
+
 					S.AddArc10(50, 750, 400, 400);
-					S.UnionFz();
+
 					S.AddArc01(400, 400, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2145,19 +2145,19 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc10(750, 50, 400, 400);
-					S.UnionFz();
+
 					S.AddArc01(400, 400, 50, 50);
-					S.UnionFz();
+
 					S.AddLin11(400, 50, 400, 750);
-					S.UnionFz();
+
 					S.AddArc10(50, 750, 400, 400);
-					S.UnionFz();
+
 					S.AddArc01(400, 400, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2171,21 +2171,21 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc10(50, 225, 400, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc01(750, 225, 400, 400);
-					S.UnionFz();
+
 					S.AddArc00(400, 400, 750, 575);
-					S.UnionFz();
+
 					S.AddArc00(750, 575, 400, 750);
-					S.UnionFz();
+
 					S.AddArc01(400, 750, 50, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2199,21 +2199,21 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc10(50, 225, 400, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc01(750, 225, 400, 400);
-					S.UnionFz();
+
 					S.AddArc00(400, 400, 750, 575);
-					S.UnionFz();
+
 					S.AddArc00(750, 575, 400, 750);
-					S.UnionFz();
+
 					S.AddArc01(400, 750, 50, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2227,17 +2227,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(750, 50, 750, 750);
-					S.UnionFz();
+
 					S.AddArc00(750, 225, 225, 750);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddLin10(50, 50, 50, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2251,17 +2251,17 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin11(750, 50, 750, 750);
-					S.UnionFz();
+
 					S.AddArc00(750, 225, 225, 750);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddLin10(50, 50, 50, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2275,21 +2275,21 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc10(550, -150, 400, 0);
-					S.UnionFz();
+
 					S.AddArc01(400, 0, 250, -150);
-					S.UnionFz();
+
 					S.AddLin11(750, 50, 750, 750);
-					S.UnionFz();
+
 					S.AddArc00(750, 225, 225, 750);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddLin10(50, 50, 50, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2303,21 +2303,21 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc10(550, -275, 400, -125);
-					S.UnionFz();
+
 					S.AddArc01(400, -125, 250, -275);
-					S.UnionFz();
+
 					S.AddLin11(750, 50, 750, 750);
-					S.UnionFz();
+
 					S.AddArc00(750, 225, 225, 750);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddLin10(50, 50, 50, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2331,15 +2331,15 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(50, 50, 50, 750);
-					S.UnionFz();
+
 					S.AddArc10(750, 50, 50, 400);
-					S.UnionFz();
+
 					S.AddArc01(50, 400, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2353,15 +2353,15 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin11(50, 50, 50, 750);
-					S.UnionFz();
+
 					S.AddArc10(750, 50, 50, 400);
-					S.UnionFz();
+
 					S.AddArc01(50, 400, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2375,13 +2375,13 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc11(400, 50, 50, 750);
-					S.UnionFz();
+
 					S.AddArc10(750, 750, 400, 50);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2395,13 +2395,13 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc11(400, 50, 50, 750);
-					S.UnionFz();
+
 					S.AddArc10(750, 750, 400, 50);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2415,17 +2415,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(50, 50, 50, 750);
-					S.UnionFz();
+
 					S.AddArc01(50, 50, 400, 575);
-					S.UnionFz();
+
 					S.AddArc00(400, 575, 750, 50);
-					S.UnionFz();
+
 					S.AddLin11(750, 50, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2439,17 +2439,17 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin11(50, 50, 50, 750);
-					S.UnionFz();
+
 					S.AddArc01(50, 50, 400, 575);
-					S.UnionFz();
+
 					S.AddArc00(400, 575, 750, 50);
-					S.UnionFz();
+
 					S.AddLin11(750, 50, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2463,15 +2463,15 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(50, 50, 50, 750);
-					S.UnionFz();
+
 					S.AddLin00(50, 400, 750, 400);
-					S.UnionFz();
+
 					S.AddLin11(750, 50, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2485,15 +2485,15 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin11(50, 50, 50, 750);
-					S.UnionFz();
+
 					S.AddLin00(50, 400, 750, 400);
-					S.UnionFz();
+
 					S.AddLin11(750, 50, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2507,21 +2507,21 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc00(50, 225, 400, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc00(750, 400, 400, 750);
-					S.UnionFz();
+
 					S.AddArc00(400, 750, 50, 400);
-					S.UnionFz();
+
 					S.AddLin00(50, 225, 50, 400);
-					S.UnionFz();
+
 					S.AddLin00(750, 225, 750, 400);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2535,21 +2535,21 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc00(50, 225, 400, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc00(750, 400, 400, 750);
-					S.UnionFz();
+
 					S.AddArc00(400, 750, 50, 400);
-					S.UnionFz();
+
 					S.AddLin00(50, 225, 50, 400);
-					S.UnionFz();
+
 					S.AddLin00(750, 225, 750, 400);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2563,17 +2563,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin01(50, 225, 50, 750);
-					S.UnionFz();
+
 					S.AddArc00(50, 225, 400, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddLin01(750, 225, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2587,17 +2587,17 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin01(50, 225, 50, 750);
-					S.UnionFz();
+
 					S.AddArc00(50, 225, 400, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddLin01(750, 225, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2611,17 +2611,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin01(50, 225, 50, 750);
-					S.UnionFz();
+
 					S.AddArc00(50, 225, 225, 50);
-					S.UnionFz();
+
 					S.AddArc00(225, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc01(750, 225, 225, 400);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2635,17 +2635,17 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin01(50, 225, 50, 750);
-					S.UnionFz();
+
 					S.AddArc00(50, 225, 225, 50);
-					S.UnionFz();
+
 					S.AddArc00(225, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc01(750, 225, 225, 400);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2659,17 +2659,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc01(575, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc00(50, 575, 575, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddArc10(750, 575, 400, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2683,17 +2683,17 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc01(575, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc00(50, 575, 575, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddArc10(750, 575, 400, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2707,15 +2707,15 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc10(50, 50, 400, 225);
-					S.UnionFz();
+
 					S.AddArc01(400, 225, 750, 50);
-					S.UnionFz();
+
 					S.AddLin10(400, 750, 400, 225);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2729,15 +2729,15 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc10(50, 50, 400, 225);
-					S.UnionFz();
+
 					S.AddArc01(400, 225, 750, 50);
-					S.UnionFz();
+
 					S.AddLin10(400, 750, 400, 225);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2751,13 +2751,13 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc11(575, 400, 50, 50);
-					S.UnionFz();
+
 					S.AddArc11(750, 50, 225, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2771,13 +2771,13 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc11(575, 400, 50, 50);
-					S.UnionFz();
+
 					S.AddArc11(750, 50, 225, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2791,19 +2791,19 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(400, 50, 400, 750);
-					S.UnionFz();
+
 					S.AddArc00(50, 400, 400, 225);
-					S.UnionFz();
+
 					S.AddArc00(400, 225, 750, 400);
-					S.UnionFz();
+
 					S.AddArc00(750, 400, 400, 575);
-					S.UnionFz();
+
 					S.AddArc00(400, 575, 50, 400);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2817,19 +2817,19 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin11(400, -75, 400, 875);
-					S.UnionFz();
+
 					S.AddArc00(50, 400, 400, 225);
-					S.UnionFz();
+
 					S.AddArc00(400, 225, 750, 400);
-					S.UnionFz();
+
 					S.AddArc00(750, 400, 400, 575);
-					S.UnionFz();
+
 					S.AddArc00(400, 575, 50, 400);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2843,17 +2843,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc10(50, 50, 400, 400);
-					S.UnionFz();
+
 					S.AddArc01(400, 400, 750, 50);
-					S.UnionFz();
+
 					S.AddArc01(400, 400, 50, 750);
-					S.UnionFz();
+
 					S.AddArc10(750, 750, 400, 400);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2867,17 +2867,17 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc10(50, 50, 400, 400);
-					S.UnionFz();
+
 					S.AddArc01(400, 400, 750, 50);
-					S.UnionFz();
+
 					S.AddArc01(400, 400, 50, 750);
-					S.UnionFz();
+
 					S.AddArc10(750, 750, 400, 400);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2891,21 +2891,21 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin10(50, 50, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(575, 575, 312.5, 750);
-					S.UnionFz();
+
 					S.AddArc00(312.5, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddLin10(575, 50, 575, 575);
-					S.UnionFz();
+
 					S.AddLin01(575, 575, 750, 575);
-					S.UnionFz();
+
 					S.AddLin01(750, 575, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2919,21 +2919,21 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin10(50, -75, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(575, 575, 312.5, 750);
-					S.UnionFz();
+
 					S.AddArc00(312.5, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddLin10(575, -75, 575, 575);
-					S.UnionFz();
+
 					S.AddLin01(575, 575, 750, 575);
-					S.UnionFz();
+
 					S.AddLin01(750, 575, 750, 875);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2947,15 +2947,15 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					//S.AddLin00(400, 400, 750, 400);
-					//S.MzUnion();
+					//
 					S.AddArc01(750, 400, 50, 50);
-					S.UnionFz();
+
 					S.AddLin11(750, 50, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2969,15 +2969,15 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					//S.AddLin00(400, 400, 750, 400);
-					//S.MzUnion();
+					//
 					S.AddArc01(750, 400, 50, 50);
-					S.UnionFz();
+
 					S.AddLin11(750, 50, 750, 875);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -2991,19 +2991,19 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(400, 50, 400, 575);
-					S.UnionFz();
+
 					S.AddLin10(50, 50, 50, 575);
-					S.UnionFz();
+
 					S.AddLin10(750, 50, 750, 575);
-					S.UnionFz();
+
 					S.AddArc00(400, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(750, 575, 400, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3017,19 +3017,19 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin11(400, 50, 400, 575);
-					S.UnionFz();
+
 					S.AddLin10(50, 50, 50, 575);
-					S.UnionFz();
+
 					S.AddLin10(750, 50, 750, 575);
-					S.UnionFz();
+
 					S.AddArc00(400, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(750, 575, 400, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3043,23 +3043,23 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(312.5, 175, 312.5, 575);
-					S.UnionFz();
+
 					S.AddLin10(50, 50, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(575, 575, 312.5, 750);
-					S.UnionFz();
+
 					S.AddArc00(312.5, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddLin10(575, 50, 575, 575);
-					S.UnionFz();
+
 					S.AddLin01(575, 575, 750, 575);
-					S.UnionFz();
+
 					S.AddLin01(750, 575, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3073,23 +3073,23 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin11(312.5, 50, 312.5, 575);
-					S.UnionFz();
+
 					S.AddLin10(50, -75, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(575, 575, 312.5, 750);
-					S.UnionFz();
+
 					S.AddArc00(312.5, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddLin10(575, -75, 575, 575);
-					S.UnionFz();
+
 					S.AddLin01(575, 575, 750, 575);
-					S.UnionFz();
+
 					S.AddLin01(750, 575, 750, 875);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3103,17 +3103,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin10(50, 50, 225, 50);
-					S.UnionFz();
+
 					S.AddLin10(225, 50, 225, 750);
-					S.UnionFz();
+
 					S.AddArc00(225, 400, 750, 575);
-					S.UnionFz();
+
 					S.AddArc01(750, 575, 225, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3127,17 +3127,17 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin10(50, -75, 225, -75);
-					S.UnionFz();
+
 					S.AddLin10(225, -75, 225, 750);
-					S.UnionFz();
+
 					S.AddArc00(225, 400, 750, 575);
-					S.UnionFz();
+
 					S.AddArc01(750, 575, 225, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3151,20 +3151,20 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(750, 50, 750, 750);
-					S.UnionFz();
+
 					S.AddLin10(50, 50, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
-					S.UnionFz();
+
 					S.PresetRoot(-0.465);
 					S.AddArc10(225, 400, 750, 925/*, -0.465*/);
-					S.UnionFz();
+
 					S.AddArc00(750, 225, 225, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3178,20 +3178,20 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(WH: 0.5, X: 50, Y: 300);
 					S.AddLin11(750, 50, 750, 750);
-					S.UnionFz();
+
 					S.AddLin10(50, 50, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
-					S.UnionFz();
+
 					S.PresetRoot(-0.465);
 					S.AddArc10(225, 400, 750, 925/*, -0.465*/);
-					S.UnionFz();
+
 					S.AddArc00(750, 225, 225, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3205,17 +3205,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin10(50, 50, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddArc10(225, 400, 750, 575);
-					S.UnionFz();
+
 					S.AddArc00(750, 575, 225, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3229,17 +3229,17 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddLin10(50, 50, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddArc10(225, 400, 750, 575);
-					S.UnionFz();
+
 					S.AddArc00(750, 575, 225, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3253,17 +3253,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc10(50, 225, 400, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddLin11(400, 400, 575, 400);
-					S.UnionFz();
+
 					S.AddArc01(750, 225, 225, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3277,17 +3277,17 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc10(50, 225, 400, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddLin11(400, 400, 575, 400);
-					S.UnionFz();
+
 					S.AddArc01(750, 225, 225, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3301,21 +3301,21 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc00(225, 400, 575, 50);
-					S.UnionFz();
+
 					S.AddArc00(575, 50, 750, 400);
-					S.UnionFz();
+
 					S.AddArc00(750, 400, 575, 750);
-					S.UnionFz();
+
 					S.AddArc00(575, 750, 225, 400);
-					S.UnionFz();
+
 					S.AddArc01(225, 400, 50, 50);
-					S.UnionFz();
+
 					S.AddArc10(50, 750, 225, 400);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3329,21 +3329,21 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc00(225, 400, 575, 50);
-					S.UnionFz();
+
 					S.AddArc00(575, 50, 750, 400);
-					S.UnionFz();
+
 					S.AddArc00(750, 400, 575, 750);
-					S.UnionFz();
+
 					S.AddArc00(575, 750, 225, 400);
-					S.UnionFz();
+
 					S.AddArc01(225, 400, 50, 50);
-					S.UnionFz();
+
 					S.AddArc10(50, 750, 225, 400);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3357,26 +3357,26 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc00(575, 400, 750, 575);
-					S.UnionFz();
+
 					S.PresetRoot(-0.6);
 					S.AddArc01(225, 750, 50, 575/*, -0.6*/);
-					S.UnionFz();
+
 					S.AddArc00(575, 400, 225, 750);
-					S.UnionFz();
+
 					S.AddLin01(750, 575, 750, 750);
-					S.UnionFz();
+
 					S.AddArc00(50, 225, 575, 50);
-					S.UnionFz();
+
 					S.AddArc00(575, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc00(750, 225, 575, 400);
-					S.UnionFz();
+
 					S.AddArc00(575, 400, 50, 225);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3390,26 +3390,26 @@ namespace Wholemy {
 				//D *= 2;
 				if (D > 0) {
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
 					S.AddArc00(575, 400, 750, 575);
-					S.UnionFz();
+
 					S.PresetRoot(-0.6);
 					S.AddArc01(225, 750, 50, 575/*, -0.6*/);
-					S.UnionFz();
+
 					S.AddArc00(575, 400, 225, 750);
-					S.UnionFz();
+
 					S.AddLin01(750, 575, 750, 750);
-					S.UnionFz();
+
 					S.AddArc00(50, 225, 575, 50);
-					S.UnionFz();
+
 					S.AddArc00(575, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc00(750, 225, 575, 400);
-					S.UnionFz();
+
 					S.AddArc00(575, 400, 50, 225);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3425,30 +3425,30 @@ namespace Wholemy {
 		//		if (D > 0) {
 		//			D /= UD;
 		//			S.Thickness = D;
-		//			S.MzBegin();
+		//			
 		//			S.AddResizeMovA(XY: 100);
 
 		//			S.AddLin10(50, 225, 225, 225);
-		//			S.MzUnion();
+		//			
 		//			S.AddLin10(50, 575, 225, 575);
-		//			S.MzUnion();
+		//			
 
 		//			S.AddArc00(225, 225, 400, 50);
-		//			S.MzUnion();
+		//			
 		//			S.AddArc00(400, 750, 225, 575);
-		//			S.MzUnion();
+		//			
 
 		//			S.AddLin00(225, 225, 225, 575);
-		//			S.MzUnion();
+		//			
 
 		//			S.AddLin01(400, 50, 750, 50);
-		//			S.MzUnion();
+		//			
 		//			S.AddLin01(225, 400, 575, 400);
-		//			S.MzUnion();
+		//			
 		//			S.AddLin01(400, 750, 750, 750);
 
 		//			S.CutResize();
-		//			return S.DxCombine();
+		//			
 		//		}
 		//		return S;
 		//	}
@@ -3462,17 +3462,17 @@ namespace Wholemy {
 		//		if (D > 0) {
 		//			D /= UD;
 		//			S.Thickness = D;
-		//			S.MzBegin();
+		//			
 		//			S.AddResizeMovA(XY: 100);
 		//			S.AddArc10(750, 50, 400, 400);
-		//			S.MzUnion();
+		//			
 		//			S.AddArc01(400, 400, 50, 50);
-		//			S.MzUnion();
+		//			
 		//			S.AddLin01(400, 400, 400, 750);
-		//			S.MzUnion();
+		//			
 		//			S.AddLin11(150, 575, 650, 575);
 		//			S.CutResize();
-		//			return S.DxCombine();
+		//			
 		//		}
 		//		return S;
 		//	}
@@ -3486,19 +3486,19 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(225, 50, 225, 750);
-					S.UnionFz();
+
 					S.AddArc00(225, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc00(750, 225, 225, 400);
-					S.UnionFz();
+
 					S.AddLin11(400, 600, 50, 600);
-					S.UnionFz();
+
 					S.AddLin10(50, 400, 225, 400);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3512,37 +3512,37 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin10(225, 50, 225, 150);
-					S.UnionFz();
+
 					S.AddLin10(575, 50, 575, 150);
-					S.UnionFz();
+
 					S.PresetRoot(-0.3);
 					S.AddArc01(625, 150, 750, 275/*, -0.3*/);
-					S.UnionFz();
+
 					S.AddLin00(175, 150, 625, 150);
-					S.UnionFz();
+
 					S.AddArc00(50, 275, 175, 150);
-					S.UnionFz();
+
 					S.AddArc00(175, 400, 50, 275);
-					S.UnionFz();
+
 					S.AddLin00(175, 400, 625, 400);
-					S.UnionFz();
+
 					S.AddArc00(625, 400, 750, 525);
-					S.UnionFz();
+
 					S.AddArc00(750, 525, 625, 650);
-					S.UnionFz();
+
 					S.AddLin00(175, 650, 625, 650);
-					S.UnionFz();
+
 					S.PresetRoot(-0.3);
 					S.AddArc01(175, 650, 50, 525/*, -0.3*/);
-					S.UnionFz();
+
 					S.AddLin01(225, 650, 225, 750);
-					S.UnionFz();
+
 					S.AddLin01(575, 650, 575, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3556,25 +3556,25 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin01(50, 225, 50, 750);
-					S.UnionFz();
+
 					S.AddLin11(50, 225, 400, 750);
-					S.UnionFz();
+
 					S.AddLin00(400, 225, 400, 750);
-					S.UnionFz();
+
 					S.AddArc00(400, 225, 575, 50);
-					S.UnionFz();
+
 					S.AddArc00(575, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc00(750, 225, 575, 400);
-					S.UnionFz();
+
 					S.AddArc00(575, 400, 400, 225);
-					S.UnionFz();
+
 					S.AddLin11(575, 575, 750, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3588,17 +3588,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddLin11(225, 50, 225, 750);
-					S.UnionFz();
+
 					S.AddLin11(575, 50, 575, 750);
-					S.UnionFz();
+
 					S.AddLin11(50, 225, 750, 225);
-					S.UnionFz();
+
 					S.AddLin11(50, 575, 750, 575);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3612,30 +3612,30 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= 2.0;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: 100);
 					S.AddArc00(400, 750, 50, 400);
-					S.UnionFz();
+
 					S.AddArc00(50, 400, 400, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 50, 750, 400);
-					S.UnionFz();
+
 					S.AddArc00(750, 400, 400, 750);
-					S.UnionFz();
+
 					D *= 2.0;
 					S.Thickness = D;
 					S.SetResizeMovA(WH: 0.5, XY: 300);
 					S.AddArc00(400, 750, 50, 400);
-					S.UnionFz();
+
 					S.AddArc00(50, 400, 400, 50);
-					S.UnionFz();
+
 					S.PresetRoot(-0.5);
 					S.AddArc01(400, 50, 750, 400/*, -0.5*/);
-					S.UnionFz();
+
 					S.PresetRoot(0.5);
 					S.AddArc10(750, 400, 400, 750/*, 0.5*/);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3649,38 +3649,38 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= 2.0;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: 100);
 					S.AddLin00(50, 225, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(50, 225, 225, 50);
-					S.UnionFz();
+
 					S.AddLin00(225, 50, 575, 50);
-					S.UnionFz();
+
 					S.AddArc00(575, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddLin00(750, 225, 750, 575);
-					S.UnionFz();
+
 					S.AddArc00(750, 575, 575, 750);
-					S.UnionFz();
+
 					S.AddLin00(225, 750, 575, 750);
-					S.UnionFz();
+
 					D *= 2.0;
 					S.Thickness = D;
 					S.SetResizeMovA(WH: 0.5, XY: 300);
 					S.AddLin11(50, 50, 50, 750);
-					S.UnionFz();
+
 					S.AddLin00(50, 50, 750, 50);
-					S.UnionFz();
+
 					S.AddArc10(750, 50, 275, 525);
-					S.UnionFz();
+
 					S.AddLin00(50, 525, 275, 525);
-					S.UnionFz();
+
 					S.AddLin01(275, 525, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3694,40 +3694,40 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= 2.0;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: 100);
 					S.AddLin00(50, 225, 50, 575);
-					S.UnionFz();
+
 					S.AddArc00(50, 225, 225, 50);
-					S.UnionFz();
+
 					S.AddLin00(225, 50, 575, 50);
-					S.UnionFz();
+
 					S.AddArc00(575, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddArc00(225, 750, 50, 575);
-					S.UnionFz();
+
 					S.AddLin00(750, 225, 750, 575);
-					S.UnionFz();
+
 					S.AddArc00(750, 575, 575, 750);
-					S.UnionFz();
+
 					S.AddLin00(225, 750, 575, 750);
-					S.UnionFz();
+
 					D *= 2.0;
 					S.Thickness = D;
 					S.SetResizeMovA(WH: 0.5, XY: 300);
 					S.AddLin11(50, 50, 750, 50);
-					S.UnionFz();
+
 					S.AddLin00(400, 50, 400, 750);
-					S.UnionFz();
+
 					S.AddLin01(50, 400, 50, 750);
-					S.UnionFz();
+
 					S.AddLin10(50, 400, 400, 750);
-					S.UnionFz();
+
 					S.AddLin11(400, 750, 750, 400);
-					S.UnionFz();
+
 					S.AddLin01(750, 400, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3741,30 +3741,30 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddRotate(400, -25, 250, 500);
 					S.AddArc10(150, 350 + 100, 150 - 100, 350);
-					S.UnionFz();
+
 					S.AddArc01(150 - 100, 350, 150, 350 - 100);
-					S.UnionFz();
+
 					S.AddArc10(350, 650 - 100, 350 + 100, 650);
-					S.UnionFz();
+
 					S.AddArc01(350 + 100, 650, 350, 650 + 100);
 					S.CutRotate();
 
 					//var L = new Bezier(400, -25, 100, 1025);
-					S.UnionFz();
+
 					//S.IsBonesUse = true;
 					S.AddOrc(400, -25, 25);
 					//S.BaseIntersectBones(L, out var M);
-					S.UnionFz();
+
 					S.AddOrc(100, 1025, 25);
 					//S.LastIntersectBones(L, out var E);
 					//S.IsBonesUse = false;
-					S.UnionFz();
+
 					S.PresetRoot(0.02289931874165918, -0.022899318741659291);
 					S.AddLin00(400, -25, 100, 1025);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3779,19 +3779,19 @@ namespace Wholemy {
 					D /= UD;
 					S.Thickness = D;
 					//var L = new Bezier(400, -25, 100, 1025);
-					S.BeginFz();
+
 					//S.IsBonesUse = true;
 					S.AddOrc(400, -25, 25);
 					//S.BaseIntersectBones(L, out var M);
-					S.UnionFz();
+
 					S.AddOrc(100, 1025, 25);
 					//S.LastIntersectBones(L, out var E);
 					//S.IsBonesUse = false;
-					S.UnionFz();
+
 					//S.AddLin00(x0, y0, x1, y1);
 					S.PresetRoot(0.02289931874165918, -0.022899318741659291);
 					S.AddLin00(400, -25, 100, 1025);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3806,18 +3806,18 @@ namespace Wholemy {
 					D /= UD;
 					S.Thickness = D;
 					//var L = new Bezier(100, -25, 400, 1025);
-					S.BeginFz();
+
 					//S.IsBonesUse = true;
 					S.AddOrc(100, -25, 25);
 					//S.BaseIntersectBones(L, out var M);
-					S.UnionFz();
+
 					S.AddOrc(400, 1025, 25);
 					//S.LastIntersectBones(L, out var E);
 					//S.IsBonesUse = false;
-					S.UnionFz();
+
 					S.PresetRoot(0.022899318741659208, -0.022899318741659291);
 					S.AddLin00(100, -25, 400, 1025);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3832,9 +3832,9 @@ namespace Wholemy {
 		//		if (D > 0) {
 		//			D /= UD;
 		//			S.Thickness = D;
-		//			S.MzBegin();
+		//			
 		//			S.AddLin11(150, 575, 350, 425);
-		//			return S.DxCombine();
+		//			
 		//		}
 		//		return S;
 		//	}
@@ -3848,14 +3848,14 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddRotate(51.5, 88, 500);
 					S.AddOrc(88, 300, 25);
-					S.UnionFz();
+
 					S.PresetRoot(0.075);
 					S.AddArc01(88, 300, 288, 500/*, 0.075*/);
 					S.CutRotate();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3869,16 +3869,16 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddOrc(162, 500, 25);
-					S.UnionFz();
+
 					S.AddRotate(51.5, 162, 500);
 					S.AddOrc(162, 300, 25);
-					S.UnionFz();
+
 					S.PresetRoot(0.075);
 					S.AddArc01(162, 300, 362, 500/*, 0.075*/);
 					S.CutRotate();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3892,9 +3892,9 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddOrc(250, 500, 75);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3908,9 +3908,9 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddOrc(250, 500, 25);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3924,9 +3924,9 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddOrc(250, 500, 25);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3940,11 +3940,11 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddOrc(250, 375, 25);
-					S.UnionFz();
+
 					S.AddOrc(250, 625, 25);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3958,13 +3958,13 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddOrc(358, 500, 25);
-					S.UnionFz();
+
 					S.AddOrc(142, 375, 25);
-					S.UnionFz();
+
 					S.AddOrc(142, 625, 25);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3978,9 +3978,9 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin11(100, 500, 400, 500);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -3994,9 +3994,9 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin00(0, 500, 500, 500);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4010,9 +4010,9 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin11(50, 500, 450, 500);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4026,9 +4026,9 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin10(100, 500, 1000, 500);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4042,9 +4042,9 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin01(0, 500, 900, 500);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4058,9 +4058,9 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin00(0, 500, 1000, 500);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4074,11 +4074,11 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin11(100, 500, 400, 500);
-					S.UnionFz();
+
 					S.AddLin11(250, 350, 250, 650);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4092,16 +4092,16 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin11(250, 350, 250, 650);
-					S.UnionFz();
+
 					S.AddRotate(60, 250, 500);
 					S.AddLin11(250, 350, 250, 650);
-					S.UnionFz();
+
 					S.SetRotate(-60, 250, 500);
 					S.AddLin11(250, 350, 250, 650);
 					S.CutRotate();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4115,13 +4115,13 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin11(100, 400, 400, 400);
-					S.UnionFz();
+
 					S.AddLin11(250, 250, 250, 550);
-					S.UnionFz();
+
 					S.AddLin11(100, 700, 400, 700);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4138,17 +4138,17 @@ namespace Wholemy {
 					//S.FigureBegin();
 					//var CB = S.AddArc(100, 500, 500, -50).IntersectLine(X1 - R, Y1, X2 - R, Y2);
 					//var BB = 1.0 - CB.root;
-					S.BeginFz();
+
 					S.PresetRoot(-0.19760141239685169);
 					S.AddArc00(100, 500, 500, -50/*, -0.19760141239685169*/);
-					S.UnionFz();
+
 					S.PresetRoot(0.19760141239685169);
 					S.AddArc00(500, 1050, 100, 500/*, 0.19760141239685169*/);
-					S.UnionFz();
+
 					S.AddOrc(400, -25, 25);
-					S.UnionFz();
+
 					S.AddOrc(400, 1025, 25);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4162,17 +4162,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.PresetRoot(0.19760141239685169);
 					S.AddArc00(0, -50, 400, 500/*, 0.19760141239685169*/);
-					S.UnionFz();
+
 					S.PresetRoot(-0.19760141239685169);
 					S.AddArc00(400, 500, 0, 1050/*, -0.19760141239685169*/);
-					S.UnionFz();
+
 					S.AddOrc(100, -25, 25);
-					S.UnionFz();
+
 					S.AddOrc(100, 1025, 25);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4194,25 +4194,25 @@ namespace Wholemy {
 					//S.FigureBegin();
 					//var CB = S.AddArc(200, 300, 500, -50).IntersectLine(X1 - R, Y1, X2 - R, Y2);
 					//var BB = 1.0 - CB.root;
-					S.BeginFz();
+
 					S.PresetRoot(0.26924939404799664);
 					S.AddArc00(500, 1050, 200, 700/*, 0.26924939404799664*/);
-					S.UnionFz();
+
 					S.AddArc10(100, 600, 200, 700);
-					S.UnionFz();
+
 					S.AddLin00(200, 500, 100, 600);
-					S.UnionFz();
+
 					S.AddLin01(100, 400, 200, 500);
-					S.UnionFz();
+
 					S.AddArc01(200, 300, 100, 400);
-					S.UnionFz();
+
 					S.PresetRoot(-0.26924939404799664);
 					S.AddArc00(200, 300, 500, -50/*, -0.26924939404799664*/);
-					S.UnionFz();
+
 					S.AddOrc(400, -25, 25);
-					S.UnionFz();
+
 					S.AddOrc(400, 1025, 25);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4226,25 +4226,25 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.PresetRoot(0.26924939404799664);
 					S.AddArc00(0, -50, 300, 300/*, 0.26924939404799664*/);
-					S.UnionFz();
+
 					S.AddArc10(400, 400, 300, 300);
-					S.UnionFz();
+
 					S.AddLin00(400, 400, 300, 500);
-					S.UnionFz();
+
 					S.AddLin10(300, 500, 400, 600);
-					S.UnionFz();
+
 					S.AddArc01(300, 700, 400, 600);
-					S.UnionFz();
+
 					S.PresetRoot(-0.26924939404799664);
 					S.AddArc00(300, 700, 0, 1050/*, -0.26924939404799664*/);
-					S.UnionFz();
+
 					S.AddOrc(100, -25, 25);
-					S.UnionFz();
+
 					S.AddOrc(100, 1025, 25);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4258,21 +4258,21 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin11(150, 75, 150, 925);
-					S.UnionFz();
+
 					S.AddLin00(150, 75, 250, -25);
-					S.UnionFz();
+
 					S.AddLin00(150, 925, 250, 1025);
-					S.UnionFz();
+
 					S.AddLin10(250, -25, 375, -25);
-					S.UnionFz();
+
 					S.AddLin10(250, 1025, 375, 1025);
-					S.UnionFz();
+
 					S.AddOrc(400, -25, 25);
-					S.UnionFz();
+
 					S.AddOrc(400, 1025, 25);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4286,21 +4286,21 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin11(350, 75, 350, 925);
-					S.UnionFz();
+
 					S.AddLin00(250, -25, 350, 75);
-					S.UnionFz();
+
 					S.AddLin00(250, 1025, 350, 925);
-					S.UnionFz();
+
 					S.AddLin01(125, -25, 250, -25);
-					S.UnionFz();
+
 					S.AddLin01(125, 1025, 250, 1025);
-					S.UnionFz();
+
 					S.AddOrc(100, -25, 25);
-					S.UnionFz();
+
 					S.AddOrc(100, 1025, 25);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4314,13 +4314,13 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin00(250, 0, 250, 1000);
-					S.UnionFz();
+
 					S.AddOrc(250, -25, 25);
-					S.UnionFz();
+
 					S.AddOrc(250, 1025, 25);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4334,19 +4334,19 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin00(250, 0, 250, 300);
-					S.UnionFz();
+
 					S.AddLin00(250, 700, 250, 1000);
-					S.UnionFz();
+
 					S.AddOrc(250, 325, 25);
-					S.UnionFz();
+
 					S.AddOrc(250, 675, 25);
-					S.UnionFz();
+
 					S.AddOrc(250, -25, 25);
-					S.UnionFz();
+
 					S.AddOrc(250, 1025, 25);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4360,11 +4360,11 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin01(125, 500, 375, 250);
-					S.UnionFz();
+
 					S.AddLin11(125, 500, 375, 750);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4378,11 +4378,11 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin10(125, 250, 375, 500);
-					S.UnionFz();
+
 					S.AddLin11(125, 750, 375, 500);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4396,11 +4396,11 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin11(100, 375, 400, 375);
-					S.UnionFz();
+
 					S.AddLin11(100, 625, 400, 625);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4414,13 +4414,13 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin01(100, 150 + 375, 400, 150 + 75);
-					S.UnionFz();
+
 					S.AddLin11(100, 150 + 375, 400, 150 + 375);
-					S.UnionFz();
+
 					S.AddLin11(100, 150 + 625, 400, 150 + 625);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4434,13 +4434,13 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin11(100, 150 + 75, 400, 150 + 375);
-					S.UnionFz();
+
 					S.AddLin10(100, 150 + 375, 400, 150 + 375);
-					S.UnionFz();
+
 					S.AddLin11(100, 150 + 625, 400, 150 + 625);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4454,23 +4454,23 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.PresetRoot(0.5);
 					S.AddArc10(100, 275, 250, 125/*, 0.5*/);
-					S.UnionFz();
+
 					S.AddArc00(250, 125, 400, 275);
-					S.UnionFz();
+
 					S.AddArc00(400, 275, 250, 425);
-					S.UnionFz();
+
 					S.AddArc00(150, 525, 250, 425);
-					S.UnionFz();
+
 					S.AddArc00(250, 625, 150, 525);
-					S.UnionFz();
+
 					S.PresetRoot(0.5);
 					S.AddArc10(350, 525, 250, 625/*, 0.5*/);
-					S.UnionFz();
+
 					S.AddOrc(250, 850, 25);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4484,11 +4484,11 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin11(250, 125, 250, 625);
-					S.UnionFz();
+
 					S.AddOrc(250, 850, 25);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4502,32 +4502,32 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 
 					S.AddArc00(125, 250, 250, 125);
-					S.UnionFz();
+
 					S.AddArc00(250, 125, 375, 250);
-					S.UnionFz();
+
 
 					S.AddYrc00(375, 250, 125, 750);
-					S.UnionFz();
+
 					S.AddYrc00(375, 750, 125, 250);
-					S.UnionFz();
+
 
 					S.AddArc00(375, 750, 250, 875);
-					S.UnionFz();
+
 					S.AddArc00(250, 875, 125, 750);
-					S.UnionFz();
+
 
 					S.AddOrc(250, 500, 25);
-					S.UnionFz();
+
 
 					S.AddRotate(-60, 250, 500);
 					S.AddArc01(250, 500, 150, 400);
-					S.UnionFz();
+
 					S.AddArc01(250, 500, 350, 600);
 					S.CutRotate();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4541,31 +4541,31 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc00(400, 575, 225, 400);
-					S.UnionFz();
+
 					S.AddArc00(225, 400, 400, 225);
-					S.UnionFz();
+
 					S.AddLin00(400, 225, 575, 225);
-					S.UnionFz();
+
 					S.AddLin10(575, 225, 575, 575);
-					S.UnionFz();
+
 					S.AddLin01(400, 575, 750, 575);
-					S.UnionFz();
+
 					S.AddLin00(750, 575, 750, 225);
-					S.UnionFz();
+
 					S.AddArc00(575, 50, 750, 225);
-					S.UnionFz();
+
 					S.AddLin00(400, 50, 575, 50);
-					S.UnionFz();
+
 					S.AddArc00(50, 400, 400, 50);
-					S.UnionFz();
+
 					S.AddArc00(400, 750, 50, 400);
-					S.UnionFz();
+
 					S.AddLin01(400, 750, 750, 750);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4579,15 +4579,15 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin10(300, 425, 225, 500);
-					S.UnionFz();
+
 					S.AddLin10(250, 425, 275, 500);
-					S.UnionFz();
+
 					S.AddLin11(275, 500, 200, 575);
-					S.UnionFz();
+
 					S.AddLin11(225, 500, 250, 575);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4601,15 +4601,15 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin10(375, 425, 400, 500);
-					S.UnionFz();
+
 					S.AddLin11(400, 500, 325, 575);
-					S.UnionFz();
+
 					S.AddLin10(175, 425, 100, 500);
-					S.UnionFz();
+
 					S.AddLin11(100, 500, 125, 575);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4623,15 +4623,15 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin10(175, 425, 100, 500);
-					S.UnionFz();
+
 					S.AddLin11(100, 500, 125, 575);
-					S.UnionFz();
+
 					S.AddLin10(400, 425, 325, 500);
-					S.UnionFz();
+
 					S.AddLin11(325, 500, 350, 575);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4645,15 +4645,15 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin10(375, 425, 400, 500);
-					S.UnionFz();
+
 					S.AddLin11(400, 500, 325, 575);
-					S.UnionFz();
+
 					S.AddLin10(150, 425, 175, 500);
-					S.UnionFz();
+
 					S.AddLin11(175, 500, 100, 575);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4667,17 +4667,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddRotate(-45, 250, 500);
 					S.AddLin10(250, 425, 225, 500);
-					S.UnionFz();
+
 					S.AddLin10(200, 425, 275, 500);
-					S.UnionFz();
+
 					S.AddLin11(275, 500, 250, 575);
-					S.UnionFz();
+
 					S.AddLin11(225, 500, 300, 575);
 					S.CutRotate();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4691,17 +4691,17 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddRotate(45, 250, 500);
 					S.AddLin10(300, 425, 225, 500);
-					S.UnionFz();
+
 					S.AddLin10(250, 425, 275, 500);
-					S.UnionFz();
+
 					S.AddLin11(275, 500, 200, 575);
-					S.UnionFz();
+
 					S.AddLin11(225, 500, 250, 575);
 					S.CutRotate();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4715,13 +4715,13 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddRotate(-53.1, 250, 500);
 					S.AddArc10(150, 400, 250, 500);
-					S.UnionFz();
+
 					S.AddArc10(350, 600, 250, 500);
 					S.CutRotate();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4735,13 +4735,13 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddRotate(-53.1, 250, 500);
 					S.AddArc10(150, 400, 250, 500);
-					S.UnionFz();
+
 					S.AddArc10(350, 600, 250, 500);
 					S.CutRotate();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4755,13 +4755,13 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddRotate(45, 250, 500);
 					S.AddLin11(100, 500, 400, 500);
-					S.UnionFz();
+
 					S.AddLin11(250, 350, 250, 650);
 					S.CutRotate();
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4775,11 +4775,11 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin01(250, 425, 400, 575);
-					S.UnionFz();
+
 					S.AddLin11(250, 425, 100, 575);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4793,11 +4793,11 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-					S.BeginFz();
+
 					S.AddLin01(250, 575, 400, 425);
-					S.UnionFz();
+
 					S.AddLin11(250, 575, 100, 425);
-					return S.Combine();
+
 				}
 				return S;
 			}
@@ -4811,32 +4811,32 @@ namespace Wholemy {
 		//		var S = Source ?? new PathSource(1000, 1000);
 		//		if (D > 0) {
 		//			D /= UD;
-		//			S.MzBegin();
+		//			
 		//			S.AddResizeMovA(XY: UXY, WH: UWH);
 		//			S.AddLin00(50, 225, 50, 575);
-		//			S.MzUnion();
+		//			
 		//			S.AddArc00(50, 225, 225, 50);
-		//			S.MzUnion();
+		//			
 		//			S.AddLin00(225, 50, 575, 50);
-		//			S.MzUnion();
+		//			
 		//			S.AddArc00(575, 50, 750, 225);
-		//			S.MzUnion();
+		//			
 		//			S.AddArc00(225, 750, 50, 575);
-		//			S.MzUnion();
+		//			
 		//			S.AddLin00(750, 225, 750, 575);
-		//			S.MzUnion();
+		//			
 		//			S.AddArc00(750, 575, 575, 750);
-		//			S.MzUnion();
+		//			
 		//			S.AddLin00(225, 750, 575, 750);
 		//			S.CutResize();
-		//			S.MzUnion();
+		//			
 		//			D *= 2;
 		//			S.AddResizeMovA(0.5, X: 300, Y: 300);
 		//			S.AddLin11(50, 50, 750, 750);
-		//			S.MzUnion();
+		//			
 		//			S.AddLin11(750, 50, 50, 750);
 		//			S.CutResize();
-		//			return S.DxCombine();
+		//			
 		//		}
 		//		return S;
 		//	}
@@ -4849,40 +4849,40 @@ namespace Wholemy {
 		//		var S = Source ?? new PathSource(1000, 1000);
 		//		if (D > 0) {
 		//			D /= UD;
-		//			S.MzBegin();
+		//			
 		//			S.AddResizeMovA(XY: UXY, WH: UWH);
 		//			S.AddLin00(50, 225, 50, 575);
-		//			S.MzUnion();
+		//			
 		//			S.AddArc00(50, 225, 225, 50);
-		//			S.MzUnion();
+		//			
 		//			S.AddLin00(225, 50, 575, 50);
-		//			S.MzUnion();
+		//			
 		//			S.AddArc00(575, 50, 750, 225);
-		//			S.MzUnion();
+		//			
 		//			S.AddArc00(225, 750, 50, 575);
-		//			S.MzUnion();
+		//			
 		//			S.AddLin00(750, 225, 750, 575);
-		//			S.MzUnion();
+		//			
 		//			S.AddArc00(750, 575, 575, 750);
-		//			S.MzUnion();
+		//			
 		//			S.AddLin00(225, 750, 575, 750);
 		//			S.CutResize();
-		//			S.MzUnion();
+		//			
 		//			D *= 2;
 		//			S.AddResizeMovA(0.5, X: 300, Y: 300);
 		//			S.AddArc00(275, 750, 50, 525);
-		//			S.MzUnion();
+		//			
 		//			S.AddLin10(50, 50, 50, 525);
-		//			S.MzUnion();
+		//			
 		//			S.AddLin10(275, 300, 525, 300);
-		//			S.MzUnion();
+		//			
 		//			S.AddArc00(525, 300, 750, 525);
-		//			S.MzUnion();
+		//			
 		//			S.AddArc00(750, 525, 525, 750);
-		//			S.MzUnion();
+		//			
 		//			S.AddLin00(275, 750, 525, 750);
 		//			S.CutResize();
-		//			return S.DxCombine();
+		//			
 		//		}
 		//		return S;
 		//	}
@@ -4899,79 +4899,79 @@ namespace Wholemy {
 					double NM = 80 / UD;
 					double NL = 60 / UD;
 					S.AddResizeMoved();
-					S.BeginFz();
+
 					S.AddOrc(500, 500, 100 / UD);
-					S.UnionFz(); // Верхние средние кружки Центр
+					// Верхние средние кружки Центр
 					S.AddOrc(500, 500 - 180.5, NM);
-					S.UnionFz(); // Правые средние кружки Центр
+					// Правые средние кружки Центр
 					S.AddOrc(500 + 180.5, 500, NM);
-					S.UnionFz(); // Нижние средние кружки Центр
+					// Нижние средние кружки Центр
 					S.AddOrc(500, 500 + 180.5, NM);
-					S.UnionFz(); // Левые средние кружки Центр
+					// Левые средние кружки Центр
 					S.AddOrc(500 - 180.5, 500, NM);
 
-					S.UnionFz(); // Верхние средние кружки Лево
+					// Верхние средние кружки Лево
 					S.AddOrc(500 - 123.2, 500 - 283.5, NM);
-					S.UnionFz(); // Верхние средние кружки Право
+					// Верхние средние кружки Право
 					S.AddOrc(500 + 123.2, 500 - 283.5, NM);
-					S.UnionFz(); // Правые средние кружки Верх
+					// Правые средние кружки Верх
 					S.AddOrc(500 + 283.5, 500 - 123.2, NM);
-					S.UnionFz(); // Правые средние кружки Низ
+					// Правые средние кружки Низ
 					S.AddOrc(500 + 283.5, 500 + 123.2, NM);
-					S.UnionFz(); // Нижние средние кружки Право
+					// Нижние средние кружки Право
 					S.AddOrc(500 + 123.2, 500 + 283.5, NM);
-					S.UnionFz(); // Нижние средние кружки Лево
+					// Нижние средние кружки Лево
 					S.AddOrc(500 - 123.2, 500 + 283.5, NM);
-					S.UnionFz(); // Левые средние кружки Низ
+					// Левые средние кружки Низ
 					S.AddOrc(500 - 283.5, 500 + 123.2, NM);
-					S.UnionFz(); // Левые средние кружки Верх
+					// Левые средние кружки Верх
 					S.AddOrc(500 - 283.5, 500 - 123.2, NM);
 
-					S.UnionFz(); // Верхние малые кружки 1
+					// Верхние малые кружки 1
 					S.AddOrc(500 - 228.915, 500 - 375.83, NL);
-					S.UnionFz(); // Верхние малые кружки 2
+					// Верхние малые кружки 2
 					S.AddOrc(500 - 118.88, 500 - 423.77, NL);
-					S.UnionFz(); // Верхние малые кружки 3
+					// Верхние малые кружки 3
 					S.AddOrc(500, 500 - 440, NL);
-					S.UnionFz(); // Верхние малые кружки 4
+					// Верхние малые кружки 4
 					S.AddOrc(500 + 118.88, 500 - 423.77, NL);
-					S.UnionFz(); // Верхние малые кружки 5
+					// Верхние малые кружки 5
 					S.AddOrc(500 + 228.915, 500 - 375.83, NL);
 
-					S.UnionFz(); // Правые малые кружки 1
+					// Правые малые кружки 1
 					S.AddOrc(500 + 375.83, 500 - 228.915, NL);
-					S.UnionFz(); // Правые малые кружки 2
+					// Правые малые кружки 2
 					S.AddOrc(500 + 423.77, 500 - 118.88, NL);
-					S.UnionFz(); // Правые малые кружки 3
+					// Правые малые кружки 3
 					S.AddOrc(500 + 440, 500, NL);
-					S.UnionFz(); // Правые малые кружки 4
+					// Правые малые кружки 4
 					S.AddOrc(500 + 423.77, 500 + 118.88, NL);
-					S.UnionFz(); // Правые малые кружки 5
+					// Правые малые кружки 5
 					S.AddOrc(500 + 375.83, 500 + 228.915, NL);
 
-					S.UnionFz(); // Нижние малые кружки 5
+					// Нижние малые кружки 5
 					S.AddOrc(500 + 228.915, 500 + 375.83, NL);
-					S.UnionFz(); // Нижние малые кружки 4
+					// Нижние малые кружки 4
 					S.AddOrc(500 + 118.88, 500 + 423.77, NL);
-					S.UnionFz(); // Нижние малые кружки 3
+					// Нижние малые кружки 3
 					S.AddOrc(500, 500 + 440, NL);
-					S.UnionFz(); // Нижние малые кружки 2
+					// Нижние малые кружки 2
 					S.AddOrc(500 - 118.88, 500 + 423.77, NL);
-					S.UnionFz(); // Нижние малые кружки 1
+					// Нижние малые кружки 1
 					S.AddOrc(500 - 228.915, 500 + 375.83, NL);
 
-					S.UnionFz(); // Левые малые кружки 5
+					// Левые малые кружки 5
 					S.AddOrc(500 - 375.83, 500 + 228.915, NL);
-					S.UnionFz(); // Левые малые кружки 4
+					// Левые малые кружки 4
 					S.AddOrc(500 - 423.77, 500 + 118.88, NL);
-					S.UnionFz(); // Левые малые кружки 3
+					// Левые малые кружки 3
 					S.AddOrc(500 - 440, 500, NL);
-					S.UnionFz(); // Левые малые кружки 2
+					// Левые малые кружки 2
 					S.AddOrc(500 - 423.77, 500 - 118.88, NL);
-					S.UnionFz(); // Левые малые кружки 1
+					// Левые малые кружки 1
 					S.AddOrc(500 - 375.83, 500 - 228.915, NL);
 					S.CutResize();
-					return S.Combine();
+
 				}
 				return S;
 			}

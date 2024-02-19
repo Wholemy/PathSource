@@ -1,3 +1,7 @@
+using Microsoft.VisualBasic;
+using System.Windows.Controls;
+using static Wholemy.Pomax;
+
 namespace Wholemy {
 	public class PathSource {
 		#region #method# Rotate1(CX, CY, BX, BY, AR) 
@@ -32,8 +36,6 @@ namespace Wholemy {
 		/// <param name="AY">Конец по оси Y)</param>
 		/// <returns>Возвращает корень поворота от 0.0 до 1.0)</returns>
 		public static double GetaR1(double CX, double CY, double BX, double BY, double AX, double AY) {
-			var a = 0.5 / System.Math.PI;
-			var b = System.Math.PI * 2;
 			return (0.5 / System.Math.PI) * (System.Math.Atan2(AY - CY, AX - CX) - System.Math.Atan2(BY - CY, BX - CX));
 		}
 		#endregion
@@ -58,9 +60,11 @@ namespace Wholemy {
 		#region #method# SetMulLen(MX, MY, EX, EY, Value) 
 		public static double SetMulLen(double MX, double MY, ref double EX, ref double EY, double Value) {
 			var L = Sqrt(MX - EX, MY - EY);
-			Value *= L;
-			EX = MX + (EX - MX) / L * Value;
-			EY = MY + (EY - MY) / L * Value;
+			if (L > 0) {
+				Value *= L;
+				EX = MX + (EX - MX) / L * Value;
+				EY = MY + (EY - MY) / L * Value;
+			}
 			return Value;
 		}
 		#endregion
@@ -121,45 +125,19 @@ namespace Wholemy {
 			return NewRoots;
 		}
 		#endregion
-		#region #static# #method# AddRoots 
-		public static double[] AddCubicRoots(double A, double B, double C, double[] Roots = null) {
-			var B2 = B * 2;
-			var D = A - B2 + C;
+		#region #static# #method# AddBoxRoots(A, B, C, Roots) 
+		public static double[] AddBoxRoots(double A, double B, double C, double[] Roots = null) {
+			var D = A - (B * 2) + C;
 			if (D != 0.0) {
-				var m1 = -System.Math.Sqrt(B * B - A * C);
-				if (!double.IsNaN(m1)) {
-					var m2 = -A + B;
-					var v1 = -(m1 + m2) / D;
-					var v2 = -(-m1 + m2) / D;
-					Roots = AddRoots(v1, Roots);
-					Roots = AddRoots(v2, Roots);
+				var L = System.Math.Sqrt(B * B - A * C);
+				if (!double.IsNaN(L)) {
+					C = -A + B;
+					A = -(-L + C) / D;
+					B = -(L + C) / D;
+					Roots = AddRoots(A, Roots);
+					Roots = AddRoots(B, Roots);
 				}
 			}
-			//if (A != B) {
-			//	Roots = AddRoots(A - B2 / ((A - B) * 2), Roots);
-			//	Roots = AddRoots(A / (A - B), Roots);
-			//}
-			//if (B != C) {
-			//	Roots = AddRoots(B / (B - C), Roots);
-			//	Roots = AddRoots(B2 - C / ((B - C) * 2), Roots);
-			//}
-			return Roots;
-		}
-		public static double[] AddRoots(double A, double B, double C, double[] Roots = null) {
-			var D = A - (B * 2.0) + C;
-			if (D != 0.0) {
-				var m1 = -System.Math.Sqrt(B * B - A * C);
-				var m2 = -A + B;
-				var v1 = -(m1 + m2) / D;
-				var v2 = -(-m1 + m2) / D;
-				Roots = AddRoots(v1, Roots);
-				Roots = AddRoots(v2, Roots);
-			} else if (B != C && D == 0.0)
-				Roots = AddRoots(((B * 2.0) - C) / ((B - C) * 2.0), Roots);
-			return Roots;
-		}
-		public static double[] AddRoots(double A, double B, double[] Roots = null) {
-			if (A != B) Roots = AddRoots(A / (A - B), Roots);
 			return Roots;
 		}
 		#endregion
@@ -473,9 +451,9 @@ namespace Wholemy {
 		public bool IsBoned;
 		public bool IsRoundM;
 		public bool IsRoundE;
-		/// <summary>Истинное значение устанавливает точность 0.005 при обнаружении разворотов в кривых,
-		/// а так же добавляет излишние операции для нормальной точности, которая эквивалентна значению 0.5)</summary>
-		public bool Ideal;
+		public const double QualityMax = 0.5;
+		public const double QualityBut = 0.05;
+		public const double QualityMin = 0.005;
 		#region #property# Figures 
 		private Figure[] Figures {
 			#region #through# 
@@ -503,8 +481,8 @@ namespace Wholemy {
 			var Context = Stream.Open();
 			var Figure = FigureBase;
 			while (Figure != null) {
-				if (Figure.ItemCount > 0) {
-					var Cache = Figure.ItemBase;
+				if (Figure.CurveCount > 0) {
+					var Cache = Figure.CurveBase;
 					var Value = Cache.Line;
 					Context.BeginFigure(new System.Windows.Point(Value.MX, Value.MY), Figure.IsFilled, Figure.IsClozed);
 					Value.To(Context);
@@ -601,12 +579,6 @@ namespace Wholemy {
 			}
 		}
 		#endregion
-		#region #method# Combine 
-		public PathSource Combine() {
-			var Path = FiguresToGeometry();
-			return this;
-		}
-		#endregion
 		#region #method# Begin[Part = P][Hollow = H|Filled = F][Closed = z] 
 		public void Begin() { new Figure(this); }
 		public void BeginHz() { this.IsFilled = false; this.IsClozed = true; new Figure(this); }
@@ -617,8 +589,8 @@ namespace Wholemy {
 		#region #method# AddCurve(Line) 
 		public Curve AddCurve(Line Line) {
 			var Fig = this.FigureLast ?? new Figure(this);
-			Line.Change(this.Mod, (this.Inverted && Fig.Inverted));
-			return new Curve(Fig, Line);
+			Line.Change(this.Mod, this.Inverted);
+			return new Curve(this, Fig, Line);
 		}
 		#endregion
 		#region #method# AddCurve(MX, MY, EX, EY) 
@@ -629,8 +601,8 @@ namespace Wholemy {
 		#region #method# AddCurve(Val) 
 		public Curve AddCurve(Quadratic Val) {
 			var Fig = this.FigureLast ?? new Figure(this);
-			Val.Change(this.Mod, (this.Inverted && Fig.Inverted));
-			return new Curve(Fig, Val);
+			Val.Change(this.Mod, this.Inverted);
+			return new Curve(this, Fig, Val);
 		}
 		#endregion
 		#region #method# AddCurve(MX, MY, QX, QY, EX, EY) 
@@ -641,8 +613,8 @@ namespace Wholemy {
 		#region #method# AddCurve(Val) 
 		public Curve AddCurve(Cubic Val) {
 			var Fig = this.FigureLast ?? new Figure(this);
-			Val.Change(this.Mod, (this.Inverted && Fig.Inverted));
-			return new Curve(Fig, Val);
+			Val.Change(this.Mod, this.Inverted);
+			return new Curve(this, Fig, Val);
 		}
 		#endregion
 		#region #method# AddCurve(MX, MY, cmX, cmY, ceX, ceY, EX, EY) 
@@ -653,8 +625,8 @@ namespace Wholemy {
 		#region #method# AddBone(Val) 
 		public Bone AddBone(Line Val) {
 			var Fig = this.FigureLast ?? new Figure(this);
-			if (this.Inverted && Fig.Inverted) Val.Invert();
-			return new Bone(Fig, Val);
+			if (this.Inverted) Val.Invert();
+			return new Bone(this, Fig, Val);
 		}
 		#endregion
 		#region #method# AddBone(MX, MY, EX, EY) 
@@ -665,8 +637,8 @@ namespace Wholemy {
 		#region #method# AddBone(Val) 
 		public Bone AddBone(Quadratic Val) {
 			var Fig = this.FigureLast ?? new Figure(this);
-			if (this.Inverted && Fig.Inverted) Val.Invert();
-			return new Bone(Fig, Val);
+			if (this.Inverted) Val.Invert();
+			return new Bone(this, Fig, Val);
 		}
 		#endregion
 		#region #method# AddBone(MX, MY, QX, QY, EX, EY) 
@@ -677,8 +649,8 @@ namespace Wholemy {
 		#region #method# AddBone(Val) 
 		public Bone AddBone(Cubic Val) {
 			var Fig = this.FigureLast ?? new Figure(this);
-			if (this.Inverted && Fig.Inverted) Val.Invert();
-			return new Bone(Fig, Val);
+			if (this.Inverted) Val.Invert();
+			return new Bone(this, Fig, Val);
 		}
 		#endregion
 		#region #method# AddBone(MX, MY, cmX, cmY, ceX, ceY, EX, EY) 
@@ -993,7 +965,6 @@ namespace Wholemy {
 		public class Figure {
 			public bool IsFilled;
 			public bool IsClozed;
-			public bool Inverted;
 			public PathSource Owner;
 			#region #invisible# 
 #if TRACE
@@ -1012,19 +983,19 @@ namespace Wholemy {
 			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
 			#endregion
-			public int ItemCount;
+			public int CurveCount;
 			#region #invisible# 
 #if TRACE
 			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
 			#endregion
-			public Curve ItemBase;
+			public Curve CurveBase;
 			#region #invisible# 
 #if TRACE
 			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
 			#endregion
-			public Curve ItemLast;
+			public Curve CurveLast;
 			#region #property# Curves 
 			public Line[] Curves {
 				#region #through# 
@@ -1033,9 +1004,9 @@ namespace Wholemy {
 #endif
 				#endregion
 				get {
-					var Count = this.ItemCount;
+					var Count = this.CurveCount;
 					var Array = new Line[Count--];
-					var Item = this.ItemLast;
+					var Item = this.CurveLast;
 					while (Count >= 0) {
 						Array[Count--] = Item.Line;
 						Item = Item.Prev;
@@ -1085,7 +1056,6 @@ namespace Wholemy {
 			public Figure(PathSource Owner) {
 				this.IsFilled = Owner.IsFilled;
 				this.IsClozed = Owner.IsClozed;
-				this.Inverted = Owner.Inverted;
 				this.Owner = Owner;
 				if (Owner.FigureSize == 0) {
 					Owner.FigureSize = 1;
@@ -1102,8 +1072,8 @@ namespace Wholemy {
 			public override string ToString() {
 				var I = System.Globalization.CultureInfo.InvariantCulture;
 				var S = "";
-				if (ItemCount > 0) {
-					var Cache = ItemBase;
+				if (CurveCount > 0) {
+					var Cache = CurveBase;
 					S = "M" + Cache.Line.MX.ToString(I) + "," + Cache.Line.MY.ToString(I);
 					while (Cache != null) {
 						S += Cache.Line.ToPathString();
@@ -1133,7 +1103,7 @@ namespace Wholemy {
 			public Bone Next;
 			public Line Value;
 			#region #new# (Figure, Value) 
-			public Bone(Figure Figure, Line Value) {
+			public Bone(PathSource Source, Figure Figure, Line Value) {
 				this.Figure = Figure;
 				this.Value = Value;
 				if (Figure.BoneCount == 0) {
@@ -1141,7 +1111,7 @@ namespace Wholemy {
 					Figure.BoneBase = this;
 					Figure.BoneLast = this;
 				} else {
-					if (Figure.Inverted) {
+					if (Source.Inverted) {
 						(this.Next = Figure.BoneBase).Prev = this;
 						Figure.BoneBase = this;
 					} else {
@@ -1181,22 +1151,22 @@ namespace Wholemy {
 			public Curve Next;
 			public Line Line;
 			#region #new# (Figure, Value) 
-			public Curve(Figure Figure, Line Line) {
+			public Curve(PathSource Source, Figure Figure, Line Line) {
 				this.Figure = Figure;
 				this.Line = Line;
-				if (Figure.ItemCount == 0) {
-					Figure.ItemCount = 1;
-					Figure.ItemBase = this;
-					Figure.ItemLast = this;
+				if (Figure.CurveCount == 0) {
+					Figure.CurveCount = 1;
+					Figure.CurveBase = this;
+					Figure.CurveLast = this;
 				} else {
-					if (Figure.Inverted) {
-						(this.Next = Figure.ItemBase).Prev = this;
-						Figure.ItemBase = this;
+					if (Source.Inverted) {
+						(this.Next = Figure.CurveBase).Prev = this;
+						Figure.CurveBase = this;
 					} else {
-						(this.Prev = Figure.ItemLast).Next = this;
-						Figure.ItemLast = this;
+						(this.Prev = Figure.CurveLast).Next = this;
+						Figure.CurveLast = this;
 					}
-					Figure.ItemCount++;
+					Figure.CurveCount++;
 				}
 			}
 			#endregion
@@ -1396,92 +1366,6 @@ namespace Wholemy {
 				return this;
 			}
 			#endregion
-			#region #method# AddArcM(P) 
-			public virtual void AddArcM(PathSource P) {
-				var S = P.Thickness / 2;
-				var A = S * Arc14;
-				var MX = this.MX;
-				var MY = this.MY;
-				var EX = this.EX;
-				var EY = this.EY;
-				var meL = Sqrt(MX - EX, MY - EY);
-				var YX = (EY - MY) / meL * S;
-				var XY = (MX - EX) / meL * S;
-				var AX = MX + YX;
-				var AY = MY + XY;
-				var BX = MX - YX;
-				var BY = MY - XY;
-				var CX = MX + (MX - EX) / meL * S;
-				var CY = MY + (MY - EY) / meL * S;
-				new Cubic(BX, BY, (BX + (MY - BY) / S * A), (BY + (BX - MX) / S * A), (CX + (CY - MY) / S * A), (CY + (MX - CX) / S * A), CX, CY).DivArc(out var a0, out var a1);
-				new Cubic(CX, CY, (CX + (MY - CY) / S * A), (CY + (CX - MX) / S * A), (AX + (AY - MY) / S * A), (AY + (MX - AX) / S * A), AX, AY).DivArc(out var a2, out var a3);
-				P.AddCurve(a0);
-				P.AddCurve(a1);
-				P.AddCurve(a2);
-				P.AddCurve(a3);
-			}
-			#endregion
-			#region #method# AddArcE(P) 
-			public virtual void AddArcE(PathSource P) {
-				var S = P.Thickness / 2;
-				var A = S * Arc14;
-				var MX = this.MX;
-				var MY = this.MY;
-				var EX = this.EX;
-				var EY = this.EY;
-				var meL = Sqrt(MX - EX, MY - EY);
-				var YX = (EY - MY) / meL * S;
-				var XY = (MX - EX) / meL * S;
-				var AX = EX + YX;
-				var AY = EY + XY;
-				var BX = EX - YX;
-				var BY = EY - XY;
-				var CX = EX + (EX - MX) / meL * S;
-				var CY = EY + (EY - MY) / meL * S;
-				new Cubic(AX, AY, (AX + (EY - AY) / S * A), (AY + (AX - EX) / S * A), (CX + (CY - EY) / S * A), (CY + (EX - CX) / S * A), CX, CY).DivArc(out var a0, out var a1);
-				new Cubic(CX, CY, (CX + (EY - CY) / S * A), (CY + (CX - EX) / S * A), (BX + (BY - EY) / S * A), (BY + (EX - BX) / S * A), BX, BY).DivArc(out var a2, out var a3);
-				P.AddCurve(a0);
-				P.AddCurve(a1);
-				P.AddCurve(a2);
-				P.AddCurve(a3);
-			}
-			#endregion
-			#region #method# AddLinM(P) 
-			public virtual void AddLinM(PathSource P) {
-				var S = P.Thickness / 2;
-				var A = S * Arc14;
-				var MX = this.MX;
-				var MY = this.MY;
-				var EX = this.EX;
-				var EY = this.EY;
-				var meL = Sqrt(MX - EX, MY - EY);
-				var YX = (EY - MY) / meL * S;
-				var XY = (MX - EX) / meL * S;
-				var AX = MX + YX;
-				var AY = MY + XY;
-				var BX = MX - YX;
-				var BY = MY - XY;
-				P.AddCurve(new Line(BX, BY, AX, AY));
-			}
-			#endregion
-			#region #method# AddLinE(P) 
-			public virtual void AddLinE(PathSource P) {
-				var S = P.Thickness / 2;
-				var A = S * Arc14;
-				var MX = this.MX;
-				var MY = this.MY;
-				var EX = this.EX;
-				var EY = this.EY;
-				var meL = Sqrt(MX - EX, MY - EY);
-				var YX = (EY - MY) / meL * S;
-				var XY = (MX - EX) / meL * S;
-				var AX = EX + YX;
-				var AY = EY + XY;
-				var BX = EX - YX;
-				var BY = EY - XY;
-				P.AddCurve(new Line(AX, AY, BX, BY));
-			}
-			#endregion
 			#region #method# Dot(root) 
 			public virtual Dot Dot(double root) {
 				if (root < 0.0 || root > 1.0) throw new System.InvalidOperationException();
@@ -1495,20 +1379,124 @@ namespace Wholemy {
 				return new Dot(root, x01, y01, x00, y00, x11, y11);
 			}
 			#endregion
-			public virtual List<Line> HalfArcM(double Size) {
-				return null;
+			#region #method# HalfArcM(Size) 
+			public virtual List HalfArcM(double Size) {
+				var List = new List();
+				var SA = Size;
+				var SB = -SA;
+				var A = SA * Arc14;
+				var MX = this.MX;
+				var MY = this.MY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var l0 = RootOffset(EX - MX, EY - MY, out var l0X, out var l0Y);
+				if (l0 == 0.0) {
+					EX = MX + SA;
+					EY = MY;
+				}
+				var aX = MX + SA * l0X;
+				var aY = MY + SA * l0Y;
+				var bX = aX;
+				var bY = aY;
+				var cX = MX + SB * l0X;
+				var cY = MY + SB * l0Y;
+				var baX = MX;
+				var baY = MY;
+				var cbX = MX;
+				var cbY = MY;
+				Rotate1(MX, MY, ref bX, ref bY, 0.25);
+				Rotate1(bX, bY, ref baX, ref baY, 0.25);
+				Rotate1(bX, bY, ref cbX, ref cbY, 0.75);
+				Cubic.ArcTo(List, cX, cY, cbX, cbY, bX, bY);
+				Cubic.ArcTo(List, bX, bY, baX, baY, aX, aY);
+				//List.AddLast(new LineItem(new Cubic(cX, cY, cbX, cbY, bX, bY)));
+				//List.AddLast(new LineItem(new Cubic(bX, bY, baX, baY, aX, aY)));
+				return List;
 			}
-			public virtual List<Line> HalfArcE(double Size) {
-				return null;
+			#endregion
+			#region #method# HalfArcE(Size) 
+			public virtual List HalfArcE(double Size) {
+				var List = new List();
+				var SA = Size;
+				var SB = -SA;
+				var A = SA * Arc14;
+				var MX = this.MX;
+				var MY = this.MY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var l0 = RootOffset(EX - MX, EY - MY, out var l0X, out var l0Y);
+				if (l0 == 0.0) {
+					MX = MX + SB;
+					MY = EY;
+				}
+				var aX = EX + SA * l0X;
+				var aY = EY + SA * l0Y;
+				var bX = aX;
+				var bY = aY;
+				var cX = EX + SB * l0X;
+				var cY = EY + SB * l0Y;
+				var abX = EX;
+				var abY = EY;
+				var bcX = EX;
+				var bcY = EY;
+				Rotate1(EX, EY, ref bX, ref bY, -0.25);
+				Rotate1(bX, bY, ref abX, ref abY, -0.25);
+				Rotate1(bX, bY, ref bcX, ref bcY, -0.75);
+				Cubic.ArcTo(List, aX, aY, abX, abY, bX, bY);
+				Cubic.ArcTo(List, bX, bY, bcX, bcY, cX, cY);
+				//List.AddLast(new LineItem(new Cubic(aX, aY, abX, abY, bX, bY)));
+				//List.AddLast(new LineItem(new Cubic(bX, bY, bcX, bcY, cX, cY)));
+				return List;
 			}
-		}
-		#endregion
-		#region #class# Cubic 
-		public class Cubic : Line {
+			#endregion
+			#region #method# Div(root, A, B) 
+			public virtual void Div(double root, out Line A, out Line B) {
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = EX;
+				var y11 = EY;
+				var x01 = (x11 - x00) * root + x00;
+				var y01 = (y11 - y00) * root + y00;
+				A = new Line(x00, y00, x01, y01);
+				B = new Line(x01, y01, x11, y11);
+			}
+			#endregion
+			#region #method# DivA(root) 
+			public virtual Line DivA(double root) {
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = EX;
+				var y11 = EY;
+				var x01 = (x11 - x00) * root + x00;
+				var y01 = (y11 - y00) * root + y00;
+				return new Line(x00, y00, x01, y01);
+			}
+			#endregion
+			#region #method# DivB(root) 
+			public virtual Line DivB(double root) {
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = EX;
+				var y11 = EY;
+				var x01 = (x11 - x00) * root + x00;
+				var y01 = (y11 - y00) * root + y00;
+				return new Line(x01, y01, x11, y11);
+			}
+			#endregion
+			#region #method# DivC(root, X, Y) 
+			public virtual void DivC(double root, out double X, out double Y) {
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = EX;
+				var y11 = EY;
+				X = (x11 - x00) * root + x00;
+				Y = (y11 - y00) * root + y00;
+			}
+			#endregion
 			#region #method# RootsList(Roots) 
-			public List<Cubic> RootsList(double[] Roots = null) {
-				List<Cubic> List = new List<Cubic>();
-				var A = this;
+			public List RootsList(double[] Roots = null) {
+				List List = new List();
+				Line A = this;
 				var R = 0.0;
 				if (Roots != null) {
 					var L = Roots.Length;
@@ -1517,16 +1505,158 @@ namespace Wholemy {
 						while (I < L) {
 							var r = Roots[I];
 							A.Div((r - R) / (1.0 - R), out var B, out A);
-							List.AddLast(B, R, r - R);
+							List.AddLast(new RSLineItem(B, R, r - R));
 							R = r;
 							I++;
 						}
 					}
 				}
-				List.AddLast(A, R, 1.0 - R);
+				List.AddLast(new RSLineItem(A, R, 1.0 - R));
 				return List;
 			}
 			#endregion
+			#region #method# Ext(S, A, B) 
+			/// <summary>Расширяет кривую на указанную толщину)</summary>
+			/// <param name="S">Толщина линии, положительное или отридцательное значение определяет сторону)</param>
+			/// <param name="A">Возвращаемая кривая, если длина исходной кривой больше нуля)</param>
+			/// <param name="B">Инвертированная кривая с другой стороны, если длина исходной кривой больше нуля)</param>
+			/// <returns>Успех если длина исходной кривой больше нуля)</returns>
+			public virtual bool Ext(double S, out Line A, out Line B) {
+				var MX = this.MX;
+				var MY = this.MY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var cX = EX - MX;
+				var cY = EY - MY;
+				var l = Sqrt(cX, cY);
+				if (l == 0) { A = null; B = null; return false; }
+				var lX = -cY / l;
+				var lY = cX / l;
+
+				var aMX = MX + S * lX;
+				var aMY = MY + S * lY;
+				var aEX = EX + S * lX;
+				var aEY = EY + S * lY;
+				S = -S;
+				var bMX = EX + S * lX;
+				var bMY = EY + S * lY;
+				var bEX = MX + S * lX;
+				var bEY = MY + S * lY;
+				A = new Line(aMX, aMY, aEX, aEY);
+				B = new Line(bMX, bMY, bEX, bEY);
+				return true;
+			}
+			#endregion
+			#region #method# Ext(S, R, I) 
+			/// <summary>Расширяет кривую на указанную толщину)</summary>
+			/// <param name="S">Толщина линии, положительное или отридцательное значение определяет сторону)</param>
+			/// <param name="R">Возвращаемая кривая, если длина исходной кривой больше нуля)</param>
+			/// <param name="I">Истина инвертирует значение толщины и направление возвращаемой кривой)</param>
+			/// <returns>Успех если длина исходной кривой больше нуля)</returns>
+			public virtual bool Ext(double S, out Line R, bool I = false) {
+				var MX = this.MX;
+				var MY = this.MY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var l0 = RootOffset(EX - MX, EY - MY, out var l0X, out var l0Y);
+				if (!I) {
+					R = new Line(
+						MX + S * l0X,
+						MY + S * l0Y,
+						EX + S * l0X,
+						EY + S * l0Y);
+				} else {
+					S = -S;
+					R = new Line(
+						EX + S * l0X,
+						EY + S * l0Y,
+						MX + S * l0X,
+						MY + S * l0Y);
+				}
+				return true;
+			}
+			#endregion
+			#region #method# TesReturn(Size, PA, PB, Reset) 
+			public virtual bool TesReturn(double Size, ref Line PA, ref Line PB, out bool Reset) {
+				Reset = false;
+				return true;
+			}
+			#endregion
+			#region #method# ExtReturn(Size, Roots) 
+			public virtual List ExtReturn(double Size, List Roots = null) {
+				List List = new List();
+				var DIV = 0.5;
+				var POS = 0.0;
+				var ROOT = 0.0;
+				Line RES = this;
+				Line TES = this;
+				var LastRoot = 0.0;
+				var LastSize = 1.0;
+				RSLineItem Item = null;
+				if (Roots != null) {
+					Item = Roots.Base as RSLineItem;
+					if (Item != null) {
+						TES = RES = Item.Line;
+						LastRoot = Item.Root;
+						LastSize = Item.Size;
+						Item = Item.Next as RSLineItem;
+					}
+				}
+				RSABCItem Stab = new RSABCItem(LastRoot, LastSize);
+				List.AddLast(Stab);
+				var Reset = false;
+				Line NOW;
+				Line RAM;
+				Line PreA = null;
+				Line PreB = null;
+				RTES:
+				if (TES.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
+					if (Reset && Stab.IsUsed) {
+						Stab = Stab.AddLastTo(List, ROOT, out LastRoot, out LastSize);
+						ROOT = 0.0;
+					}
+					Stab.Add(PreA, PreB, TES, LastRoot + (ROOT * LastSize), LastSize - (ROOT * LastSize));
+					POS = 0.0;
+				} else {
+					NEXT:
+					TES.Div(DIV, out NOW, out RAM);
+					if (NOW.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
+						var PDIV = ((1.0 - POS) * DIV);
+						var RPDIV = ((1.0 - ROOT) * PDIV);
+						if (Reset && Stab.IsUsed) {
+							Stab = Stab.AddLastTo(List, ROOT, out LastRoot, out LastSize);
+							ROOT = 0.0;
+						}
+						Stab.Add(PreA, PreB, NOW, LastRoot + (ROOT * LastSize), RPDIV * LastSize);
+						POS += PDIV;
+						ROOT += RPDIV;
+						DIV = 0.5;
+						if (Reset) {
+							RES.Div(POS, out var CUT, out RES);
+							TES = RES;
+							POS = 0.0;
+							goto RTES;
+						} else {
+							TES = RAM;
+						}
+						goto RTES;
+					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
+				}
+				if (Item != null) {
+					List.AddLast(Stab = new RSABCItem(Item.Root, Item.Size));
+					ROOT = 0.0;
+					POS = 0.0;
+					TES = RES = Item.Line;
+					Item = Item.Next as RSLineItem;
+					goto RTES;
+				}
+				return List;
+			}
+			#endregion
+		}
+		#endregion
+		#region #class# Cubic 
+		public class Cubic : Line {
 			#region #new# 
 			public Cubic() { }
 			#endregion
@@ -1562,35 +1692,37 @@ namespace Wholemy {
 				this.cmY = V;
 			}
 			#endregion
-			#region #method# DivArc(A, B) 
-			public void DivArc(out Cubic A, out Cubic B) {
+
+			#region #static# #method# ArcTo(List, MX, MY, AX, AY, EX, EY) 
+			public static void ArcTo(List List, double MX, double MY, double AX, double AY, double EX, double EY) {
 				var x00 = MX;
 				var y00 = MY;
-				var x11 = cmX;
-				var y11 = cmY;
-				var x22 = ceX;
-				var y22 = ceY;
+				var x11 = AX;
+				var y11 = AY;
+				var x22 = AX;
+				var y22 = AY;
 				var x33 = EX;
 				var y33 = EY;
-				var x01 = (x11 - x00) * 0.5 + x00;
-				var y01 = (y11 - y00) * 0.5 + y00;
-				var x12 = (x22 - x11) * 0.5 + x11;
-				var y12 = (y22 - y11) * 0.5 + y11;
-				var x23 = (x33 - x22) * 0.5 + x22;
-				var y23 = (y33 - y22) * 0.5 + y22;
-				var x02 = (x12 - x01) * 0.5 + x01;
-				var y02 = (y12 - y01) * 0.5 + y01;
-				var x13 = (x23 - x12) * 0.5 + x12;
-				var y13 = (y23 - y12) * 0.5 + y12;
-				var x03 = (x13 - x02) * 0.5 + x02;
-				var y03 = (y13 - y02) * 0.5 + y02;
-				double X, Y;
-				var al0 = System.Math.Sqrt((X = x23 - x33) * X + (Y = y23 - y33) * Y);
-				var bl0 = System.Math.Sqrt((X = x01 - x00) * X + (Y = y01 - y00) * Y);
-				var al1 = System.Math.Sqrt((X = x03 - x13) * X + (Y = y03 - y13) * Y);
-				var bl1 = System.Math.Sqrt((X = x02 - x03) * X + (Y = y02 - y03) * Y);
-				var al2 = al1 + (al0 - al1) * 0.5;
-				var bl2 = bl1 + (bl0 - bl1) * 0.5;
+				SetMulLen(MX, MY, ref x11, ref y11, Arc14);
+				SetMulLen(EX, EY, ref x22, ref y22, Arc14);
+				var x01 = (x11 - x00) / 2 + x00;
+				var y01 = (y11 - y00) / 2 + y00;
+				var x12 = (x22 - x11) / 2 + x11;
+				var y12 = (y22 - y11) / 2 + y11;
+				var x23 = (x33 - x22) / 2 + x22;
+				var y23 = (y33 - y22) / 2 + y22;
+				var x02 = (x12 - x01) / 2 + x01;
+				var y02 = (y12 - y01) / 2 + y01;
+				var x13 = (x23 - x12) / 2 + x12;
+				var y13 = (y23 - y12) / 2 + y12;
+				var x03 = (x13 - x02) / 2 + x02;
+				var y03 = (y13 - y02) / 2 + y02;
+				var al0 = Sqrt(x23 - x33, y23 - y33);
+				var bl0 = Sqrt(x01 - x00, y01 - y00);
+				var al1 = Sqrt(x03 - x13, y03 - y13);
+				var bl1 = Sqrt(x02 - x03, y02 - y03);
+				var al2 = al1 + (al0 - al1) / 2;
+				var bl2 = bl1 + (bl0 - bl1) / 2;
 				var x23u = x33 + (x23 - x33) / al0 * al2;
 				var y23u = y33 + (y23 - y33) / al0 * al2;
 				var x01u = x00 + (x01 - x00) / bl0 * bl2;
@@ -1599,12 +1731,15 @@ namespace Wholemy {
 				var y13u = y03 + (y13 - y03) / al1 * al2;
 				var x02u = x03 + (x02 - x03) / bl1 * bl2;
 				var y02u = y03 + (y02 - y03) / bl1 * bl2;
-				A = new Cubic(x00, y00, x01u, y01u, x02u, y02u, x03, y03);
-				B = new Cubic(x03, y03, x13u, y13u, x23u, y23u, x33, y33);
+				List.AddLast(new LineItem(new Cubic(x00, y00, x01u, y01u, x02u, y02u, x03, y03)));
+				List.AddLast(new LineItem(new Cubic(x03, y03, x13u, y13u, x23u, y23u, x33, y33)));
+				//List.AddLast(new LineItem(new Cubic(x00, y00, x01, y01, x02, y02, x03, y03)));
+				//List.AddLast(new LineItem(new Cubic(x03, y03, x13, y13, x23, y23, x33, y33)));
 			}
 			#endregion
+
 			#region #method# Div(R, A, B) 
-			public void Div(double R, out Cubic A, out Cubic B) {
+			public override void Div(double R, out Line A, out Line B) {
 				var x00 = MX;
 				var y00 = MY;
 				var x11 = cmX;
@@ -1615,14 +1750,19 @@ namespace Wholemy {
 				var y33 = EY;
 				var x01 = (x11 - x00) * R + x00;
 				var y01 = (y11 - y00) * R + y00;
+
 				var x12 = (x22 - x11) * R + x11;
 				var y12 = (y22 - y11) * R + y11;
+
 				var x23 = (x33 - x22) * R + x22;
 				var y23 = (y33 - y22) * R + y22;
+
 				var x02 = (x12 - x01) * R + x01;
 				var y02 = (y12 - y01) * R + y01;
+
 				var x13 = (x23 - x12) * R + x12;
 				var y13 = (y23 - y12) * R + y12;
+
 				var x03 = (x13 - x02) * R + x02;
 				var y03 = (y13 - y02) * R + y02;
 				A = new Cubic(x00, y00, x01, y01, x02, y02, x03, y03);
@@ -1630,7 +1770,7 @@ namespace Wholemy {
 			}
 			#endregion
 			#region #method# DivA(R) 
-			public Cubic DivA(double R) {
+			public override Line DivA(double R) {
 				var x00 = MX;
 				var y00 = MY;
 				var x11 = cmX;
@@ -1655,7 +1795,7 @@ namespace Wholemy {
 			}
 			#endregion
 			#region #method# DivB(R) 
-			public Cubic DivB(double R) {
+			public override Line DivB(double R) {
 				var x00 = MX;
 				var y00 = MY;
 				var x11 = cmX;
@@ -1680,7 +1820,7 @@ namespace Wholemy {
 			}
 			#endregion
 			#region #method# DivC(R, X, Y) 
-			public void DivC(double R, out double X, out double Y) {
+			public override void DivC(double R, out double X, out double Y) {
 				var x00 = MX;
 				var y00 = MY;
 				var x11 = cmX;
@@ -1980,81 +2120,9 @@ namespace Wholemy {
 			}
 			#endregion
 			public override char Prefix => 'C';
-			#region #method# AddArcM(P) 
-			public override void AddArcM(PathSource P) {
-				var SA = P.Thickness / 2;
-				var SB = -SA;
-				var A = SA * Arc14;
-				var MX = this.MX;
-				var MY = this.MY;
-				var cmX = this.cmX;
-				var cmY = this.cmY;
-				var ceX = this.ceX;
-				var ceY = this.ceY;
-				var EX = this.EX;
-				var EY = this.EY;
-				var l0 = RootOffset(cmX - MX, cmY - MY, out var l0X, out var l0Y);
-				var l1 = RootOffset(ceX - cmX, ceY - cmY, out var l1X, out var l1Y);
-				var l2 = RootOffset(EX - ceX, EY - ceY, out var l2X, out var l2Y);
-				if (l0 == 0.0 && l1 == 0.0 && l2 == 0.0) return;
-				if (l0 == 0.0) if (l1 > 0.0) { l0X = l1X; l0Y = l1Y; } else { l0X = l2X; l0Y = l2Y; }
-				if (l2 == 0.0) if (l1 > 0.0) { l2X = l1X; l2Y = l1Y; } else { l2X = l0X; l2Y = l0Y; }
-				var aX = MX + SA * l0X;
-				var aY = MY + SA * l0Y;
-				var bX = aX;
-				var bY = aY;
-				var cX = MX + SB * l0X;
-				var cY = MY + SB * l0Y;
-				var baX = MX;
-				var baY = MY;
-				var cbX = MX;
-				var cbY = MY;
-				Rotate1(MX, MY, ref bX, ref bY, 0.25);
-				Rotate1(bX, bY, ref baX, ref baY, 0.25);
-				Rotate1(bX, bY, ref cbX, ref cbY, 0.75);
-				P.AddCurve(new Cubic(cX, cY, cbX, cbY, bX, bY));
-				P.AddCurve(new Cubic(bX, bY, baX, baY, aX, aY));
-			}
-			#endregion
-			#region #method# AddArcE(P) 
-			public override void AddArcE(PathSource P) {
-				var SA = P.Thickness / 2;
-				var SB = -SA;
-				var A = SA * Arc14;
-				var MX = this.MX;
-				var MY = this.MY;
-				var cmX = this.cmX;
-				var cmY = this.cmY;
-				var ceX = this.ceX;
-				var ceY = this.ceY;
-				var EX = this.EX;
-				var EY = this.EY;
-				var l0 = RootOffset(cmX - MX, cmY - MY, out var l0X, out var l0Y);
-				var l1 = RootOffset(ceX - cmX, ceY - cmY, out var l1X, out var l1Y);
-				var l2 = RootOffset(EX - ceX, EY - ceY, out var l2X, out var l2Y);
-				if (l0 == 0.0 && l1 == 0.0 && l2 == 0.0) return;
-				if (l0 == 0.0) if (l1 > 0.0) { l0X = l1X; l0Y = l1Y; } else { l0X = l2X; l0Y = l2Y; }
-				if (l2 == 0.0) if (l1 > 0.0) { l2X = l1X; l2Y = l1Y; } else { l2X = l0X; l2Y = l0Y; }
-				var aX = EX + SA * l2X;
-				var aY = EY + SA * l2Y;
-				var bX = aX;
-				var bY = aY;
-				var cX = EX + SB * l2X;
-				var cY = EY + SB * l2Y;
-				var abX = EX;
-				var abY = EY;
-				var bcX = EX;
-				var bcY = EY;
-				Rotate1(EX, EY, ref bX, ref bY, -0.25);
-				Rotate1(bX, bY, ref abX, ref abY, -0.25);
-				Rotate1(bX, bY, ref bcX, ref bcY, -0.75);
-				P.AddCurve(new Cubic(aX, aY, abX, abY, bX, bY));
-				P.AddCurve(new Cubic(bX, bY, bcX, bcY, cX, cY));
-			}
-			#endregion
 			#region #method# HalfArcM(P) 
-			public override List<Line> HalfArcM(double Size) {
-				var List = new List<Line>();
+			public override List HalfArcM(double Size) {
+				var List = new List();
 				var SA = Size;
 				var SB = -SA;
 				var A = SA * Arc14;
@@ -2085,14 +2153,16 @@ namespace Wholemy {
 				Rotate1(MX, MY, ref bX, ref bY, 0.25);
 				Rotate1(bX, bY, ref baX, ref baY, 0.25);
 				Rotate1(bX, bY, ref cbX, ref cbY, 0.75);
-				List.AddLast(new Cubic(cX, cY, cbX, cbY, bX, bY));
-				List.AddLast(new Cubic(bX, bY, baX, baY, aX, aY));
+				Cubic.ArcTo(List, cX, cY, cbX, cbY, bX, bY);
+				Cubic.ArcTo(List, bX, bY, baX, baY, aX, aY);
+				//List.AddLast(new LineItem(new Cubic(cX, cY, cbX, cbY, bX, bY)));
+				//List.AddLast(new LineItem(new Cubic(bX, bY, baX, baY, aX, aY)));
 				return List;
 			}
 			#endregion
 			#region #method# HalfArcE(P) 
-			public override List<Line> HalfArcE(double Size) {
-				var List = new List<Line>();
+			public override List HalfArcE(double Size) {
+				var List = new List();
 				var SA = Size;
 				var SB = -SA;
 				var A = SA * Arc14;
@@ -2123,218 +2193,52 @@ namespace Wholemy {
 				Rotate1(EX, EY, ref bX, ref bY, -0.25);
 				Rotate1(bX, bY, ref abX, ref abY, -0.25);
 				Rotate1(bX, bY, ref bcX, ref bcY, -0.75);
-				List.AddLast(new Cubic(aX, aY, abX, abY, bX, bY));
-				List.AddLast(new Cubic(bX, bY, bcX, bcY, cX, cY));
+				Cubic.ArcTo(List, aX, aY, abX, abY, bX, bY);
+				Cubic.ArcTo(List, bX, bY, bcX, bcY, cX, cY);
+				//List.AddLast(new LineItem(new Cubic(aX, aY, abX, abY, bX, bY)));
+				//List.AddLast(new LineItem(new Cubic(bX, bY, bcX, bcY, cX, cY)));
 				return List;
 			}
 			#endregion
-			#region #method# NormalAddA(P) 
-			public bool NormalAddA(PathSource P) {
-				var Size = P.Thickness / 2.0;
-				var S = 0.05 * Size;
-				if (S < 0.005) S = 0.005; else if (S > 0.5) S = 0.5;
-				var DIV = 0.5;
-				var TES = this;
-				Cubic NOW;
-				Cubic RAM;
-
-				Cubic SET = null;
-				DIV = 0.5;
-				NEXT:
-				if (TES.ExtA(S, Size, ref SET)) {
-					P.AddCurve(SET);
-				} else {
-					LESS:
-					TES.Div(DIV, out NOW, out RAM);
-					if (NOW.ExtA(S, Size, ref SET)) {
-						P.AddCurve(SET);
-						TES = RAM;
-						DIV = 0.5;
-						goto NEXT;
-					} else {
-						DIV /= 2.0;
-						if (DIV > 0) goto LESS;
-					}
-				}
-				return false;
-			}
-			#endregion
-			#region #method# NormalAddB(P) 
-			public bool NormalAddB(PathSource P) {
-				//return NorAddB(P);
-				var Size = P.Thickness / 2.0;
-				var S = 0.05 * Size;
-				if (S < 0.005) S = 0.005; else if (S > 0.5) S = 0.5;
-				var TES = this;
-				var DIV = 0.5;
-				Cubic NOW;
-				Cubic RAM;
-				Cubic SET = null;
-				NEXT:
-				if (TES.ExtB(S, Size, ref SET)) {
-					P.AddCurve(SET);
-				} else {
-					LESS:
-					TES.Div(1.0 - DIV, out RAM, out NOW);
-					if (NOW.ExtB(S, Size, ref SET)) {
-						P.AddCurve(SET);
-						TES = RAM;
-						DIV = 0.5;
-						goto NEXT;
-					} else {
-						DIV /= 2.0;
-						if (DIV > 0) goto LESS;
-					}
-				}
-				return false;
-			}
-			#endregion
-			#region #method# ExtA(Need, Size, Result) 
-			public bool ExtA(double Need, double Size, ref Cubic Result) {
-				if (this.Ext(Size, out var Item)) {
-					this.Div(0.5, out var BA, out var BB);
-					Item.Div(0.5, out var AA, out var AB);
-					if (BB.Ext(Size, out var B)) {
-						var cmcL = Sqrt(AB.MX - B.MX, AB.MY - B.MY);
-						if (cmcL < Need) {
-							Result = Item;
-							return true;
-						}
-					}
-				}
-				return false;
-			}
-			#endregion
-			#region #method# ExtB(Need, Size, Result) 
-			public bool ExtB(double Need, double Size, ref Cubic Result) {
-				if (this.Ext(Size, out var Item, true)) {
-					this.Div(0.5, out var RA, out var RB);
-					Item.Div(0.5, out var BA, out var BB);
-					if (RB.Ext(Size, out var B, true)) {
-						var cecL = Sqrt(BA.EX - B.EX, BA.EY - B.EY);
-						if (cecL < Need) {
-							Result = Item;
-							return true;
-						}
-					}
-				}
-				return false;
-			}
-			#endregion
-			#region #method# IdealAddA(P) 
-			public bool IdealAddA(PathSource P) {
-				var Size = P.Thickness / 2.0;
-				var S = 0.005 * Size;
-				if (S < 0.0005) S = 0.0005; else if (S > 0.5) S = 0.5;
-				var DIV = 0.5;
-				var TES = this;
-				Cubic NOW;
-				Cubic RAM;
-				Cubic PRENOW;
-				Cubic PRERAM;
-				var PREDIV = 0.0;
-				Cubic PRESET = null;
-				Cubic PRETES = null;
-				Cubic SET = null;
-				Cubic NEWSET = null;
-				DIV = 0.5;
-				NEXT:
-				if (TES.ExtA(S, Size, ref SET)) {
-					if (PRETES != null)
-						P.AddCurve(PRESET);
-					P.AddCurve(SET);
-				} else {
-					LESS:
-					TES.Div(DIV, out NOW, out RAM);
-					if (NOW.ExtA(S, Size, ref SET)) {
-						if (PRETES != null) {
-							var NEWDIV = PREDIV + (1.0 - PREDIV) * DIV;
-							PRETES.Div(NEWDIV, out PRENOW, out PRERAM);
-							if (PRENOW.ExtA(S, Size, ref NEWSET)) {
-								PREDIV = NEWDIV;
-								PRESET = NEWSET;
-							} else {
-								P.AddCurve(PRESET);
-								PRETES = TES;
-								PREDIV = DIV;
-								PRESET = SET;
-							}
-						} else {
-							PRETES = TES;
-							PREDIV = DIV;
-							PRESET = SET;
-						}
-						TES = RAM;
-						DIV = 0.5;
-						goto NEXT;
-					} else {
-						DIV /= 2.0;
-						if (DIV > 0) goto LESS;
-					}
-				}
-				return false;
-			}
-			#endregion
-			#region #method# IdealAddB(P) 
-			public bool IdealAddB(PathSource P) {
-				var Size = P.Thickness / 2.0;
-				var S = 0.005 * Size;
-				if (S < 0.0005) S = 0.0005; else if (S > 0.5) S = 0.5;
-				var TES = this;
-				var DIV = 0.5;
-				Cubic NOW;
-				Cubic RAM;
-				Cubic PRENOW;
-				Cubic PRERAM;
-				var PREDIV = 0.0;
-				Cubic PRESET = null;
-				Cubic PRETES = null;
-				Cubic SET = null;
-				Cubic NEWSET = null;
-				NEXT:
-				if (TES.ExtB(S, Size, ref SET)) {
-					if (PRETES != null)
-						P.AddCurve(PRESET);
-					P.AddCurve(SET);
-				} else {
-					LESS:
-					TES.Div(1.0 - DIV, out RAM, out NOW);
-					if (NOW.ExtB(S, Size, ref SET)) {
-						if (PRETES != null) {
-							var NEWDIV = PREDIV + (1.0 - PREDIV) * DIV;
-							PRETES.Div(1.0 - NEWDIV, out PRERAM, out PRENOW);
-							if (PRENOW.ExtB(S, Size, ref NEWSET)) {
-								PREDIV = NEWDIV;
-								PRESET = NEWSET;
-							} else {
-								P.AddCurve(PRESET);
-								PRETES = TES;
-								PREDIV = DIV;
-								PRESET = SET;
-							}
-						} else {
-							PRETES = TES;
-							PREDIV = DIV;
-							PRESET = SET;
-						}
-						TES = RAM;
-						DIV = 0.5;
-						goto NEXT;
-					} else {
-						DIV /= 2.0;
-						if (DIV > 0) goto LESS;
-					}
-				}
-				return false;
-			}
-			#endregion
+			//#region #method# ExtA(Need, Size, Result) 
+			//public bool ExtA(double Need, double Size, ref Cubic Result) {
+			//	if (this.Ext(Size, out var Item)) {
+			//		this.Div(0.5, out var BA, out var BB);
+			//		Item.Div(0.5, out var AA, out var AB);
+			//		if (BB.Ext(Size, out var B)) {
+			//			var cmcL = Sqrt(AB.MX - B.MX, AB.MY - B.MY);
+			//			if (cmcL < Need) {
+			//				Result = Item;
+			//				return true;
+			//			}
+			//		}
+			//	}
+			//	return false;
+			//}
+			//#endregion
+			//#region #method# ExtB(Need, Size, Result) 
+			//public bool ExtB(double Need, double Size, ref Cubic Result) {
+			//	if (this.Ext(Size, out var Item, true)) {
+			//		this.Div(0.5, out var RA, out var RB);
+			//		Item.Div(0.5, out var BA, out var BB);
+			//		if (RB.Ext(Size, out var B, true)) {
+			//			var cecL = Sqrt(BA.EX - B.EX, BA.EY - B.EY);
+			//			if (cecL < Need) {
+			//				Result = Item;
+			//				return true;
+			//			}
+			//		}
+			//	}
+			//	return false;
+			//}
+			//#endregion
 			#region #method# Ext(S, A, B) 
 			/// <summary>Расширяет кривую на указанную толщину)</summary>
 			/// <param name="S">Толщина линии, положительное или отридцательное значение определяет сторону)</param>
 			/// <param name="A">Возвращаемая кривая, если длина исходной кривой больше нуля)</param>
 			/// <param name="B">Инвертированная кривая с другой стороны, если длина исходной кривой больше нуля)</param>
 			/// <returns>Успех если длина исходной кривой больше нуля)</returns>
-			public bool Ext(double S, out Cubic A, out Cubic B) {
+			public override bool Ext(double S, out Line A, out Line B) {
 				var MX = this.MX;
 				var MY = this.MY;
 				var cmX = this.cmX;
@@ -2343,16 +2247,46 @@ namespace Wholemy {
 				var ceY = this.ceY;
 				var EX = this.EX;
 				var EY = this.EY;
-				var l0 = RootOffset(cmX - MX, cmY - MY, out var l0X, out var l0Y);
-				var l1 = RootOffset(ceX - cmX, ceY - cmY, out var l1X, out var l1Y);
-				var l2 = RootOffset(EX - ceX, EY - ceY, out var l2X, out var l2Y);
-				//var l = l0 + l1 + l2;
-				//if (l == 0.0) { A = null; B = null; return false; }
-				if (l0 == 0.0) if (l1 > 0.0) { l0X = l1X; l0Y = l1Y; } else { l0X = l2X; l0Y = l2Y; }
-				if (l2 == 0.0) if (l1 > 0.0) { l2X = l1X; l2Y = l1Y; } else { l2X = l0X; l2Y = l0Y; }
-				A = new Cubic(MX + S * l0X, MY + S * l0Y, cmX + S * l1X, cmY + S * l1Y, ceX + S * l1X, ceY + S * l1Y, EX + S * l2X, EY + S * l2Y);
+				var cMX = cmX - MX;
+				var cMY = cmY - MY;
+				var cEX = EX - ceX;
+				var cEY = EY - ceY;
+				var lM = Sqrt(cMX, cMY);
+				var lE = Sqrt(cEX, cEY);
+				if (lM == 0 && lE == 0) return base.Ext(S, out A, out B);
+				if (lM == 0) return new Quadratic(MX, MY, ceX, ceY, EX, EY).Ext(S, out A, out B);
+				if (lE == 0) return new Quadratic(MX, MY, cmX, cmY, EX, EY).Ext(S, out A, out B);
+				var cCX = ceX - cmX;
+				var cCY = ceY - cmY;
+				var lC = Sqrt(cCX, cCY);
+				var lMX = -cMY / lM;
+				var lMY = cMX / lM;
+				var lEX = -cEY / lE;
+				var lEY = cEX / lE;
+				var lCX = -cCY / lC;
+				var lCY = cCX / lC;
+
+				var aMX = MX + S * lMX;
+				var aMY = MY + S * lMY;
+				var aEX = EX + S * lEX;
+				var aEY = EY + S * lEY;
+
+				var acmX = cmX + S * lCX;
+				var acmY = cmY + S * lCY;
+				var aceX = ceX + S * lCX;
+				var aceY = ceY + S * lCY;
 				S = -S;
-				B = new Cubic(EX + S * l2X, EY + S * l2Y, ceX + S * l1X, ceY + S * l1Y, cmX + S * l1X, cmY + S * l1Y, MX + S * l0X, MY + S * l0Y);
+				var bMX = EX + S * lEX;
+				var bMY = EY + S * lEY;
+				var bEX = MX + S * lMX;
+				var bEY = MY + S * lMY;
+
+				var bcmX = ceX + S * lCX;
+				var bcmY = ceY + S * lCY;
+				var bceX = cmX + S * lCX;
+				var bceY = cmY + S * lCY;
+				A = new Cubic(aMX, aMY, acmX, acmY, aceX, aceY, aEX, aEY);
+				B = new Cubic(bMX, bMY, bcmX, bcmY, bceX, bceY, bEX, bEY);
 				return true;
 			}
 			#endregion
@@ -2362,18 +2296,18 @@ namespace Wholemy {
 				var cmX = this.cmX; var cmY = this.cmY;
 				var ceX = this.ceX; var ceY = this.ceY;
 				var EX = this.EX; var EY = this.EY;
-				var x01 = (cmX - MX) * 0.5 + MX;
-				var y01 = (cmY - MY) * 0.5 + MY;
-				var x12 = (ceX - cmX) * 0.5 + cmX;
-				var y12 = (ceY - cmY) * 0.5 + cmY;
-				var x23 = (EX - ceX) * 0.5 + ceX;
-				var y23 = (EY - ceY) * 0.5 + ceY;
-				var x02 = (x12 - x01) * 0.5 + x01;
-				var y02 = (y12 - y01) * 0.5 + y01;
-				var x13 = (x23 - x12) * 0.5 + x12;
-				var y13 = (y23 - y12) * 0.5 + y12;
-				var x03 = (x13 - x02) * 0.5 + x02;
-				var y03 = (y13 - y02) * 0.5 + y02;
+				var x01 = (cmX - MX) / 2 + MX;
+				var y01 = (cmY - MY) / 2 + MY;
+				var x12 = (ceX - cmX) / 2 + cmX;
+				var y12 = (ceY - cmY) / 2 + cmY;
+				var x23 = (EX - ceX) / 2 + ceX;
+				var y23 = (EY - ceY) / 2 + ceY;
+				var x02 = (x12 - x01) / 2 + x01;
+				var y02 = (y12 - y01) / 2 + y01;
+				var x13 = (x23 - x12) / 2 + x12;
+				var y13 = (y23 - y12) / 2 + y12;
+				var x03 = (x13 - x02) / 2 + x02;
+				var y03 = (y13 - y02) / 2 + y02;
 				MX = x03; MY = y03;
 				cmX = x13; cmY = y13;
 				ceX = x23; ceY = y23;
@@ -2398,7 +2332,7 @@ namespace Wholemy {
 			/// <param name="R">Возвращаемая кривая, если длина исходной кривой больше нуля)</param>
 			/// <param name="I">Истина инвертирует значение толщины и направление возвращаемой кривой)</param>
 			/// <returns>Успех если длина исходной кривой больше нуля)</returns>
-			public bool Ext(double S, out Cubic R, bool I = false) {
+			public override bool Ext(double S, out Line R, bool I = false) {
 				var MX = this.MX;
 				var MY = this.MY;
 				var cmX = this.cmX;
@@ -2424,10 +2358,10 @@ namespace Wholemy {
 			}
 			#endregion
 			#region #method# TesReturn(Size, PA, PB, Reset) 
-			public bool TesReturn(double Size, ref Cubic PA, ref Cubic PB, out bool Reset) {
+			public override bool TesReturn(double Size, ref Line PA, ref Line PB, out bool Reset) {
 				Reset = false;
-				var S = 0.05 * Size;
-				if (S < 0.005) S = 0.005; else if (S > 0.5) S = 0.5;
+				var S = QualityBut * Size;
+				if (S < QualityMin) S = QualityMin; else if (S > QualityMax) S = QualityMax;
 				if (this.Ext(Size, out var A, out var B)) {
 					if (this.DivBExtAMBE(Size, out var TAMX, out var TAMY, out var TBEX, out var TBEY)) {
 						A.DivC(0.5, out var ABMX, out var ABMY);
@@ -2455,32 +2389,32 @@ namespace Wholemy {
 			}
 			#endregion
 			#region #method# ExtReturn(Size, Roots) 
-			public List<Stab> ExtReturn(double Size, List<Cubic> Roots = null) {
-				List<Stab> List = new List<Stab>();
-				Stab Stab = new Stab();
+			public override List ExtReturn(double Size, List Roots = null) {
+				List List = new List();
 				var DIV = 0.5;
 				var POS = 0.0;
 				var ROOT = 0.0;
-				var RES = this;
-				var TES = this;
+				Line RES = this;
+				Line TES = this;
 				var LastRoot = 0.0;
 				var LastSize = 1.0;
-				List<Cubic>.Item Item = null;
+				RSLineItem Item = null;
 				if (Roots != null) {
-					Item = Roots.Base;
+					Item = Roots.Base as RSLineItem;
 					if (Item != null) {
-						TES = RES = Item.Value;
+						TES = RES = Item.Line;
 						LastRoot = Item.Root;
 						LastSize = Item.Size;
-						Item = Item.Next;
+						Item = Item.Next as RSLineItem;
 					}
 				}
-				List.AddLast(Stab, LastRoot, LastSize);
+				RSABCItem Stab = new RSABCItem(LastRoot, LastSize);
+				List.AddLast(Stab);
 				var Reset = false;
-				Cubic NOW;
-				Cubic RAM;
-				Cubic PreA = null;
-				Cubic PreB = null;
+				Line NOW;
+				Line RAM;
+				Line PreA = null;
+				Line PreB = null;
 				RTES:
 				if (TES.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
 					if (Reset && Stab.IsUsed) {
@@ -2515,180 +2449,89 @@ namespace Wholemy {
 					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
 				}
 				if (Item != null) {
-					List.AddLast(Stab = new Stab(), LastRoot = Item.Root, LastSize = Item.Size);
+					List.AddLast(Stab = new RSABCItem(Item.Root, Item.Size));
 					ROOT = 0.0;
 					POS = 0.0;
-					TES = RES = Item.Value;
-					Item = Item.Next;
+					TES = RES = Item.Line;
+					Item = Item.Next as RSLineItem;
 					goto RTES;
 				}
 				return List;
 			}
 			#endregion
-			#region #class# Stab 
-			public class Stab {
-				#region #invisible# 
-#if TRACE
-				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-				#endregion
-				public readonly List<Line> A;
-				#region #invisible# 
-#if TRACE
-				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-				#endregion
-				public readonly List<Line> B;
-				#region #invisible# 
-#if TRACE
-				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.RootHidden)]
-#endif
-				#endregion
-				public readonly List<Line> C;
-				#region #through# 
-#if TRACE
-				[System.Diagnostics.DebuggerStepThrough]
-#endif
-				#endregion
-				public Stab() {
-					this.A = new List<Line>();
-					this.B = new List<Line>();
-					this.C = new List<Line>();
-				}
-				#region #through# 
-#if TRACE
-				[System.Diagnostics.DebuggerStepThrough]
-#endif
-				#endregion
-				public Stab(bool A, bool B, bool C) {
-					if (!A && !B && !C) throw new System.ArgumentOutOfRangeException();
-					if (A) this.A = new List<Line>();
-					if (B) this.B = new List<Line>();
-					if (C) this.C = new List<Line>();
-				}
-				#region #invisible# 
-#if TRACE
-				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-				#endregion
-				public bool IsUsed {
-					#region #through# 
-#if TRACE
-					[System.Diagnostics.DebuggerStepThrough]
-#endif
-					#endregion
-					get {
-						if (this.A != null && this.A.Base != null) return true;
-						if (this.B != null && this.B.Base != null) return true;
-						if (this.C != null && this.C.Base != null) return true;
-						return false;
-					}
-				}
-				#region #through# 
-#if TRACE
-				[System.Diagnostics.DebuggerStepThrough]
-#endif
-				#endregion
-				public void Add(Line A, Line B, Line C, double Root, double Size) {
-					if (this.A != null) this.A.AddLast(A, Root, Size);
-					if (this.B != null) this.B.AddBase(B, Root, Size);
-					if (this.C != null) this.C.AddLast(C, Root, Size);
-				}
-				#region #through# 
-#if TRACE
-				[System.Diagnostics.DebuggerStepThrough]
-#endif
-				#endregion
-				public Stab AddLastTo(List<Stab> List, double ROOT, out double Root, out double Size) {
-					var Last = List.Last;
-					if (Last.Value != this) throw new System.ArgumentOutOfRangeException();
-					var LastRoot = Last.Root;
-					var LastSize = Last.Size;
-					var PrevSize = LastSize * ROOT;
-					LastSize -= PrevSize;
-					LastRoot += PrevSize;
-					Last.Size = PrevSize;
-					var Stab = new Stab(this.A != null, this.B != null, this.C != null);
-					List.AddLast(Stab, LastRoot, LastSize);
-					Root = LastRoot;
-					Size = LastSize;
-					return Stab;
-				}
-			}
-			#endregion
 			#region #method# AddLinM(P) 
-			public override void AddLinM(PathSource P) {
-				var S = P.Thickness / 2;
-				var A = S * Arc14;
-				var MX = this.MX;
-				var MY = this.MY;
-				var cmX = this.cmX;
-				var cmY = this.cmY;
-				var ceX = this.ceX;
-				var ceY = this.ceY;
-				var EX = this.EX;
-				var EY = this.EY;
-				var cmL = Sqrt(MX - cmX, MY - cmY);
-				var ceL = Sqrt(EX - ceX, EY - ceY);
-				var meL = Sqrt(MX - EX, MY - EY);
-				if (cmL > 0.0) {
-					if (Sqrt(EX - cmX, EY - cmY) > 0.0) {
-						EX = cmX;
-						EY = cmY;
-						meL = cmL;
-					}
-				} else if (ceL > 0.0) {
-					if (Sqrt(MX - ceX, MY - ceY) > 0.0) {
-						EX = ceX;
-						EY = ceY;
-						meL = Sqrt(MX - EX, MY - EY);
-					}
-				}
-				var YX = (EY - MY) / meL * S;
-				var XY = (MX - EX) / meL * S;
-				var AX = MX + YX;
-				var AY = MY + XY;
-				var BX = MX - YX;
-				var BY = MY - XY;
-				P.AddCurve(new Line(BX, BY, AX, AY));
-			}
+			//public override void AddLinM(PathSource P) {
+			//	var S = P.Thickness / 2;
+			//	var A = S * Arc14;
+			//	var MX = this.MX;
+			//	var MY = this.MY;
+			//	var cmX = this.cmX;
+			//	var cmY = this.cmY;
+			//	var ceX = this.ceX;
+			//	var ceY = this.ceY;
+			//	var EX = this.EX;
+			//	var EY = this.EY;
+			//	var cmL = Sqrt(MX - cmX, MY - cmY);
+			//	var ceL = Sqrt(EX - ceX, EY - ceY);
+			//	var meL = Sqrt(MX - EX, MY - EY);
+			//	if (cmL > 0.0) {
+			//		if (Sqrt(EX - cmX, EY - cmY) > 0.0) {
+			//			EX = cmX;
+			//			EY = cmY;
+			//			meL = cmL;
+			//		}
+			//	} else if (ceL > 0.0) {
+			//		if (Sqrt(MX - ceX, MY - ceY) > 0.0) {
+			//			EX = ceX;
+			//			EY = ceY;
+			//			meL = Sqrt(MX - EX, MY - EY);
+			//		}
+			//	}
+			//	var YX = (EY - MY) / meL * S;
+			//	var XY = (MX - EX) / meL * S;
+			//	var AX = MX + YX;
+			//	var AY = MY + XY;
+			//	var BX = MX - YX;
+			//	var BY = MY - XY;
+			//	P.AddCurve(new Line(BX, BY, AX, AY));
+			//}
 			#endregion
 			#region #method# AddLinE(P) 
-			public override void AddLinE(PathSource P) {
-				var S = P.Thickness / 2;
-				var A = S * Arc14;
-				var MX = this.MX;
-				var MY = this.MY;
-				var cmX = this.cmX;
-				var cmY = this.cmY;
-				var ceX = this.ceX;
-				var ceY = this.ceY;
-				var EX = this.EX;
-				var EY = this.EY;
-				var cmL = Sqrt(MX - cmX, MY - cmY);
-				var ceL = Sqrt(EX - ceX, EY - ceY);
-				var meL = Sqrt(MX - EX, MY - EY);
-				if (ceL > 0.0) {
-					if (Sqrt(MX - ceX, MY - ceY) > 0.0) {
-						MX = ceX;
-						MY = ceY;
-						meL = ceL;
-					}
-				} else if (cmL > 0.0) {
-					if (Sqrt(EX - cmX, EY - cmY) > 0.0) {
-						MX = cmX;
-						MY = cmY;
-						meL = Sqrt(MX - EX, MY - EY);
-					}
-				}
-				var YX = (EY - MY) / meL * S;
-				var XY = (MX - EX) / meL * S;
-				var AX = EX + YX;
-				var AY = EY + XY;
-				var BX = EX - YX;
-				var BY = EY - XY;
-				P.AddCurve(new Line(AX, AY, BX, BY));
-			}
+			//public override void AddLinE(PathSource P) {
+			//	var S = P.Thickness / 2;
+			//	var A = S * Arc14;
+			//	var MX = this.MX;
+			//	var MY = this.MY;
+			//	var cmX = this.cmX;
+			//	var cmY = this.cmY;
+			//	var ceX = this.ceX;
+			//	var ceY = this.ceY;
+			//	var EX = this.EX;
+			//	var EY = this.EY;
+			//	var cmL = Sqrt(MX - cmX, MY - cmY);
+			//	var ceL = Sqrt(EX - ceX, EY - ceY);
+			//	var meL = Sqrt(MX - EX, MY - EY);
+			//	if (ceL > 0.0) {
+			//		if (Sqrt(MX - ceX, MY - ceY) > 0.0) {
+			//			MX = ceX;
+			//			MY = ceY;
+			//			meL = ceL;
+			//		}
+			//	} else if (cmL > 0.0) {
+			//		if (Sqrt(EX - cmX, EY - cmY) > 0.0) {
+			//			MX = cmX;
+			//			MY = cmY;
+			//			meL = Sqrt(MX - EX, MY - EY);
+			//		}
+			//	}
+			//	var YX = (EY - MY) / meL * S;
+			//	var XY = (MX - EX) / meL * S;
+			//	var AX = EX + YX;
+			//	var AY = EY + XY;
+			//	var BX = EX - YX;
+			//	var BY = EY - XY;
+			//	P.AddCurve(new Line(AX, AY, BX, BY));
+			//}
 			#endregion
 			#region #method# Extrema(Roots) 
 			/// <summary>Возвращает массив корней кубической кривой)</summary>
@@ -2709,8 +2552,8 @@ namespace Wholemy {
 				var l1Y = ceY - cmY;
 				var l2X = EX - ceX;
 				var l2Y = EY - ceY;
-				Roots = AddCubicRoots(l0X, l1X, l2X, Roots);
-				Roots = AddCubicRoots(l0Y, l1Y, l2Y, Roots);
+				Roots = AddBoxRoots(l0X, l1X, l2X, Roots);
+				Roots = AddBoxRoots(l0Y, l1Y, l2Y, Roots);
 				return Roots;
 			}
 			#endregion
@@ -2867,108 +2710,74 @@ namespace Wholemy {
 			}
 			#endregion
 			public override char Prefix => 'Q';
-			#region #method# AddArcM(P) 
-			public override void AddArcM(PathSource P) {
-				var S = P.Thickness / 2;
-				var A = S * Arc14;
+			#region #method# HalfArcM(P) 
+			public override List HalfArcM(double Size) {
+				var List = new List();
+				var SA = Size;
+				var SB = -SA;
+				var A = SA * Arc14;
 				var MX = this.MX;
 				var MY = this.MY;
 				var QX = this.QX;
 				var QY = this.QY;
 				var EX = this.EX;
 				var EY = this.EY;
-				var cmL = Sqrt(MX - QX, MY - QY);
-				var ceL = Sqrt(EX - QX, EY - QY);
-				var meL = Sqrt(MX - EX, MY - EY);
-				if (cmL > 0.0 && ceL > 0.0) { EX = QX; EY = QY; meL = cmL; }
-				var YX = (EY - MY) / meL * S;
-				var XY = (MX - EX) / meL * S;
-				var AX = MX + YX;
-				var AY = MY + XY;
-				var BX = MX - YX;
-				var BY = MY - XY;
-				var CX = MX + (MX - EX) / meL * S;
-				var CY = MY + (MY - EY) / meL * S;
-				new Cubic(BX, BY, (BX + (MY - BY) / S * A), (BY + (BX - MX) / S * A), (CX + (CY - MY) / S * A), (CY + (MX - CX) / S * A), CX, CY).DivArc(out var a0, out var a1);
-				new Cubic(CX, CY, (CX + (MY - CY) / S * A), (CY + (CX - MX) / S * A), (AX + (AY - MY) / S * A), (AY + (MX - AX) / S * A), AX, AY).DivArc(out var a2, out var a3);
-				P.AddCurve(a0);
-				P.AddCurve(a1);
-				P.AddCurve(a2);
-				P.AddCurve(a3);
+				var l0 = RootOffset(QX - MX, QY - MY, out var l0X, out var l0Y);
+				var l1 = RootOffset(EX - QX, EY - QY, out var l1X, out var l1Y);
+				if (l0 == 0.0 && l1 == 0.0) return List;
+				var aX = MX + SA * l0X;
+				var aY = MY + SA * l0Y;
+				var bX = aX;
+				var bY = aY;
+				var cX = MX + SB * l0X;
+				var cY = MY + SB * l0Y;
+				var baX = MX;
+				var baY = MY;
+				var cbX = MX;
+				var cbY = MY;
+				Rotate1(MX, MY, ref bX, ref bY, 0.25);
+				Rotate1(bX, bY, ref baX, ref baY, 0.25);
+				Rotate1(bX, bY, ref cbX, ref cbY, 0.75);
+				Cubic.ArcTo(List, cX, cY, cbX, cbY, bX, bY);
+				Cubic.ArcTo(List, bX, bY, baX, baY, aX, aY);
+				//List.AddLast(new LineItem(new Cubic(cX, cY, cbX, cbY, bX, bY)));
+				//List.AddLast(new LineItem(new Cubic(bX, bY, baX, baY, aX, aY)));
+				return List;
 			}
 			#endregion
-			#region #method# AddArcE(P) 
-			public override void AddArcE(PathSource P) {
-				var S = P.Thickness / 2;
-				var A = S * Arc14;
+			#region #method# HalfArcE(P) 
+			public override List HalfArcE(double Size) {
+				var List = new List();
+				var SA = Size;
+				var SB = -SA;
+				var A = SA * Arc14;
 				var MX = this.MX;
 				var MY = this.MY;
 				var QX = this.QX;
 				var QY = this.QY;
 				var EX = this.EX;
 				var EY = this.EY;
-				var cmL = Sqrt(MX - QX, MY - QY);
-				var ceL = Sqrt(EX - QX, EY - QY);
-				var meL = Sqrt(MX - EX, MY - EY);
-				if (ceL > 0.0 && cmL > 0.0) { MX = QX; MY = QY; meL = ceL; }
-				var YX = (EY - MY) / meL * S;
-				var XY = (MX - EX) / meL * S;
-				var AX = EX + YX;
-				var AY = EY + XY;
-				var BX = EX - YX;
-				var BY = EY - XY;
-				var CX = EX + (EX - MX) / meL * S;
-				var CY = EY + (EY - MY) / meL * S;
-				new Cubic(AX, AY, (AX + (EY - AY) / S * A), (AY + (AX - EX) / S * A), (CX + (CY - EY) / S * A), (CY + (EX - CX) / S * A), CX, CY).DivArc(out var a0, out var a1);
-				new Cubic(CX, CY, (CX + (EY - CY) / S * A), (CY + (CX - EX) / S * A), (BX + (BY - EY) / S * A), (BY + (EX - BX) / S * A), BX, BY).DivArc(out var a2, out var a3);
-				P.AddCurve(a0);
-				P.AddCurve(a1);
-				P.AddCurve(a2);
-				P.AddCurve(a3);
-			}
-			#endregion
-			#region #method# AddLinM(P) 
-			public override void AddLinM(PathSource P) {
-				var S = P.Thickness / 2;
-				var MX = this.MX;
-				var MY = this.MY;
-				var QX = this.QX;
-				var QY = this.QY;
-				var EX = this.EX;
-				var EY = this.EY;
-				var cmL = Sqrt(MX - QX, MY - QY);
-				var ceL = Sqrt(EX - QX, EY - QY);
-				var meL = Sqrt(MX - EX, MY - EY);
-				if (cmL > 0.0 && ceL > 0.0) { EX = QX; EY = QY; meL = cmL; }
-				var YX = (EY - MY) / meL * S;
-				var XY = (MX - EX) / meL * S;
-				var AX = MX + YX;
-				var AY = MY + XY;
-				var BX = MX - YX;
-				var BY = MY - XY;
-				P.AddCurve(new Line(BX, BY, AX, AY));
-			}
-			#endregion
-			#region #method# AddLinE(P) 
-			public override void AddLinE(PathSource P) {
-				var S = P.Thickness / 2;
-				var MX = this.MX;
-				var MY = this.MY;
-				var QX = this.QX;
-				var QY = this.QY;
-				var EX = this.EX;
-				var EY = this.EY;
-				var cmL = Sqrt(MX - QX, MY - QY);
-				var ceL = Sqrt(EX - QX, EY - QY);
-				var meL = Sqrt(MX - EX, MY - EY);
-				if (ceL > 0.0 && cmL > 0.0) { MX = QX; MY = QY; meL = ceL; }
-				var YX = (EY - MY) / meL * S;
-				var XY = (MX - EX) / meL * S;
-				var AX = EX + YX;
-				var AY = EY + XY;
-				var BX = EX - YX;
-				var BY = EY - XY;
-				P.AddCurve(new Line(AX, AY, BX, BY));
+				var l0 = RootOffset(QX - MX, QY - MY, out var l0X, out var l0Y);
+				var l1 = RootOffset(EX - QX, EY - QY, out var l1X, out var l1Y);
+				if (l0 == 0.0 && l1 == 0.0) return List;
+				var aX = EX + SA * l1X;
+				var aY = EY + SA * l1Y;
+				var bX = aX;
+				var bY = aY;
+				var cX = EX + SB * l1X;
+				var cY = EY + SB * l1Y;
+				var abX = EX;
+				var abY = EY;
+				var bcX = EX;
+				var bcY = EY;
+				Rotate1(EX, EY, ref bX, ref bY, -0.25);
+				Rotate1(bX, bY, ref abX, ref abY, -0.25);
+				Rotate1(bX, bY, ref bcX, ref bcY, -0.75);
+				Cubic.ArcTo(List, aX, aY, abX, abY, bX, bY);
+				Cubic.ArcTo(List, bX, bY, bcX, bcY, cX, cY);
+				//List.AddLast(new LineItem(new Cubic(aX, aY, abX, abY, bX, bY)));
+				//List.AddLast(new LineItem(new Cubic(bX, bY, bcX, bcY, cX, cY)));
+				return List;
 			}
 			#endregion
 			#region #method# Dot(root) 
@@ -2988,6 +2797,216 @@ namespace Wholemy {
 				var x02 = (x12 - x01) * R + x01;
 				var y02 = (y12 - y01) * R + y01;
 				return new Dot(root, x02, y02, x12, y12, x01, y01);
+			}
+			#endregion
+			#region #method# Div(root, A, B) 
+			public override void Div(double root, out Line A, out Line B) {
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = QX;
+				var y11 = QY;
+				var x22 = EX;
+				var y22 = EY;
+				var x01 = (x11 - x00) * root + x00;
+				var y01 = (y11 - y00) * root + y00;
+				var x12 = (x22 - x11) * root + x11;
+				var y12 = (y22 - y11) * root + y11;
+				var x02 = (x12 - x01) * root + x01;
+				var y02 = (y12 - y01) * root + y01;
+				A = new Quadratic(x00, y00, x01, y01, x02, y02);
+				B = new Quadratic(x02, y02, x12, y12, x22, y22);
+			}
+			#endregion
+			#region #method# DivA(root) 
+			public override Line DivA(double root) {
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = QX;
+				var y11 = QY;
+				var x22 = EX;
+				var y22 = EY;
+				var x01 = (x11 - x00) * root + x00;
+				var y01 = (y11 - y00) * root + y00;
+				var x12 = (x22 - x11) * root + x11;
+				var y12 = (y22 - y11) * root + y11;
+				var x02 = (x12 - x01) * root + x01;
+				var y02 = (y12 - y01) * root + y01;
+				return new Quadratic(x00, y00, x01, y01, x02, y02);
+			}
+			#endregion
+			#region #method# DivB(root) 
+			public override Line DivB(double root) {
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = QX;
+				var y11 = QY;
+				var x22 = EX;
+				var y22 = EY;
+				var x01 = (x11 - x00) * root + x00;
+				var y01 = (y11 - y00) * root + y00;
+				var x12 = (x22 - x11) * root + x11;
+				var y12 = (y22 - y11) * root + y11;
+				var x02 = (x12 - x01) * root + x01;
+				var y02 = (y12 - y01) * root + y01;
+				return new Quadratic(x02, y02, x12, y12, x22, y22);
+			}
+			#endregion
+			#region #method# DivC(root, X, Y) 
+			public override void DivC(double root, out double X, out double Y) {
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = QX;
+				var y11 = QY;
+				var x22 = EX;
+				var y22 = EY;
+				var x01 = (x11 - x00) * root + x00;
+				var y01 = (y11 - y00) * root + y00;
+				var x12 = (x22 - x11) * root + x11;
+				var y12 = (y22 - y11) * root + y11;
+				X = (x12 - x01) * root + x01;
+				Y = (y12 - y01) * root + y01;
+			}
+			#endregion
+			#region #method# Ext(S, A, B) 
+			/// <summary>Расширяет кривую на указанную толщину)</summary>
+			/// <param name="S">Толщина линии, положительное или отридцательное значение определяет сторону)</param>
+			/// <param name="A">Возвращаемая кривая, если длина исходной кривой больше нуля)</param>
+			/// <param name="B">Инвертированная кривая с другой стороны, если длина исходной кривой больше нуля)</param>
+			/// <returns>Успех если длина исходной кривой больше нуля)</returns>
+			public override bool Ext(double S, out Line A, out Line B) {
+				var MX = this.MX;
+				var MY = this.MY;
+				var QX = this.QX;
+				var QY = this.QY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var cMX = QX - MX;
+				var cMY = QY - MY;
+				var cEX = EX - QX;
+				var cEY = EY - QY;
+				var lM = Sqrt(cMX, cMY);
+				var lE = Sqrt(cEX, cEY);
+				if (lM == 0 || lE == 0) return base.Ext(S, out A, out B);
+				var lMX = -cMY / lM;
+				var lMY = cMX / lM;
+				var lEX = -cEY / lE;
+				var lEY = cEX / lE;
+
+				var aMX = MX + S * lMX;
+				var aMY = MY + S * lMY;
+				var aEX = EX + S * lEX;
+				var aEY = EY + S * lEY;
+
+				var aQX = QX + S * lMX;
+				var aQY = QY + S * lMY;
+				S = -S;
+				var bMX = EX + S * lEX;
+				var bMY = EY + S * lEY;
+				var bEX = MX + S * lMX;
+				var bEY = MY + S * lMY;
+
+				var bQX = QX + S * lEX;
+				var bQY = QY + S * lEY;
+				A = new Quadratic(aMX, aMY, aQX, aQY, aEX, aEY);
+				B = new Quadratic(bMX, bMY, bQX, bQY, bEX, bEY);
+				return true;
+			}
+			#endregion
+			#region #method# Ext(S, R, I) 
+			/// <summary>Расширяет кривую на указанную толщину)</summary>
+			/// <param name="S">Толщина линии, положительное или отридцательное значение определяет сторону)</param>
+			/// <param name="R">Возвращаемая кривая, если длина исходной кривой больше нуля)</param>
+			/// <param name="I">Истина инвертирует значение толщины и направление возвращаемой кривой)</param>
+			/// <returns>Успех если длина исходной кривой больше нуля)</returns>
+			public override bool Ext(double S, out Line R, bool I = false) {
+				var MX = this.MX;
+				var MY = this.MY;
+				var QX = this.QX;
+				var QY = this.QY;
+				var EX = this.EX;
+				var EY = this.EY;
+				var l0 = RootOffset(QX - MX, QY - MY, out var l0X, out var l0Y);
+				var l1 = RootOffset(EX - QX, EY - QY, out var l1X, out var l1Y);
+				if (l0 == 0.0 || l1 == 0.0) return base.Ext(S, out R, I);
+				if (!I) {
+					R = new Quadratic(
+					MX + S * l0X,
+					MY + S * l0Y,
+					QX + S * l0X,
+					QY + S * l0Y,
+					EX + S * l1X,
+					EY + S * l1Y);
+				} else {
+					S = -S;
+					R = new Quadratic(
+					EX + S * l1X,
+					EY + S * l1Y,
+					QX + S * l0X,
+					QY + S * l0Y,
+					MX + S * l0X,
+					MY + S * l0Y);
+				}
+				return true;
+			}
+			#endregion
+			#region #method# DivBExtAMBE(S, AMX, AMY, BEX, BEY) 
+			public bool DivBExtAMBE(double S, out double AMX, out double AMY, out double BEX, out double BEY) {
+				var MX = this.MX; var MY = this.MY;
+				var QX = this.QX; var QY = this.QY;
+				var EX = this.EX; var EY = this.EY;
+				var x00 = MX;
+				var y00 = MY;
+				var x11 = QX;
+				var y11 = QY;
+				var x22 = EX;
+				var y22 = EY;
+				var x01 = (x11 - x00) / 2 + x00;
+				var y01 = (y11 - y00) / 2 + y00;
+				var x12 = (x22 - x11) / 2 + x11;
+				var y12 = (y22 - y11) / 2 + y11;
+				var x02 = (x12 - x01) / 2 + x01;
+				var y02 = (y12 - y01) / 2 + y01;
+				MX = x02; MY = y02;
+				QX = x12; QY = y12;
+				var l0 = RootOffset(QX - MX, QY - MY, out var l0X, out var l0Y);
+				var l1 = RootOffset(EX - QX, EY - QY, out var l2X, out var l2Y);
+				AMX = MX + S * l0X;
+				AMY = MY + S * l0Y;
+				S = -S;
+				BEX = MX + S * l0X;
+				BEY = MY + S * l0Y;
+				return true;
+			}
+			#endregion
+			#region #method# TesReturn(Size, PA, PB, Reset) 
+			public override bool TesReturn(double Size, ref Line PA, ref Line PB, out bool Reset) {
+				Reset = false;
+				var S = QualityBut * Size;
+				if (S < QualityMin) S = QualityMin; else if (S > QualityMax) S = QualityMax;
+				if (this.Ext(Size, out var A, out var B)) {
+					if (this.DivBExtAMBE(Size, out var TAMX, out var TAMY, out var TBEX, out var TBEY)) {
+						A.DivC(0.5, out var ABMX, out var ABMY);
+						B.DivC(0.5, out var BAEX, out var BAEY);
+						var AL = Sqrt(ABMX - TAMX, ABMY - TAMY);
+						var BL = Sqrt(BAEX - TBEX, BAEY - TBEY);
+						if (AL < S && BL < S) {
+							if (PA != null && PB != null) {
+								var Aa = GetaR1(PA.EX, PA.EY, PA.MX, PA.MY, A.EX, A.EY);
+								var Bb = GetaR1(PB.MX, PB.MY, PB.EX, PB.EY, B.MX, B.MY);
+								if (Aa < 0.0) Aa += 1.0;
+								if (Bb < 0.0) Bb += 1.0;
+								if ((Aa < 0.375) || (Aa > 0.625))
+									Reset = true;
+								if ((Bb < 0.375) || (Bb > 0.625))
+									Reset = true;
+							}
+							PA = A;
+							PB = B;
+							return true;
+						}
+					}
+				}
+				return false;
 			}
 			#endregion
 		}
@@ -3021,26 +3040,6 @@ namespace Wholemy {
 			return AddBone(new Line(MX, MY, EX, EY).ToArcC(Acw));
 		}
 		#endregion
-		#region #method# AddItemArc(MX, MY, EX, EY, r0, cw) 
-		public Curve AddItemArc(double MX, double MY, double EX, double EY, double r0, bool Acw = false) {
-			return AddCurve(new Line(MX, MY, EX, EY).ToArcC(Acw).Cuted(r0));
-		}
-		#endregion
-		#region #method# AddBoneArc(MX, MY, EX, EY, r0, cw) 
-		public Bone AddBoneArc(double MX, double MY, double EX, double EY, double r0, bool Acw = false) {
-			return AddBone(new Line(MX, MY, EX, EY).ToArcC(Acw).Cuted(r0));
-		}
-		#endregion
-		#region #method# AddItemArc(MX, MY, EX, EY, r0, r1, cw) 
-		public Curve AddItemArc(double MX, double MY, double EX, double EY, double r0, double r1, bool Acw = false) {
-			return AddCurve(new Line(MX, MY, EX, EY).ToArcC(Acw).Cuted(r0, r1));
-		}
-		#endregion
-		#region #method# AddBoneArc(MX, MY, EX, EY, r0, r1, cw) 
-		public Bone AddBoneArc(double MX, double MY, double EX, double EY, double r0, double r1, bool Acw = false) {
-			return AddBone(new Line(MX, MY, EX, EY).ToArcC(Acw).Cuted(r0, r1));
-		}
-		#endregion
 		#region #method# AddOrc(X, Y, R, D) 
 		/// <summary>Добавляет кольцо указанного радиуса и толщины)</summary>
 		/// <param name="X">Горизонтальный центр кольца)</param>
@@ -3062,7 +3061,6 @@ namespace Wholemy {
 					AddItemArc(x20, y20 + D, x21 - D, y21);
 					AddItemArc(x30 - D, y30, x31, y31 - D);
 					if (hole && R - D > 0.0) {
-						BeginFz();
 						Invert();
 						AddItemArc(x00, y00 + D, x01 - D, y01);
 						AddItemArc(x10 - D, y10, x11, y11 - D);
@@ -3097,102 +3095,6 @@ namespace Wholemy {
 				AddBoneArc(X, Y + R, X - R, Y);
 				AddBoneArc(X - R, Y, X, Y - R);
 			}
-		}
-		#endregion
-		#region #method# AddAtr(tx, ty, rx, ry, Inverted) 
-		/// <summary>Добавляет четверть круга где выпуклость сверху справа)</summary>
-		public Curve AddAtr(double TX, double TY, double RX, double RY, bool Inverted = false) {
-			var C = new Cubic(TX, TY, TX, TY, RX, RY, RX, RY);
-			var RTX = RX - TX;
-			var RTY = RY - TY;
-			if (TX < RX || RTX == RTY) { C.cmX += (RTX * Arc14); }
-			if (TY < RY || RTX == RTY) { C.ceY -= (RTY * Arc14); }
-			if (Inverted) C.Invert();
-			return AddCurve(C);
-		}
-		#endregion
-		#region #method# AddArb(rx, ry, bx, by, Inverted) 
-		/// <summary>Добавляет четверть круга где выпуклость справа снизу)</summary>
-		public Curve AddArb(double RX, double RY, double BX, double BY, bool Inverted = false) {
-			var C = new Cubic(RX, RY, RX, RY, BX, BY, BX, BY);
-			var BRY = BY - RY;
-			var RBX = RX - BX;
-			if (RY < BY || BRY == RBX) { C.cmY += (BRY * Arc14); }
-			if (BX < RX || BRY == RBX) { C.ceX += (RBX * Arc14); }
-			if (Inverted) C.Invert();
-			return AddCurve(C);
-		}
-		#endregion
-		#region #method# AddAbl(bx, by, lx, ly, Inverted) 
-		/// <summary>Добавляет четверть круга где выпуклость снизу слева)</summary>
-		public Curve AddAbl(double BX, double BY, double LX, double LY, bool Inverted = false) {
-			var C = new Cubic(BX, BY, BX, BY, LX, LY, LX, LY);
-			var BLX = BX - LX;
-			var BLY = BY - LY;
-			if (LX < BX || BLX == BLY) { C.cmX -= (BLX * Arc14); }
-			if (LY < BY || BLX == BLY) { C.ceY += (BLY * Arc14); }
-			if (Inverted) C.Invert();
-			return AddCurve(C);
-		}
-		#endregion
-		#region #method# AddAlt(lx, ly, tx, ty, Inverted) 
-		/// <summary>Добавляет четверть круга где выпуклость слева сверху)</summary>
-		public Curve AddAlt(double LX, double LY, double TX, double TY, bool Inverted = false) {
-			var C = new Cubic(LX, LY, LX, LY, TX, TY, TX, TY);
-			var LTY = LY - TY;
-			var TLX = TX - LX;
-			if (TY < LY || LTY == TLX) { C.cmY -= (LTY * Arc14); }
-			if (LX < TX || LTY == TLX) { C.ceX -= (TLX * Arc14); }
-			if (Inverted) C.Invert();
-			return AddCurve(C);
-		}
-		#endregion
-		#region #method# GetAtr(tx, ty, rx, ry, Inverted) 
-		/// <summary>Добавляет четверть круга где выпуклость сверху справа)</summary>
-		public Cubic GetAtr(double TX, double TY, double RX, double RY, bool Inverted = false) {
-			var C = new Cubic(TX, TY, TX, TY, RX, RY, RX, RY);
-			var RTX = RX - TX;
-			var RTY = RY - TY;
-			if (TX < RX || RTX == RTY) { C.cmX += (RTX * Arc14); }
-			if (TY < RY || RTX == RTY) { C.ceY -= (RTY * Arc14); }
-			if (Inverted) C.Invert();
-			return C;
-		}
-		#endregion
-		#region #method# GetArb(rx, ry, bx, by, Inverted) 
-		/// <summary>Добавляет четверть круга где выпуклость справа снизу)</summary>
-		public Cubic GetArb(double RX, double RY, double BX, double BY, bool Inverted = false) {
-			var C = new Cubic(RX, RY, RX, RY, BX, BY, BX, BY);
-			var BRY = BY - RY;
-			var RBX = RX - BX;
-			if (RY < BY || BRY == RBX) { C.cmY += (BRY * Arc14); }
-			if (BX < RX || BRY == RBX) { C.ceX += (RBX * Arc14); }
-			if (Inverted) C.Invert();
-			return C;
-		}
-		#endregion
-		#region #method# GetAbl(bx, by, lx, ly, Inverted) 
-		/// <summary>Добавляет четверть круга где выпуклость снизу слева)</summary>
-		public Cubic GetAbl(double BX, double BY, double LX, double LY, bool Inverted = false) {
-			var C = new Cubic(BX, BY, BX, BY, LX, LY, LX, LY);
-			var BLX = BX - LX;
-			var BLY = BY - LY;
-			if (LX < BX || BLX == BLY) { C.cmX -= (BLX * Arc14); }
-			if (LY < BY || BLX == BLY) { C.ceY += (BLY * Arc14); }
-			if (Inverted) C.Invert();
-			return C;
-		}
-		#endregion
-		#region #method# GetAlt(lx, ly, tx, ty, Inverted) 
-		/// <summary>Добавляет четверть круга где выпуклость слева сверху)</summary>
-		public Cubic GetAlt(double LX, double LY, double TX, double TY, bool Inverted = false) {
-			var C = new Cubic(LX, LY, LX, LY, TX, TY, TX, TY);
-			var LTY = LY - TY;
-			var TLX = TX - LX;
-			if (TY < LY || LTY == TLX) { C.cmY -= (LTY * Arc14); }
-			if (LX < TX || LTY == TLX) { C.ceX -= (TLX * Arc14); }
-			if (Inverted) C.Invert();
-			return C;
 		}
 		#endregion
 		#region #method# AddArc00(x0, y0, x1, y1) 
@@ -3567,7 +3469,7 @@ namespace Wholemy {
 				if (FigureSize > 0) {
 					var Figure = FigureBase;
 					while (Figure != null) {
-						if (Figure.ItemCount > 0) {
+						if (Figure.CurveCount > 0) {
 							Result += Figure.ToString();
 						}
 						Figure = Figure.Next;
@@ -3584,8 +3486,8 @@ namespace Wholemy {
 				if (FigureSize > 0) {
 					var Figure = FigureBase;
 					while (Figure != null) {
-						if (Figure.ItemCount > 0) {
-							var Item = Figure.ItemBase;
+						if (Figure.CurveCount > 0) {
+							var Item = Figure.CurveBase;
 							Curve Prev = null;
 							while (Item != null) {
 								Result += Item.Line.ToCompessedString(Prev?.Line);
@@ -3651,64 +3553,23 @@ namespace Wholemy {
 		#endregion
 		#region #method# AddLinT(x0, y0, x1, y1) 
 		public void AddLinT(double x0, double y0, double x1, double y1) {
-			//var V = new Line(x0, y0, x1, y1).ToArcC();
-			AddCubicT(x0, y0, x0, y0, x1, y1, x1, y1);
-			return;
-			var D = this.Thickness;
+			var Size = this.Thickness / 2;
 			var IsRoundM = this.IsRoundM;
 			var IsRoundE = this.IsRoundE;
 			var RootM = this.RootM; this.RootM = null;
 			var RootE = this.RootE; this.RootE = null;
 			var Bone = new Line(x0, y0, x1, y1).Cuted(RootM, RootE);
 			if (IsBoned) { AddBone(Bone); }
-			x0 = Bone.MX;
-			y0 = Bone.MY;
-			x1 = Bone.EX;
-			y1 = Bone.EY;
-			var S = this.Thickness / 2;
-			var A = S * Arc14;
-			var x00 = Bone.MX;
-			var y00 = Bone.MY;
-			var x11 = Bone.EX;
-			var y11 = Bone.EY;
-
-			var L = Sqrt(x00 - x11, y00 - y11);
-			var yx = (y11 - y00) / L * S;
-			var xy = (x00 - x11) / L * S;
-			var ax0 = x00 + yx;
-			var ay0 = y00 + xy;
-			var ax1 = x11 + yx;
-			var ay1 = y11 + xy;
-			var bx1 = x11 - yx;
-			var by1 = y11 - xy;
-			var bx0 = x00 - yx;
-			var by0 = y00 - xy;
-			if (IsRoundM) {
-				var tx0 = x00 + (x00 - x11) / L * S;
-				var ty0 = y00 + (y00 - y11) / L * S;
-				new Cubic(bx0, by0, (bx0 + (y00 - by0) / S * A), (by0 + (bx0 - x00) / S * A), (tx0 + (ty0 - y00) / S * A), (ty0 + (x00 - tx0) / S * A), tx0, ty0).DivArc(out var a0, out var a1);
-				new Cubic(tx0, ty0, (tx0 + (y00 - ty0) / S * A), (ty0 + (tx0 - x00) / S * A), (ax0 + (ay0 - y00) / S * A), (ay0 + (x00 - ax0) / S * A), ax0, ay0).DivArc(out var a2, out var a3);
-				AddCurve(a0);
-				AddCurve(a1);
-				AddCurve(a2);
-				AddCurve(a3);
-			} else {
-				AddCurve(new Line(bx0, by0, ax0, ay0));
+			BeginFz();
+			var list = new List();
+			list.AddLast(Bone.HalfArcM(Size));
+			Bone.Ext(Size, out var A, out var B);
+			list.AddLast(new LineItem(A));
+			list.AddLast(Bone.HalfArcE(Size));
+			list.AddLast(new LineItem(B));
+			for (var I = list.Base as LineItem; I != null; I = I.Next as LineItem) {
+				AddCurve(I.Line);
 			}
-			AddCurve(new Line(ax0, ay0, ax1, ay1));
-			if (IsRoundE) {
-				var tx1 = x11 + (x11 - x00) / L * S;
-				var ty1 = y11 + (y11 - y00) / L * S;
-				new Cubic(ax1, ay1, (ax1 + (y11 - ay1) / S * A), (ay1 + (ax1 - x11) / S * A), (tx1 + (ty1 - y11) / S * A), (ty1 + (x11 - tx1) / S * A), tx1, ty1).DivArc(out var a0, out var a1);
-				new Cubic(tx1, ty1, (tx1 + (y11 - ty1) / S * A), (ty1 + (tx1 - x11) / S * A), (bx1 + (by1 - y11) / S * A), (by1 + (x11 - bx1) / S * A), bx1, by1).DivArc(out var a2, out var a3);
-				AddCurve(a0);
-				AddCurve(a1);
-				AddCurve(a2);
-				AddCurve(a3);
-			} else {
-				AddCurve(new Line(ax1, ay1, bx1, by1));
-			}
-			AddCurve(new Line(bx1, by1, bx0, by0));
 		}
 		#endregion
 		#region #method# AddCubic00(x0, y0, x1, y1, x2, y2, x3, y3) 
@@ -3768,61 +3629,236 @@ namespace Wholemy {
 			var RootE = this.RootE; this.RootE = null;
 			var Bone = new Cubic(x0, y0, x1, y1, x2, y2, x3, y3).CutedCubic(RootM, RootE);
 			if (IsBoned) { AddBone(Bone); }
+			//{ BeginFz();
+			//var list = new List();
+			//list.AddLast(Bone.HalfArcM(Size));
+			//Bone.Ext(Size, out var A, out var B);
+			//list.AddLast(new LineItem(A));
+			//list.AddLast(Bone.HalfArcE(Size));
+			//list.AddLast(new LineItem(B));
+			//for (var I = list.Base as LineItem; I != null; I = I.Next as LineItem) {
+			//	AddCurve(I.Line);
+			//}
+			//}
+			//return;
 			BeginFz();
 			var Roots = new double[0];
 			Roots = Bone.Extrema(Roots);
-			Roots = AddRoots(0.5, Roots);
+			//Roots = AddRoots(0.5, Roots);
 			var Linear = Bone.Linear;
 			var LinearRounds = Linear && (IsRoundM || IsRoundE);
 
 			var List = Bone.RootsList(Roots);
-			var Li = Bone.ExtReturn(Size, List).Base;
+			var Li = Bone.ExtReturn(Size, List).Base as RSABCItem;
 			bool first = true;
 			while (Li != null) {
-				if (Li.Value.C.Base != null && ((Linear && (IsRoundM || IsRoundE)) || (!Linear && IsRoundM && first))) {
-					Li.Value.C.Base.Value.AddArcM(this);
+				var list = new List();
+				if (Li.C.Base != null && ((Linear && (IsRoundM || IsRoundE)) || (!Linear && IsRoundM && first))) {
+					list.AddLast(((LineItem)Li.C.Base).Line.HalfArcM(Size));
 					if (!Linear) first = false;
 				}
-				var La = Li.Value.A.Base;
-				while (La != null) {
-					AddCurve(La.Value);
-					La = La.Next;
+				list.AddLast(Li.A);
+				if (Li.C.Last != null && (Linear && (IsRoundM || IsRoundE) || (!Linear && IsRoundE && Li.Next == null))) {
+					list.AddLast(((LineItem)Li.C.Last).Line.HalfArcE(Size));
 				}
-				if (Li.Value.C.Last != null && (Linear && (IsRoundM || IsRoundE) || (!Linear && IsRoundE && Li.Next == null))) {
-					Li.Value.C.Last.Value.AddArcE(this);
-					var l = Li.Value.C.Last.Value.HalfArcE(Size);
+				list.AddLast(Li.B);
+				for (var I = list.Base as LineItem; I != null; I = I.Next as LineItem) {
+					AddCurve(I.Line);
 				}
-				var Lb = Li.Value.B.Base;
-				while (Lb != null) {
-					AddCurve(Lb.Value);
-					Lb = Lb.Next;
-				}
-				Li = Li.Next;
+				Li = Li.Next as RSABCItem;
 				if (Li != null) { BeginFz(); }
 			}
-			return;
-			//Roots = Bone.ReturnRoots(Size, Roots);
-			//Cubic NOW;
-			//Cubic RAM = Bone;
-			//Roots = DivRoots(Roots);
-			//var L = Roots.Length;
-			//if (!Linear && IsRoundM) RAM.AddArcM(this);
-			//for (var I = 0; I < L; I++) {
-			//	RAM.Div(Roots[I], out NOW, out RAM);
-			//	if (LinearRounds) NOW.AddArcM(this);
-			//	NOW.NormalAddA(this);
-			//	if (LinearRounds) NOW.AddArcE(this);
-			//	NOW.NormalAddB(this);
-			//	UnionFz();
-			//}
-			//if (LinearRounds) RAM.AddArcM(this);
-			//RAM.NormalAddA(this);
-			//if (IsRoundE) RAM.AddArcE(this);
-			//RAM.NormalAddB(this);
 		}
 		#endregion
-		#region #class# List<T> 
-		public class List<T> {
+		#region #class# LineItem 
+		public class LineItem : Item {
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public LineItem() { }
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public LineItem(Line Line) {
+				this.Line = Line;
+			}
+			#region #field# Line 
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.RootHidden)]
+#endif
+			#endregion
+			public Line Line;
+			#endregion
+			#region #method# ToString 
+			public override string ToString() {
+				var Line = this.Line;
+				var S = "Curve";
+				if (Line != null)
+					S += " " + Line.ToString();
+				return S;
+			}
+			#endregion
+		}
+		#endregion
+		#region #class# RSLineItem 
+		public class RSLineItem : LineItem {
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public RSLineItem() { }
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public RSLineItem(Line Line, double Root, double Size) {
+				this.Line = Line;
+				this.Root = Root;
+				this.Size = Size;
+			}
+			public double Root;
+			public double Size;
+			#region #method# ToString 
+			public override string ToString() {
+				var T = System.Globalization.CultureInfo.InvariantCulture;
+				var S = "Curve";
+				var Root = this.Root;
+				var Size = this.Size;
+				var Line = this.Line;
+				if (!double.IsNaN(Root)) S += " Root = " + Root.ToString("G17", T);
+				if (!double.IsNaN(Size)) S += " Size = " + Size.ToString("G17", T);
+				if (!double.IsNaN(Root) && !double.IsNaN(Size)) S += " Bound = " + (Root + Size).ToString(T);
+				if (Line != null) S += " [" + Line.ToString() + "]";
+				return S;
+			}
+			#endregion
+			#region #property# Bound 
+			public double Bound {
+				#region #through# 
+#if TRACE
+				[System.Diagnostics.DebuggerStepThrough]
+#endif
+				#endregion
+				get { return this.Root + this.Size; }
+			}
+			#endregion
+		}
+		#endregion
+		#region #class# RSABCItem 
+		public class RSABCItem : Item {
+			public double Root;
+			public double Size;
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+			#endregion
+			public readonly List A;
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+			#endregion
+			public readonly List B;
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.RootHidden)]
+#endif
+			#endregion
+			public readonly List C;
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public RSABCItem(double Root, double Size, bool A = true, bool B = true, bool C = true) {
+				if (!A && !B && !C) throw new System.ArgumentOutOfRangeException();
+				this.Root = Root;
+				this.Size = Size;
+				if (A) this.A = new List();
+				if (B) this.B = new List();
+				if (C) this.C = new List();
+			}
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+			#endregion
+			public bool IsUsed {
+				#region #through# 
+#if TRACE
+				[System.Diagnostics.DebuggerStepThrough]
+#endif
+				#endregion
+				get {
+					if (this.A != null && this.A.Base != null) return true;
+					if (this.B != null && this.B.Base != null) return true;
+					if (this.C != null && this.C.Base != null) return true;
+					return false;
+				}
+			}
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public void Add(Line A, Line B, Line C, double Root, double Size) {
+				if (this.A != null) this.A.AddLast(new RSLineItem(A, Root, Size));
+				if (this.B != null) this.B.AddBase(new RSLineItem(B, Root, Size));
+				if (this.C != null) this.C.AddLast(new RSLineItem(C, Root, Size));
+			}
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public RSABCItem AddLastTo(List List, double ROOT, out double Root, out double Size) {
+				var Last = List.Last as RSABCItem;
+				var LastRoot = Last.Root;
+				var LastSize = Last.Size;
+				var PrevSize = LastSize * ROOT;
+				LastSize -= PrevSize;
+				LastRoot += PrevSize;
+				Last.Size = PrevSize;
+				var Stab = new RSABCItem(LastRoot, LastSize, this.A != null, this.B != null, this.C != null);
+				List.AddLast(Stab);
+				Root = LastRoot;
+				Size = LastSize;
+				return Stab;
+			}
+		}
+		#endregion
+		#region #class# Item 
+		public class Item {
+			#region #field# Prev 
+			/// <summary>Предыдущий элмент в списке)</summary>
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+			#endregion
+			public Item Prev;
+			#endregion
+			#region #field# Next 
+			/// <summary>Следующий элмент в списке)</summary>
+			#region #invisible# 
+#if TRACE
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+			#endregion
+			public Item Next;
+			#endregion
+		}
+		#endregion
+		#region #class# List 
+		public class List {
 			#region #field# Base 
 			/// <summary>Начинающий элмент в списке)</summary>
 			#region #invisible# 
@@ -3850,153 +3886,206 @@ namespace Wholemy {
 			#endregion
 			public int Count;
 			#endregion
-			#region #class# Item 
-			public class Item {
-				public double Root;
-				public double Size;
-				#region #invisible# 
+			#region #field# Cache 
+			#region #invisible# 
 #if TRACE
-				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.RootHidden)]
+			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
-				#endregion
-				public T Value;
-				#region #field# Prev 
-				/// <summary>Предыдущий элмент в списке)</summary>
-				#region #invisible# 
-#if TRACE
-				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-				#endregion
-				public Item Prev;
-				#endregion
-				#region #field# Next 
-				/// <summary>Следующий элмент в списке)</summary>
-				#region #invisible# 
-#if TRACE
-				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-				#endregion
-				public Item Next;
-				#endregion
-				#region #field# List 
-				/// <summary>Связанный список)</summary>
-				#region #invisible# 
-#if TRACE
-				[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-				#endregion
-				public List<T> List;
-				#endregion
-				#region #method# AddPrev(Value, Root, Size) 
-				#region #through# 
-#if TRACE
-				[System.Diagnostics.DebuggerStepThrough]
-#endif
-				#endregion
-				public Item AddPrev(T Value, double Root = double.NaN, double Size = double.NaN) {
-					var List = this.List;
-					var Prev = this.Prev;
-					var Next = this.Next = new Item() { Value = Value, Root = Root, Size = Size, List = List, Prev = Prev, Next = this };
-					if (Prev != null) { Prev.Next = Next; } else { List.Base = Next; }
-					List.Count++;
-					return Next;
-				}
-				#endregion
-				#region #method# AddNext(Value, Root, Size) 
-				#region #through# 
-#if TRACE
-				[System.Diagnostics.DebuggerStepThrough]
-#endif
-				#endregion
-				public Item AddNext(T Value, double Root = double.NaN, double Size = double.NaN) {
-					var List = this.List;
-					var Next = this.Next;
-					var Prev = this.Prev = new Item() { Value = Value, Root = Root, Size = Size, List = List, Prev = this, Next = Next };
-					if (Next != null) { Next.Prev = Prev; } else { List.Last = Prev; }
-					List.Count++;
-					return Prev;
-				}
-				#endregion
-				#region #method# ToString 
-				public override string ToString() {
-					var T = System.Globalization.CultureInfo.InvariantCulture;
-					var S = "Item<" + typeof(T).Name + ">";
-					var Root = this.Root;
-					var Size = this.Size;
-					var Value = this.Value;
-					if (!double.IsNaN(Root)) S += " Root = " + Root.ToString(T);
-					if (!double.IsNaN(Size)) S += " Size = " + Size.ToString(T);
-					if (!double.IsNaN(Root) && !double.IsNaN(Size)) S += " Bound = " + (Root + Size).ToString(T);
-					if (Value != null) S += " [" + Value.ToString() + "]";
-					return S;
-				}
-				#endregion
-				#region #property# Bound 
-				public double Bound {
-					#region #through# 
-#if TRACE
-					[System.Diagnostics.DebuggerStepThrough]
-#endif
-					#endregion
-					get { return this.Root + this.Size; }
-				}
-				#endregion
-			}
 			#endregion
-			#region #method# AddBase(Value, Root, Size) 
+			private Item[] Cache;
+			#endregion
+			#region #method# AddBase(Item) 
 			#region #through# 
 #if TRACE
 			[System.Diagnostics.DebuggerStepThrough]
 #endif
 			#endregion
-			public Item AddBase(T Value, double Root = double.NaN, double Size = double.NaN) {
-				var Base = this.Base;
-				var Item = new Item() { Value = Value, Root = Root, Size = Size, List = this, Next = Base };
-				if (Base == null) { this.Last = Item; } else { Base.Prev = Item; }
-				this.Base = Item; this.Count++;
-				return Item;
-			}
-			#endregion
-			#region #method# AddLast(Value, Root, Size) 
-			#region #through# 
-#if TRACE
-			[System.Diagnostics.DebuggerStepThrough]
-#endif
-			#endregion
-			public Item AddLast(T Value, double Root = double.NaN, double Size = double.NaN) {
-				var Last = this.Last;
-				var Item = new Item() { Value = Value, Root = Root, Size = Size, List = this, Prev = Last };
-				if (Last == null) { this.Base = Item; } else { Last.Next = Item; }
-				this.Last = Item; this.Count++;
-				return Item;
-			}
-			#endregion
-			#region #method# AddLast(List, Root, Size) 
-			public void AddLast(List<T> List, double Root = double.NaN, double Size = double.NaN) {
+			public Item AddBase(Item Item) {
 				#region #debug# 
 #if DEBUG
-				if (!double.IsNaN(Root) || !double.IsNaN(Size)) throw new System.NotImplementedException();
+				if (Item == null) throw new System.ArgumentNullException();
+				if (Item.Prev != null || Item.Next != null) throw new System.ArgumentException();
+#endif
+				#endregion
+				var Base = this.Base;
+				Item.Next = Base;
+				if (Base == null) { this.Last = Item; } else { Base.Prev = Item; }
+				this.Base = Item;
+				this.Count++;
+				this.Cache = null;
+				return Item;
+			}
+			#endregion
+			#region #method# AddLast(Item) 
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public Item AddLast(Item Item) {
+				#region #debug# 
+#if DEBUG
+				if (Item == null) throw new System.ArgumentNullException();
+				if (Item.Prev != null || Item.Next != null) throw new System.ArgumentException();
+#endif
+				#endregion
+				var Last = this.Last;
+				Item.Prev = Last;
+				if (Last == null) { this.Base = Item; } else { Last.Next = Item; }
+				this.Last = Item;
+				this.Count++;
+				this.Cache = null;
+				return Item;
+			}
+			#endregion
+			#region #method# AddPrev(Next, Item) 
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public Item AddPrev(Item Next, Item Item) {
+				#region #debug# 
+#if DEBUG
+				if (Next == null) throw new System.ArgumentNullException();
+				if (Item == null) throw new System.ArgumentNullException();
+				if (Item.Prev != null || Item.Next != null) throw new System.ArgumentException();
+#endif
+				#endregion
+				var Prev = Next.Prev;
+				Next.Prev = Item;
+				Item.Next = Next;
+				Item.Prev = Prev;
+				if (Prev != null) { Prev.Next = Item; } else { this.Base = Item; }
+				this.Count++;
+				this.Cache = null;
+				return Item;
+			}
+			#endregion
+			#region #method# AddNext(Prev, Item) 
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public Item AddNext(Item Prev, Item Item) {
+				#region #debug# 
+#if DEBUG
+				if (Prev == null) throw new System.ArgumentNullException();
+				if (Item == null) throw new System.ArgumentNullException();
+				if (Item.Prev != null || Item.Next != null) throw new System.ArgumentException();
+#endif
+				#endregion
+				var Next = Prev.Next;
+				Prev.Next = Item;
+				Item.Prev = Prev;
+				Item.Next = Next;
+				if (Next != null) { Next.Prev = Item; } else { this.Last = Item; }
+				this.Count++;
+				this.Cache = null;
+				return Item;
+			}
+			#endregion
+			#region #method# AddLast(List) 
+			public void AddLast(List List) {
+				#region #debug# 
+#if DEBUG
+				if (List == null) throw new System.ArgumentNullException();
+				if (List.Base == null || List.Last == null || List.Count == 0) return;
 #endif
 				#endregion
 				if (List != null && List.Base != null) {
 					var Last = this.Last;
+					this.Last = List.Last;
 					if (Last == null) {
 						this.Base = List.Base;
-						this.Last = List.Last;
 						this.Count = List.Count;
 					} else {
-						this.Last = List.Last;
-						Last.Next = List.Base;
-						List.Base.Prev = Last;
+						(Last.Next = List.Base).Prev = Last;
 						this.Count += List.Count;
 					}
 					List.Base = null;
 					List.Last = null;
 					List.Count = 0;
-					for (var Item = List.Base; Item != null; Item = Item.Next) {
-						Item.List = this;
-					}
+					List.Cache = null;
+					this.Cache = null;
 				}
+			}
+			#endregion
+			#region #method# AddBase(List) 
+			public void AddBase(List List) {
+				#region #debug# 
+#if DEBUG
+				if (List == null) throw new System.ArgumentNullException();
+				if (List.Base == null || List.Last == null || List.Count == 0) throw new System.ArgumentException();
+#endif
+				#endregion
+				if (List != null && List.Base != null) {
+					var Base = this.Base;
+					this.Base = List.Base;
+					if (Base == null) {
+						this.Last = List.Last;
+						this.Count = List.Count;
+					} else {
+						(Base.Prev = List.Base).Next = Base;
+						this.Count += List.Count;
+					}
+					List.Base = null;
+					List.Last = null;
+					List.Count = 0;
+					List.Cache = null;
+					this.Cache = null;
+				}
+			}
+			#endregion
+			#region #method# AddPrev(Next, List) 
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public void AddPrev(Item Next, List List) {
+				#region #debug# 
+#if DEBUG
+				if (Next == null) throw new System.ArgumentNullException();
+				if (List == null) throw new System.ArgumentNullException();
+				if (List.Base == null || List.Last == null || List.Count == 0) throw new System.ArgumentException();
+#endif
+				#endregion
+				var Prev = Next.Prev;
+				Next.Prev = List.Last;
+				List.Last.Next = Next;
+				List.Base.Prev = Prev;
+				if (Prev != null) { Prev.Next = List.Base; } else { this.Base = List.Last; }
+				this.Count += List.Count;
+				this.Cache = null;
+				List.Count = 0;
+				List.Cache = null;
+			}
+			#endregion
+			#region #method# AddNext(Prev, List) 
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public void AddNext(Item Prev, List List) {
+				#region #debug# 
+#if DEBUG
+				if (Prev == null) throw new System.ArgumentNullException();
+				if (List == null) throw new System.ArgumentNullException();
+				if (List.Base == null || List.Last == null || List.Count == 0) throw new System.ArgumentException();
+#endif
+				#endregion
+				var Next = Prev.Next;
+				Prev.Next = List.Base;
+				List.Base.Prev = Prev;
+				List.Last.Next = Next;
+				if (Next != null) { Next.Prev = List.Last; } else { this.Last = List.Base; }
+				this.Count += List.Count;
+				this.Cache = null;
+				List.Count = 0;
+				List.Cache = null;
 			}
 			#endregion
 			#region #property# Items 
@@ -4012,13 +4101,17 @@ namespace Wholemy {
 #endif
 				#endregion
 				get {
-					var C = this.Count;
-					var A = new Item[C];
-					var I = 0;
-					var Item = Base;
-					while (Item != null) {
-						A[I++] = Item;
-						Item = Item.Next;
+					var A = this.Cache;
+					if (A == null) {
+						var C = this.Count;
+						A = new Item[C];
+						var I = 0;
+						var Item = Base;
+						while (Item != null) {
+							A[I++] = Item;
+							Item = Item.Next;
+						}
+						this.Cache = A;
 					}
 					return A;
 				}
@@ -4032,14 +4125,7 @@ namespace Wholemy {
 			#endregion
 			public override string ToString() {
 				var T = System.Globalization.CultureInfo.InvariantCulture;
-				var S = "List<" + typeof(T).Name + "> Count = " + this.Count.ToString(T);
-				var Base = this.Base;
-				if (Base != null) {
-					S += " Base = [" + Base.ToString() + "]";
-					var Last = this.Last;
-					if (Last != null) S += " Last = [" + Last.ToString() + "]";
-				}
-				return S;
+				return "Count = " + this.Count.ToString(T);
 			}
 			#endregion
 		}

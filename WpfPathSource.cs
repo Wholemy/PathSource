@@ -1,9 +1,31 @@
-using Microsoft.VisualBasic;
-using System.Windows.Controls;
-using static Wholemy.Pomax;
-
 namespace Wholemy {
 	public class PathSource {
+		#region #method# IntersectLines(ax0, ay0, ax1, ay1, bx0, by0, bx1, by1, x, y) 
+		public static bool IntersectLines(double ax0, double ay0, double ax1, double ay1, double bx0, double by0, double bx1, double by1, ref double x, ref double y) {
+			var a = (bx1 - bx0) * (ay0 - by0) - (by1 - by0) * (ax0 - bx0);
+			var b = (ax1 - ax0) * (ay0 - by0) - (ay1 - ay0) * (ax0 - bx0);
+			var c = (by1 - by0) * (ax1 - ax0) - (bx1 - bx0) * (ay1 - ay0);
+
+			if (c != 0.0) {
+				var ua = a / c;
+				var ub = b / c;
+				if (0.0 <= ua && ua <= 1.0 && 0.0 <= ub && ub <= 1.0) {
+					x = ax0 + ua * (ax1 - ax0);
+					y = ay0 + ua * (ay1 - ay0);
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+				if (a == 0 || b == 0) {
+					//result = new Intersection("Coincident");
+				} else {
+					//result = new Intersection("Parallel");
+				}
+			}
+		}
+		#endregion
 		#region #method# Rotate1(CX, CY, BX, BY, AR) 
 		/// <summary>Поворачивает координаты #double# вокруг центра по корню четверти круга
 		/// где 90 градусов равно значению 0.25, а 360 градусов равно значению 1)</summary>
@@ -381,14 +403,12 @@ namespace Wholemy {
 		}
 		#endregion
 		public static readonly double Arc14 = 4.0 / 3.0 * System.Math.Tan(System.Math.PI / 8);
-		private System.Windows.Media.Geometry HoldPath;
-		private System.Windows.Media.GeometryCombineMode HoldMode;
 		private System.Windows.Media.Geometry LastPath;
 		private System.Windows.Media.GeometryCombineMode LastMode;
 		public System.Windows.Media.Geometry Geometry {
 			get {
 				var G = this.LastPath;
-				if (G == null && FigureSize != 0) { this.LastPath = G = FiguresToGeometry(); }
+				if (G == null && Figures != null) { this.LastPath = G = FiguresToGeometry(); }
 				return G;
 			}
 		}
@@ -428,24 +448,8 @@ namespace Wholemy {
 		}
 		#endregion
 		private Change Mod;
-		#region #invisible# 
-#if TRACE
-		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-		#endregion
-		public int FigureSize;
-		#region #invisible# 
-#if TRACE
-		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-		#endregion
-		public Figure FigureBase;
-		#region #invisible# 
-#if TRACE
-		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-		#endregion
-		public Figure FigureLast;
+		private List Figures;
+		private FigureProcessing ProcessingFigure;
 		/// <summary>Толщина линий)</summary>
 		public double Thickness;
 		public bool IsBoned;
@@ -455,50 +459,51 @@ namespace Wholemy {
 		public const double QualityBut = 0.05;
 		public const double QualityMin = 0.005;
 		#region #property# Figures 
-		private Figure[] Figures {
-			#region #through# 
-#if TRACE
-			[System.Diagnostics.DebuggerStepThrough]
-#endif
-			#endregion
-			get {
-				var Count = this.FigureSize;
-				var Array = new Figure[Count--];
-				var Cache = this.FigureLast;
-				while (Count >= 0) {
-					Array[Count--] = Cache;
-					Cache = Cache.Prev;
-				}
-				return Array;
-			}
-		}
+		//		private Figure[] Figures {
+		//			#region #through# 
+		//#if TRACE
+		//			[System.Diagnostics.DebuggerStepThrough]
+		//#endif
+		//			#endregion
+		//			get {
+		//				var Count = this.FigureSize;
+		//				var Array = new Figure[Count--];
+		//				var Cache = this.FigureLast;
+		//				while (Count >= 0) {
+		//					Array[Count--] = Cache;
+		//					Cache = Cache.Prev;
+		//				}
+		//				return Array;
+		//			}
+		//		}
 		#endregion
 		#region #method# FiguresToGeometry 
 		private System.Windows.Media.Geometry FiguresToGeometry() {
-			if (FigureSize == 0) return null;
+			if (Figures == null) return null;
 			var Stream = new System.Windows.Media.StreamGeometry();
 			Stream.FillRule = IsUnited ? System.Windows.Media.FillRule.Nonzero : System.Windows.Media.FillRule.EvenOdd;
 			var Context = Stream.Open();
-			var Figure = FigureBase;
+			var Figure = Figures.Base as Figure;
 			while (Figure != null) {
-				if (Figure.CurveCount > 0) {
-					var Cache = Figure.CurveBase;
+				var Curves = Figure.Curves;
+				if (Curves != null && Curves.Count > 0) {
+					var Cache = Curves.Base as Curve;
 					var Value = Cache.Line;
 					Context.BeginFigure(new System.Windows.Point(Value.MX, Value.MY), Figure.IsFilled, Figure.IsClozed);
 					Value.To(Context);
 					var PreX = Value.EX;
 					var PreY = Value.EY;
-					Cache = Cache.Next;
+					Cache = Cache.Next as Curve;
 					while (Cache != null) {
 						Value = Cache.Line;
 						Value.If(Context, PreX, PreY);
 						Value.To(Context);
 						PreX = Value.EX;
 						PreY = Value.EY;
-						Cache = Cache.Next;
+						Cache = Cache.Next as Curve;
 					}
 				}
-				Figure = Figure.Next;
+				Figure = Figure.Next as Figure;
 			}
 			Context.Close();
 			return Stream;
@@ -516,7 +521,7 @@ namespace Wholemy {
 			if (Path == null) Path = Geometry.GetFlattenedPathGeometry();
 			var Figures = Path.Figures;
 			foreach (var Figure in Figures) {
-				var F = new Figure(this);
+				var F = new Figure(this.IsFilled, this.IsClozed);
 				F.IsClozed = Figure.IsClosed;
 				F.IsFilled = Figure.IsFilled;
 				var P0 = Figure.StartPoint;
@@ -579,18 +584,53 @@ namespace Wholemy {
 			}
 		}
 		#endregion
-		#region #method# Begin[Part = P][Hollow = H|Filled = F][Closed = z] 
-		public void Begin() { new Figure(this); }
-		public void BeginHz() { this.IsFilled = false; this.IsClozed = true; new Figure(this); }
-		public void BeginH() { this.IsFilled = false; this.IsClozed = false; new Figure(this); }
-		public void BeginFz() { this.IsFilled = true; this.IsClozed = true; new Figure(this); }
-		public void BeginF() { this.IsFilled = true; this.IsClozed = false; new Figure(this); }
+		#region #method# Begin[Hollow = H|Filled = F][Closed = z] 
+		public void Begin() {
+			End();
+			this.ProcessingFigure = new FigureProcessing(this.IsFilled,this.IsClozed);
+		}
+		public void BeginHz() {
+			End();
+			this.ProcessingFigure = new FigureProcessing(false, true);
+		}
+		public void BeginH() {
+			End();
+			this.ProcessingFigure = new FigureProcessing(false, false);
+		}
+		public void BeginFz() {
+			End();
+			this.ProcessingFigure = new FigureProcessing(true, true);
+		}
+		public void BeginF() {
+			End();
+			this.ProcessingFigure = new FigureProcessing(true, false);
+		}
+		#endregion
+		#region #method# End 
+		public void End() {
+			var Figure = this.ProcessingFigure;
+			if (Figure != null) {
+				Figure.End();
+				var Curves = Figure.Curves;
+				if (Curves != null && Curves.Count > 0) {
+					var Figures = this.Figures;
+					if (Figures == null) { this.Figures = Figures = new List(); }
+					Figures.AddLast(Figure);
+				}
+				this.ProcessingFigure = null;
+				this.LastPath = null;
+			}
+		}
 		#endregion
 		#region #method# AddCurve(Line) 
 		public Curve AddCurve(Line Line) {
-			var Fig = this.FigureLast ?? new Figure(this);
-			Line.Change(this.Mod, this.Inverted);
-			return new Curve(this, Fig, Line);
+			var Figure = DemandFigure();
+			var Inverted = this.Inverted;
+			var LineItem = new Curve(Line.Change(this.Mod, Inverted));
+			var Curves = Figure.ProcessingCurves;
+			if (Curves == null) Curves = Figure.ProcessingCurves = new List();
+			if (Inverted) { Curves.AddBase(LineItem); } else { Curves.AddLast(LineItem); }
+			return LineItem;
 		}
 		#endregion
 		#region #method# AddCurve(MX, MY, EX, EY) 
@@ -598,23 +638,16 @@ namespace Wholemy {
 			return AddCurve(new Line(MX, MY, EX, EY));
 		}
 		#endregion
-		#region #method# AddCurve(Val) 
-		public Curve AddCurve(Quadratic Val) {
-			var Fig = this.FigureLast ?? new Figure(this);
-			Val.Change(this.Mod, this.Inverted);
-			return new Curve(this, Fig, Val);
-		}
-		#endregion
 		#region #method# AddCurve(MX, MY, QX, QY, EX, EY) 
 		public Curve AddCurve(double MX, double MY, double QX, double QY, double EX, double EY) {
 			return AddCurve(new Quadratic(MX, MY, QX, QY, EX, EY));
 		}
 		#endregion
-		#region #method# AddCurve(Val) 
-		public Curve AddCurve(Cubic Val) {
-			var Fig = this.FigureLast ?? new Figure(this);
-			Val.Change(this.Mod, this.Inverted);
-			return new Curve(this, Fig, Val);
+		#region #method# DemandFigure 
+		public FigureProcessing DemandFigure() {
+			var Figure = this.ProcessingFigure;
+			if (Figure == null) throw new System.InvalidOperationException();
+			return Figure;
 		}
 		#endregion
 		#region #method# AddCurve(MX, MY, cmX, cmY, ceX, ceY, EX, EY) 
@@ -622,39 +655,29 @@ namespace Wholemy {
 			return AddCurve(new Cubic(MX, MY, cmX, cmY, ceX, ceY, EX, EY));
 		}
 		#endregion
-		#region #method# AddBone(Val) 
-		public Bone AddBone(Line Val) {
-			var Fig = this.FigureLast ?? new Figure(this);
-			if (this.Inverted) Val.Invert();
-			return new Bone(this, Fig, Val);
+		#region #method# AddBone(Line) 
+		public Curve AddBone(Line Line) {
+			var Figure = DemandFigure();
+			var Inverted = this.Inverted;
+			var LineItem = new Curve(Line.Change(this.Mod, Inverted));
+			var Curves = Figure.ProcessingBones;
+			if (Curves == null) Curves = Figure.ProcessingBones = new List();
+			if (Inverted) { Curves.AddBase(LineItem); } else { Curves.AddLast(LineItem); }
+			return LineItem;
 		}
 		#endregion
 		#region #method# AddBone(MX, MY, EX, EY) 
-		public Bone AddBone(double MX, double MY, double EX, double EY) {
+		public Curve AddBone(double MX, double MY, double EX, double EY) {
 			return AddBone(new Line(MX, MY, EX, EY));
 		}
 		#endregion
-		#region #method# AddBone(Val) 
-		public Bone AddBone(Quadratic Val) {
-			var Fig = this.FigureLast ?? new Figure(this);
-			if (this.Inverted) Val.Invert();
-			return new Bone(this, Fig, Val);
-		}
-		#endregion
 		#region #method# AddBone(MX, MY, QX, QY, EX, EY) 
-		public Bone AddBone(double MX, double MY, double QX, double QY, double EX, double EY) {
+		public Curve AddBone(double MX, double MY, double QX, double QY, double EX, double EY) {
 			return AddBone(new Quadratic(MX, MY, QX, QY, EX, EY));
 		}
 		#endregion
-		#region #method# AddBone(Val) 
-		public Bone AddBone(Cubic Val) {
-			var Fig = this.FigureLast ?? new Figure(this);
-			if (this.Inverted) Val.Invert();
-			return new Bone(this, Fig, Val);
-		}
-		#endregion
 		#region #method# AddBone(MX, MY, cmX, cmY, ceX, ceY, EX, EY) 
-		public Bone AddBone(double MX, double MY, double cmX, double cmY, double ceX, double ceY, double EX, double EY) {
+		public Curve AddBone(double MX, double MY, double cmX, double cmY, double ceX, double ceY, double EX, double EY) {
 			return AddBone(new Cubic(MX, MY, cmX, cmY, ceX, ceY, EX, EY));
 		}
 		#endregion
@@ -962,222 +985,73 @@ namespace Wholemy {
 		}
 		#endregion
 		#region #class# Figure 
-		public class Figure {
+		public class Figure : Item {
 			public bool IsFilled;
 			public bool IsClozed;
-			public PathSource Owner;
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public Figure Prev;
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public Figure Next;
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public int CurveCount;
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public Curve CurveBase;
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public Curve CurveLast;
-			#region #property# Curves 
-			public Line[] Curves {
-				#region #through# 
-#if TRACE
-				[System.Diagnostics.DebuggerStepThrough]
-#endif
-				#endregion
-				get {
-					var Count = this.CurveCount;
-					var Array = new Line[Count--];
-					var Item = this.CurveLast;
-					while (Count >= 0) {
-						Array[Count--] = Item.Line;
-						Item = Item.Prev;
-					}
-					return Array;
-				}
-			}
-			#endregion
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public int BoneCount;
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public Bone BoneBase;
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public Bone BoneLast;
-			#region #property# Bones 
-			public Line[] Bones {
-				#region #through# 
-#if TRACE
-				[System.Diagnostics.DebuggerStepThrough]
-#endif
-				#endregion
-				get {
-					var Count = this.BoneCount;
-					var Array = new Line[Count--];
-					var Bone = this.BoneLast;
-					while (Count >= 0) {
-						Array[Count--] = Bone.Value;
-						Bone = Bone.Prev;
-					}
-					return Array;
-				}
-			}
-			#endregion
-			#region #new# (Owner) 
-			public Figure(PathSource Owner) {
-				this.IsFilled = Owner.IsFilled;
-				this.IsClozed = Owner.IsClozed;
-				this.Owner = Owner;
-				if (Owner.FigureSize == 0) {
-					Owner.FigureSize = 1;
-					Owner.FigureBase = this;
-					Owner.FigureLast = this;
-				} else {
-					(this.Prev = Owner.FigureLast).Next = this;
-					Owner.FigureLast = this;
-					Owner.FigureSize++;
-				}
+			public List Curves;
+			public List Bones;
+			#region #new# (IsFilled, IsClozed) 
+			public Figure(bool IsFilled, bool IsClozed) {
+				this.IsFilled = IsFilled;
+				this.IsClozed = IsClozed;
 			}
 			#endregion
 			#region #method# ToString 
 			public override string ToString() {
 				var I = System.Globalization.CultureInfo.InvariantCulture;
-				var S = "";
-				if (CurveCount > 0) {
-					var Cache = CurveBase;
-					S = "M" + Cache.Line.MX.ToString(I) + "," + Cache.Line.MY.ToString(I);
-					while (Cache != null) {
-						S += Cache.Line.ToPathString();
-						Cache = Cache.Next;
-					}
-				}
-				if (IsClozed) S += "z";
+				var S = "Figure";
+				var Curves = this.Curves;
+				if (Curves != null) { S += " Curves = " + Curves.Count.ToString(I); }
+				var Bones = this.Bones;
+				if (Bones != null) { S += " Bones = " + Bones.Count.ToString(I); }
+				if (IsFilled) S += " IsFilled";
+				if (IsClozed) S += " IsClozed";
 				return S;
 			}
 			#endregion
 		}
 		#endregion
-		#region #class# Bone 
-		public class Bone {
-			public Figure Figure;
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public Bone Prev;
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public Bone Next;
-			public Line Value;
-			#region #new# (Figure, Value) 
-			public Bone(PathSource Source, Figure Figure, Line Value) {
-				this.Figure = Figure;
-				this.Value = Value;
-				if (Figure.BoneCount == 0) {
-					Figure.BoneCount = 1;
-					Figure.BoneBase = this;
-					Figure.BoneLast = this;
-				} else {
-					if (Source.Inverted) {
-						(this.Next = Figure.BoneBase).Prev = this;
-						Figure.BoneBase = this;
-					} else {
-						(this.Prev = Figure.BoneLast).Next = this;
-						Figure.BoneLast = this;
-					}
-					Figure.BoneCount++;
-				}
+		#region #class# FigureProcessing 
+		public class FigureProcessing : Figure {
+			public List ProcessingCurves;
+			public List ProcessingBones;
+			#region #new# (IsFilled, IsClozed) 
+			public FigureProcessing(bool IsFilled, bool IsClozed):base(IsFilled, IsClozed) {
 			}
 			#endregion
 			#region #method# ToString 
-			#region #through# 
-#if TRACE
-			[System.Diagnostics.DebuggerStepThrough]
-#endif
-			#endregion
 			public override string ToString() {
-				return Value.ToString();
+				var I = System.Globalization.CultureInfo.InvariantCulture;
+				var S = base.ToString();
+				var ProcessingCurves = this.ProcessingCurves;
+				if (ProcessingCurves != null) { S += " ProcessingCurves = " + ProcessingCurves.Count.ToString(I); }
+				var ProcessingBones = this.ProcessingBones;
+				if (ProcessingBones != null) { S += " ProcessingBones = " + ProcessingBones.Count.ToString(I); }
+				return S;
 			}
 			#endregion
-		}
-		#endregion
-		#region #class# Curve 
-		public class Curve {
-			public Figure Figure;
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public Curve Prev;
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public Curve Next;
-			public Line Line;
-			#region #new# (Figure, Value) 
-			public Curve(PathSource Source, Figure Figure, Line Line) {
-				this.Figure = Figure;
-				this.Line = Line;
-				if (Figure.CurveCount == 0) {
-					Figure.CurveCount = 1;
-					Figure.CurveBase = this;
-					Figure.CurveLast = this;
-				} else {
-					if (Source.Inverted) {
-						(this.Next = Figure.CurveBase).Prev = this;
-						Figure.CurveBase = this;
+			#region #method# End 
+			public void End() {
+				var Bones = this.Bones;
+				var ProcessingBones = this.ProcessingBones;
+				if (ProcessingBones != null && ProcessingBones.Count > 0) {
+					if (Bones != null) {
+						Bones.AddLast(ProcessingBones);
 					} else {
-						(this.Prev = Figure.CurveLast).Next = this;
-						Figure.CurveLast = this;
+						this.Bones = ProcessingBones;
 					}
-					Figure.CurveCount++;
+					this.ProcessingBones = null;
 				}
-			}
-			#endregion
-			#region #method# ToString 
-			#region #through# 
-#if TRACE
-			[System.Diagnostics.DebuggerStepThrough]
-#endif
-			#endregion
-			public override string ToString() {
-				return Line.ToString();
+				var Curves = this.Curves;
+				var ProcessingCurves = this.ProcessingCurves;
+				if (ProcessingCurves != null && ProcessingCurves.Count > 0) {
+					if (Curves != null) {
+						Curves.AddLast(ProcessingCurves);
+					} else {
+						this.Curves = ProcessingCurves;
+					}
+					this.ProcessingCurves = null;
+				}
 			}
 			#endregion
 		}
@@ -1206,19 +1080,17 @@ namespace Wholemy {
 				this.MY = V;
 			}
 			#endregion
-			#region #method# Change(Mod, Invert) 
-			public virtual void Change(Change Mod, bool Invert = false) {
+			#region #method# Change(Mod, Inverted) 
+			public virtual Line Change(Change Mod, bool Inverted) {
 				var MX = this.MX; var MY = this.MY; var EX = this.EX; var EY = this.EY;
 				while (Mod != null) {
 					Mod.Modify(ref MX, ref MY, (Mod.Mods & Mods.MX) != 0, (Mod.Mods & Mods.MY) != 0);
 					Mod.Modify(ref EX, ref EY, (Mod.Mods & Mods.EX) != 0, (Mod.Mods & Mods.EY) != 0);
 					Mod = Mod.Next;
 				}
-				if (Invert) {
-					this.MX = EX; this.MY = EY; this.EX = MX; this.EY = MY;
-				} else {
-					this.MX = MX; this.MY = MY; this.EX = EX; this.EY = EY;
-				}
+				if (Inverted)
+					return new Line(EX, EY, MX, MY);
+				return new Line(MX, MY, EX, EY);
 			}
 			#endregion
 			#region #method# If(Context, X, Y) 
@@ -1407,10 +1279,8 @@ namespace Wholemy {
 				Rotate1(MX, MY, ref bX, ref bY, 0.25);
 				Rotate1(bX, bY, ref baX, ref baY, 0.25);
 				Rotate1(bX, bY, ref cbX, ref cbY, 0.75);
-				Cubic.ArcTo(List, cX, cY, cbX, cbY, bX, bY);
-				Cubic.ArcTo(List, bX, bY, baX, baY, aX, aY);
-				//List.AddLast(new LineItem(new Cubic(cX, cY, cbX, cbY, bX, bY)));
-				//List.AddLast(new LineItem(new Cubic(bX, bY, baX, baY, aX, aY)));
+				List.AddLast(new Curve(new Cubic(cX, cY, cbX, cbY, bX, bY)));
+				List.AddLast(new Curve(new Cubic(bX, bY, baX, baY, aX, aY)));
 				return List;
 			}
 			#endregion
@@ -1442,10 +1312,8 @@ namespace Wholemy {
 				Rotate1(EX, EY, ref bX, ref bY, -0.25);
 				Rotate1(bX, bY, ref abX, ref abY, -0.25);
 				Rotate1(bX, bY, ref bcX, ref bcY, -0.75);
-				Cubic.ArcTo(List, aX, aY, abX, abY, bX, bY);
-				Cubic.ArcTo(List, bX, bY, bcX, bcY, cX, cY);
-				//List.AddLast(new LineItem(new Cubic(aX, aY, abX, abY, bX, bY)));
-				//List.AddLast(new LineItem(new Cubic(bX, bY, bcX, bcY, cX, cY)));
+				List.AddLast(new Curve(new Cubic(aX, aY, abX, abY, bX, bY)));
+				List.AddLast(new Curve(new Cubic(bX, bY, bcX, bcY, cX, cY)));
 				return List;
 			}
 			#endregion
@@ -1505,13 +1373,13 @@ namespace Wholemy {
 						while (I < L) {
 							var r = Roots[I];
 							A.Div((r - R) / (1.0 - R), out var B, out A);
-							List.AddLast(new RSLineItem(B, R, r - R));
+							List.AddLast(new CurveRoot(B, R, r - R));
 							R = r;
 							I++;
 						}
 					}
 				}
-				List.AddLast(new RSLineItem(A, R, 1.0 - R));
+				List.AddLast(new CurveRoot(A, R, 1.0 - R));
 				return List;
 			}
 			#endregion
@@ -1577,13 +1445,14 @@ namespace Wholemy {
 			}
 			#endregion
 			#region #method# TesReturn(Size, PA, PB, Reset) 
-			public virtual bool TesReturn(double Size, ref Line PA, ref Line PB, out bool Reset) {
-				Reset = false;
+			public virtual bool TesReturn(double Size, ref Line PA, ref Line PB, out bool ResetA, out bool ResetB) {
+				ResetA = false;
+				ResetB = false;
 				return true;
 			}
 			#endregion
 			#region #method# ExtReturn(Size, Roots) 
-			public virtual List ExtReturn(double Size, List Roots = null) {
+			public List ExtReturn(double Size, List Roots = null) {
 				List List = new List();
 				var DIV = 0.5;
 				var POS = 0.0;
@@ -1592,27 +1461,28 @@ namespace Wholemy {
 				Line TES = this;
 				var LastRoot = 0.0;
 				var LastSize = 1.0;
-				RSLineItem Item = null;
+				CurveRoot Item = null;
 				if (Roots != null) {
-					Item = Roots.Base as RSLineItem;
+					Item = Roots.Base as CurveRoot;
 					if (Item != null) {
 						TES = RES = Item.Line;
 						LastRoot = Item.Root;
 						LastSize = Item.Size;
-						Item = Item.Next as RSLineItem;
+						Item = Item.Next as CurveRoot;
 					}
 				}
-				RSABCItem Stab = new RSABCItem(LastRoot, LastSize);
+				Stab Stab = new Stab(LastRoot, LastSize);
 				List.AddLast(Stab);
-				var Reset = false;
+				var ResetA = false;
+				var ResetB = false;
 				Line NOW;
 				Line RAM;
 				Line PreA = null;
 				Line PreB = null;
 				RTES:
-				if (TES.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
-					if (Reset && Stab.IsUsed) {
-						Stab = Stab.AddLastTo(List, ROOT, out LastRoot, out LastSize);
+				if (TES.TesReturn(Size, ref PreA, ref PreB, out ResetA, out ResetB)) {
+					if ((ResetA || ResetB) && Stab.IsUsed) {
+						Stab = Stab.AddLastTo(List, ResetA, ResetB, ROOT, out LastRoot, out LastSize);
 						ROOT = 0.0;
 					}
 					Stab.Add(PreA, PreB, TES, LastRoot + (ROOT * LastSize), LastSize - (ROOT * LastSize));
@@ -1620,18 +1490,18 @@ namespace Wholemy {
 				} else {
 					NEXT:
 					TES.Div(DIV, out NOW, out RAM);
-					if (NOW.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
+					if (NOW.TesReturn(Size, ref PreA, ref PreB, out ResetA, out ResetB)) {
 						var PDIV = ((1.0 - POS) * DIV);
 						var RPDIV = ((1.0 - ROOT) * PDIV);
-						if (Reset && Stab.IsUsed) {
-							Stab = Stab.AddLastTo(List, ROOT, out LastRoot, out LastSize);
+						if ((ResetA || ResetB) && Stab.IsUsed) {
+							Stab = Stab.AddLastTo(List, ResetA, ResetB, ROOT, out LastRoot, out LastSize);
 							ROOT = 0.0;
 						}
 						Stab.Add(PreA, PreB, NOW, LastRoot + (ROOT * LastSize), RPDIV * LastSize);
 						POS += PDIV;
 						ROOT += RPDIV;
 						DIV = 0.5;
-						if (Reset) {
+						if ((ResetA || ResetB)) {
 							RES.Div(POS, out var CUT, out RES);
 							TES = RES;
 							POS = 0.0;
@@ -1643,11 +1513,11 @@ namespace Wholemy {
 					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
 				}
 				if (Item != null) {
-					List.AddLast(Stab = new RSABCItem(Item.Root, Item.Size));
+					List.AddLast(Stab = new Stab(Item.Root, Item.Size));
 					ROOT = 0.0;
 					POS = 0.0;
 					TES = RES = Item.Line;
-					Item = Item.Next as RSLineItem;
+					Item = Item.Next as CurveRoot;
 					goto RTES;
 				}
 				return List;
@@ -1690,51 +1560,6 @@ namespace Wholemy {
 				V = this.ceY;
 				this.ceY = this.cmY;
 				this.cmY = V;
-			}
-			#endregion
-
-			#region #static# #method# ArcTo(List, MX, MY, AX, AY, EX, EY) 
-			public static void ArcTo(List List, double MX, double MY, double AX, double AY, double EX, double EY) {
-				var x00 = MX;
-				var y00 = MY;
-				var x11 = AX;
-				var y11 = AY;
-				var x22 = AX;
-				var y22 = AY;
-				var x33 = EX;
-				var y33 = EY;
-				SetMulLen(MX, MY, ref x11, ref y11, Arc14);
-				SetMulLen(EX, EY, ref x22, ref y22, Arc14);
-				var x01 = (x11 - x00) / 2 + x00;
-				var y01 = (y11 - y00) / 2 + y00;
-				var x12 = (x22 - x11) / 2 + x11;
-				var y12 = (y22 - y11) / 2 + y11;
-				var x23 = (x33 - x22) / 2 + x22;
-				var y23 = (y33 - y22) / 2 + y22;
-				var x02 = (x12 - x01) / 2 + x01;
-				var y02 = (y12 - y01) / 2 + y01;
-				var x13 = (x23 - x12) / 2 + x12;
-				var y13 = (y23 - y12) / 2 + y12;
-				var x03 = (x13 - x02) / 2 + x02;
-				var y03 = (y13 - y02) / 2 + y02;
-				var al0 = Sqrt(x23 - x33, y23 - y33);
-				var bl0 = Sqrt(x01 - x00, y01 - y00);
-				var al1 = Sqrt(x03 - x13, y03 - y13);
-				var bl1 = Sqrt(x02 - x03, y02 - y03);
-				var al2 = al1 + (al0 - al1) / 2;
-				var bl2 = bl1 + (bl0 - bl1) / 2;
-				var x23u = x33 + (x23 - x33) / al0 * al2;
-				var y23u = y33 + (y23 - y33) / al0 * al2;
-				var x01u = x00 + (x01 - x00) / bl0 * bl2;
-				var y01u = y00 + (y01 - y00) / bl0 * bl2;
-				var x13u = x03 + (x13 - x03) / al1 * al2;
-				var y13u = y03 + (y13 - y03) / al1 * al2;
-				var x02u = x03 + (x02 - x03) / bl1 * bl2;
-				var y02u = y03 + (y02 - y03) / bl1 * bl2;
-				List.AddLast(new LineItem(new Cubic(x00, y00, x01u, y01u, x02u, y02u, x03, y03)));
-				List.AddLast(new LineItem(new Cubic(x03, y03, x13u, y13u, x23u, y23u, x33, y33)));
-				//List.AddLast(new LineItem(new Cubic(x00, y00, x01, y01, x02, y02, x03, y03)));
-				//List.AddLast(new LineItem(new Cubic(x03, y03, x13, y13, x23, y23, x33, y33)));
 			}
 			#endregion
 
@@ -1965,8 +1790,8 @@ namespace Wholemy {
 				return R;
 			}
 			#endregion
-			#region #method# Change(Mod, Invert) 
-			public override void Change(Change Mod, bool Invert) {
+			#region #method# Change(Mod, Inverted) 
+			public override Line Change(Change Mod, bool Inverted) {
 				var MX = this.MX; var MY = this.MY; var cmX = this.cmX; var cmY = this.cmY; var ceX = this.ceX; var ceY = this.ceY; var EX = this.EX; var EY = this.EY;
 				while (Mod != null) {
 					Mod.Modify(ref MX, ref MY, (Mod.Mods & Mods.MX) != 0, (Mod.Mods & Mods.MY) != 0);
@@ -1975,11 +1800,9 @@ namespace Wholemy {
 					Mod.Modify(ref ceX, ref ceY, (Mod.Mods & Mods.ceX) != 0, (Mod.Mods & Mods.ceY) != 0);
 					Mod = Mod.Next;
 				}
-				if (Invert) {
-					this.MX = EX; this.MY = EY; this.cmX = ceX; this.cmY = ceY; this.ceX = cmX; this.ceY = cmY; this.EX = MX; this.EY = MY;
-				} else {
-					this.MX = MX; this.MY = MY; this.cmX = cmX; this.cmY = cmY; this.ceX = ceX; this.ceY = ceY; this.EX = EX; this.EY = EY;
-				}
+				if (Inverted)
+					return new Cubic(EX, EY, ceX, ceY, cmX, cmY, MX, MY);
+				return new Cubic(MX, MY, cmX, cmY, ceX, ceY, EX, EY);
 			}
 			#endregion
 			#region #method# To(Context) 
@@ -2153,10 +1976,8 @@ namespace Wholemy {
 				Rotate1(MX, MY, ref bX, ref bY, 0.25);
 				Rotate1(bX, bY, ref baX, ref baY, 0.25);
 				Rotate1(bX, bY, ref cbX, ref cbY, 0.75);
-				Cubic.ArcTo(List, cX, cY, cbX, cbY, bX, bY);
-				Cubic.ArcTo(List, bX, bY, baX, baY, aX, aY);
-				//List.AddLast(new LineItem(new Cubic(cX, cY, cbX, cbY, bX, bY)));
-				//List.AddLast(new LineItem(new Cubic(bX, bY, baX, baY, aX, aY)));
+				List.AddLast(new Curve(new Cubic(cX, cY, cbX, cbY, bX, bY)));
+				List.AddLast(new Curve(new Cubic(bX, bY, baX, baY, aX, aY)));
 				return List;
 			}
 			#endregion
@@ -2193,10 +2014,8 @@ namespace Wholemy {
 				Rotate1(EX, EY, ref bX, ref bY, -0.25);
 				Rotate1(bX, bY, ref abX, ref abY, -0.25);
 				Rotate1(bX, bY, ref bcX, ref bcY, -0.75);
-				Cubic.ArcTo(List, aX, aY, abX, abY, bX, bY);
-				Cubic.ArcTo(List, bX, bY, bcX, bcY, cX, cY);
-				//List.AddLast(new LineItem(new Cubic(aX, aY, abX, abY, bX, bY)));
-				//List.AddLast(new LineItem(new Cubic(bX, bY, bcX, bcY, cX, cY)));
+				List.AddLast(new Curve(new Cubic(aX, aY, abX, abY, bX, bY)));
+				List.AddLast(new Curve(new Cubic(bX, bY, bcX, bcY, cX, cY)));
 				return List;
 			}
 			#endregion
@@ -2358,8 +2177,9 @@ namespace Wholemy {
 			}
 			#endregion
 			#region #method# TesReturn(Size, PA, PB, Reset) 
-			public override bool TesReturn(double Size, ref Line PA, ref Line PB, out bool Reset) {
-				Reset = false;
+			public override bool TesReturn(double Size, ref Line PA, ref Line PB, out bool ResetA, out bool ResetB) {
+				ResetA = false;
+				ResetB = false;
 				var S = QualityBut * Size;
 				if (S < QualityMin) S = QualityMin; else if (S > QualityMax) S = QualityMax;
 				if (this.Ext(Size, out var A, out var B)) {
@@ -2375,9 +2195,9 @@ namespace Wholemy {
 								if (Aa < 0.0) Aa += 1.0;
 								if (Bb < 0.0) Bb += 1.0;
 								if ((Aa < 0.375) || (Aa > 0.625))
-									Reset = true;
+									ResetA = true;
 								if ((Bb < 0.375) || (Bb > 0.625))
-									Reset = true;
+									ResetB = true;
 							}
 							PA = A;
 							PB = B;
@@ -2389,75 +2209,76 @@ namespace Wholemy {
 			}
 			#endregion
 			#region #method# ExtReturn(Size, Roots) 
-			public override List ExtReturn(double Size, List Roots = null) {
-				List List = new List();
-				var DIV = 0.5;
-				var POS = 0.0;
-				var ROOT = 0.0;
-				Line RES = this;
-				Line TES = this;
-				var LastRoot = 0.0;
-				var LastSize = 1.0;
-				RSLineItem Item = null;
-				if (Roots != null) {
-					Item = Roots.Base as RSLineItem;
-					if (Item != null) {
-						TES = RES = Item.Line;
-						LastRoot = Item.Root;
-						LastSize = Item.Size;
-						Item = Item.Next as RSLineItem;
-					}
-				}
-				RSABCItem Stab = new RSABCItem(LastRoot, LastSize);
-				List.AddLast(Stab);
-				var Reset = false;
-				Line NOW;
-				Line RAM;
-				Line PreA = null;
-				Line PreB = null;
-				RTES:
-				if (TES.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
-					if (Reset && Stab.IsUsed) {
-						Stab = Stab.AddLastTo(List, ROOT, out LastRoot, out LastSize);
-						ROOT = 0.0;
-					}
-					Stab.Add(PreA, PreB, TES, LastRoot + (ROOT * LastSize), LastSize - (ROOT * LastSize));
-					POS = 0.0;
-				} else {
-					NEXT:
-					TES.Div(DIV, out NOW, out RAM);
-					if (NOW.TesReturn(Size, ref PreA, ref PreB, out Reset)) {
-						var PDIV = ((1.0 - POS) * DIV);
-						var RPDIV = ((1.0 - ROOT) * PDIV);
-						if (Reset && Stab.IsUsed) {
-							Stab = Stab.AddLastTo(List, ROOT, out LastRoot, out LastSize);
-							ROOT = 0.0;
-						}
-						Stab.Add(PreA, PreB, NOW, LastRoot + (ROOT * LastSize), RPDIV * LastSize);
-						POS += PDIV;
-						ROOT += RPDIV;
-						DIV = 0.5;
-						if (Reset) {
-							RES.Div(POS, out var CUT, out RES);
-							TES = RES;
-							POS = 0.0;
-							goto RTES;
-						} else {
-							TES = RAM;
-						}
-						goto RTES;
-					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
-				}
-				if (Item != null) {
-					List.AddLast(Stab = new RSABCItem(Item.Root, Item.Size));
-					ROOT = 0.0;
-					POS = 0.0;
-					TES = RES = Item.Line;
-					Item = Item.Next as RSLineItem;
-					goto RTES;
-				}
-				return List;
-			}
+			//public override List ExtReturn(double Size, List Roots = null) {
+			//	List List = new List();
+			//	var DIV = 0.5;
+			//	var POS = 0.0;
+			//	var ROOT = 0.0;
+			//	Line RES = this;
+			//	Line TES = this;
+			//	var LastRoot = 0.0;
+			//	var LastSize = 1.0;
+			//	RSLineItem Item = null;
+			//	if (Roots != null) {
+			//		Item = Roots.Base as RSLineItem;
+			//		if (Item != null) {
+			//			TES = RES = Item.Line;
+			//			LastRoot = Item.Root;
+			//			LastSize = Item.Size;
+			//			Item = Item.Next as RSLineItem;
+			//		}
+			//	}
+			//	RSABCItem Stab = new RSABCItem(LastRoot, LastSize);
+			//	List.AddLast(Stab);
+			//	var ResetA = false;
+			//	var ResetB = false;
+			//	Line NOW;
+			//	Line RAM;
+			//	Line PreA = null;
+			//	Line PreB = null;
+			//	RTES:
+			//	if (TES.TesReturn(Size, ref PreA, ref PreB, out ResetA, out ResetB)) {
+			//		if ((ResetA|| ResetB) && Stab.IsUsed) {
+			//			Stab = Stab.AddLastTo(List, ROOT, out LastRoot, out LastSize);
+			//			ROOT = 0.0;
+			//		}
+			//		Stab.Add(PreA, PreB, TES, LastRoot + (ROOT * LastSize), LastSize - (ROOT * LastSize));
+			//		POS = 0.0;
+			//	} else {
+			//		NEXT:
+			//		TES.Div(DIV, out NOW, out RAM);
+			//		if (NOW.TesReturn(Size, ref PreA, ref PreB, out ResetA, out ResetB)) {
+			//			var PDIV = ((1.0 - POS) * DIV);
+			//			var RPDIV = ((1.0 - ROOT) * PDIV);
+			//			if ((ResetA || ResetB) && Stab.IsUsed) {
+			//				Stab = Stab.AddLastTo(List, ROOT, out LastRoot, out LastSize);
+			//				ROOT = 0.0;
+			//			}
+			//			Stab.Add(PreA, PreB, NOW, LastRoot + (ROOT * LastSize), RPDIV * LastSize);
+			//			POS += PDIV;
+			//			ROOT += RPDIV;
+			//			DIV = 0.5;
+			//			if ((ResetA || ResetB)) {
+			//				RES.Div(POS, out var CUT, out RES);
+			//				TES = RES;
+			//				POS = 0.0;
+			//				goto RTES;
+			//			} else {
+			//				TES = RAM;
+			//			}
+			//			goto RTES;
+			//		} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
+			//	}
+			//	if (Item != null) {
+			//		List.AddLast(Stab = new RSABCItem(Item.Root, Item.Size));
+			//		ROOT = 0.0;
+			//		POS = 0.0;
+			//		TES = RES = Item.Line;
+			//		Item = Item.Next as RSLineItem;
+			//		goto RTES;
+			//	}
+			//	return List;
+			//}
 			#endregion
 			#region #method# AddLinM(P) 
 			//public override void AddLinM(PathSource P) {
@@ -2590,8 +2411,8 @@ namespace Wholemy {
 			#endregion
 			public double QX;
 			public double QY;
-			#region #method# Change(Mod, Invert) 
-			public override void Change(Change Mod, bool Invert) {
+			#region #method# Change(Mod, Inverted) 
+			public override Line Change(Change Mod, bool Inverted) {
 				var MX = this.MX; var MY = this.MY; var QX = this.QX; var QY = this.QY; var EX = this.EX; var EY = this.EY;
 				while (Mod != null) {
 					Mod.Modify(ref MX, ref MY, (Mod.Mods & Mods.MX) != 0, (Mod.Mods & Mods.MY) != 0);
@@ -2599,12 +2420,9 @@ namespace Wholemy {
 					Mod.Modify(ref QX, ref QY, (Mod.Mods & Mods.QX) != 0, (Mod.Mods & Mods.QY) != 0);
 					Mod = Mod.Next;
 				}
-				if (Invert) {
-					this.MX = EX; this.MY = EY; this.EX = MX; this.EY = MY;
-				} else {
-					this.MX = MX; this.MY = MY; this.EX = EX; this.EY = EY;
-				}
-				this.QX = QX; this.QY = QY;
+				if (Inverted)
+					return new Quadratic(EX, EY, QX, QY, MX, MY);
+				return new Quadratic(MX, MY, QX, QY, EX, EY);
 			}
 			#endregion
 			#region #method# To(Context) 
@@ -2738,10 +2556,8 @@ namespace Wholemy {
 				Rotate1(MX, MY, ref bX, ref bY, 0.25);
 				Rotate1(bX, bY, ref baX, ref baY, 0.25);
 				Rotate1(bX, bY, ref cbX, ref cbY, 0.75);
-				Cubic.ArcTo(List, cX, cY, cbX, cbY, bX, bY);
-				Cubic.ArcTo(List, bX, bY, baX, baY, aX, aY);
-				//List.AddLast(new LineItem(new Cubic(cX, cY, cbX, cbY, bX, bY)));
-				//List.AddLast(new LineItem(new Cubic(bX, bY, baX, baY, aX, aY)));
+				List.AddLast(new Curve(new Cubic(cX, cY, cbX, cbY, bX, bY)));
+				List.AddLast(new Curve(new Cubic(bX, bY, baX, baY, aX, aY)));
 				return List;
 			}
 			#endregion
@@ -2773,10 +2589,8 @@ namespace Wholemy {
 				Rotate1(EX, EY, ref bX, ref bY, -0.25);
 				Rotate1(bX, bY, ref abX, ref abY, -0.25);
 				Rotate1(bX, bY, ref bcX, ref bcY, -0.75);
-				Cubic.ArcTo(List, aX, aY, abX, abY, bX, bY);
-				Cubic.ArcTo(List, bX, bY, bcX, bcY, cX, cY);
-				//List.AddLast(new LineItem(new Cubic(aX, aY, abX, abY, bX, bY)));
-				//List.AddLast(new LineItem(new Cubic(bX, bY, bcX, bcY, cX, cY)));
+				List.AddLast(new Curve(new Cubic(aX, aY, abX, abY, bX, bY)));
+				List.AddLast(new Curve(new Cubic(bX, bY, bcX, bcY, cX, cY)));
 				return List;
 			}
 			#endregion
@@ -2979,8 +2793,9 @@ namespace Wholemy {
 			}
 			#endregion
 			#region #method# TesReturn(Size, PA, PB, Reset) 
-			public override bool TesReturn(double Size, ref Line PA, ref Line PB, out bool Reset) {
-				Reset = false;
+			public override bool TesReturn(double Size, ref Line PA, ref Line PB, out bool ResetA, out bool ResetB) {
+				ResetA = false;
+				ResetB = false;
 				var S = QualityBut * Size;
 				if (S < QualityMin) S = QualityMin; else if (S > QualityMax) S = QualityMax;
 				if (this.Ext(Size, out var A, out var B)) {
@@ -2996,9 +2811,9 @@ namespace Wholemy {
 								if (Aa < 0.0) Aa += 1.0;
 								if (Bb < 0.0) Bb += 1.0;
 								if ((Aa < 0.375) || (Aa > 0.625))
-									Reset = true;
+									ResetA = true;
 								if ((Bb < 0.375) || (Bb > 0.625))
-									Reset = true;
+									ResetB = true;
 							}
 							PA = A;
 							PB = B;
@@ -3013,6 +2828,7 @@ namespace Wholemy {
 		#endregion
 		#region #method# Invert 
 		public void Invert() {
+			this.ProcessingFigure?.End();
 			if (this.Inverted) {
 				this.Inverted = false;
 			} else {
@@ -3031,12 +2847,12 @@ namespace Wholemy {
 		}
 		#endregion
 		#region #method# AddBoneArc(Val, Acw) 
-		public Bone AddBoneArc(Line Val, bool Acw = false) {
+		public Curve AddBoneArc(Line Val, bool Acw = false) {
 			return AddBone(Val.ToArcC(Acw));
 		}
 		#endregion
 		#region #method# AddBoneArc(MX, MY, EX, EY, Acw) 
-		public Bone AddBoneArc(double MX, double MY, double EX, double EY, bool Acw = false) {
+		public Curve AddBoneArc(double MX, double MY, double EX, double EY, bool Acw = false) {
 			return AddBone(new Line(MX, MY, EX, EY).ToArcC(Acw));
 		}
 		#endregion
@@ -3047,8 +2863,8 @@ namespace Wholemy {
 		/// <param name="R">Радиус кольца)</param>
 		/// <param name="hole">Наличие дыры)</param>
 		public void AddOrc(double X, double Y, double R, bool hole = true) {
-			BeginFz();
 			if (R > 0.0) {
+				BeginFz();
 				var x00 = X; var y00 = Y - R; var x01 = X + R; var y01 = Y;
 				var x10 = X + R; var y10 = Y; var x11 = X; var y11 = Y + R;
 				var x20 = X; var y20 = Y + R; var x21 = X - R; var y21 = Y;
@@ -3061,6 +2877,7 @@ namespace Wholemy {
 					AddItemArc(x20, y20 + D, x21 - D, y21);
 					AddItemArc(x30 - D, y30, x31, y31 - D);
 					if (hole && R - D > 0.0) {
+						BeginHz();
 						Invert();
 						AddItemArc(x00, y00 + D, x01 - D, y01);
 						AddItemArc(x10 - D, y10, x11, y11 - D);
@@ -3075,6 +2892,7 @@ namespace Wholemy {
 					AddBoneArc(x20, y20, x21, y21);
 					AddBoneArc(x30, y30, x31, y31);
 				}
+				End();
 			}
 		}
 		#endregion
@@ -3095,6 +2913,7 @@ namespace Wholemy {
 				AddBoneArc(X, Y + R, X - R, Y);
 				AddBoneArc(X - R, Y, X, Y - R);
 			}
+			End();
 		}
 		#endregion
 		#region #method# AddArc00(x0, y0, x1, y1) 
@@ -3216,16 +3035,15 @@ namespace Wholemy {
 					this.IsUnited = (Chr == '1');
 					Index++;
 				}
-				Figure Fig = null;
 				var Base = new DOT();
 				var Prev = new DOT();
 				var Last = new DOT();
 				while (ParseToken(Val, ref Index, Count, ref Chr, ref Pre)) {
-					if (Fig == null && Chr != 'm') throw new System.FormatException("NeededToken M UnexpectedToken " + Chr);
+					if (Chr != 'm') throw new System.FormatException("NeededToken M UnexpectedToken " + Chr);
 					switch (Chr) {
 						#region #case# 'm' Начало 
 						case 'm': {
-								Fig = new Figure(this) { IsClozed = false, IsFilled = true };
+								BeginF();
 								if (ParsePoint(Val, ref Index, Count, ref Base)) {
 									while (ParsePoint(Val, ref Index, Count, ref Last)) {
 										if (Pre) Last += Base;
@@ -3347,8 +3165,8 @@ namespace Wholemy {
 						#endregion
 						#region #case# 'z' Замкнутый 
 						case 'z': {
-								Fig.IsClozed = true;
-								Fig = null;
+								ProcessingFigure.IsClozed = true;
+								End();
 								Last = Base;
 							}
 							continue;
@@ -3466,13 +3284,15 @@ namespace Wholemy {
 		public string Uncompessed {
 			get {
 				string Result = "";
-				if (FigureSize > 0) {
-					var Figure = FigureBase;
+				if (Figures != null) {
+					var Figure = Figures.Base as Figure;
 					while (Figure != null) {
-						if (Figure.CurveCount > 0) {
-							Result += Figure.ToString();
+						var Curve = Figure.Curves.Base as Curve;
+						while (Curve != null) {
+							Result += Curve.Line.ToString();
+							Curve = Curve.Next as Curve;
 						}
-						Figure = Figure.Next;
+						Figure = Figure.Next as Figure;
 					}
 				}
 				return Result;
@@ -3483,20 +3303,21 @@ namespace Wholemy {
 		public string Compessed {
 			get {
 				string Result = "";
-				if (FigureSize > 0) {
-					var Figure = FigureBase;
+				if (Figures != null) {
+					var Figure = Figures.Base as Figure;
 					while (Figure != null) {
-						if (Figure.CurveCount > 0) {
-							var Item = Figure.CurveBase;
+						var Curves = Figure.Curves;
+						if (Curves != null && Curves.Count > 0) {
+							var Item = Curves.Base as Curve;
 							Curve Prev = null;
 							while (Item != null) {
 								Result += Item.Line.ToCompessedString(Prev?.Line);
 								Prev = Item;
-								Item = Item.Next;
+								Item = Item.Next as Curve;
 							}
 							if (Figure.IsClozed) Result += "z";
 						}
-						Figure = Figure.Next;
+						Figure = Figure.Next as Figure;
 					}
 				}
 				return Result;
@@ -3564,12 +3385,13 @@ namespace Wholemy {
 			var list = new List();
 			list.AddLast(Bone.HalfArcM(Size));
 			Bone.Ext(Size, out var A, out var B);
-			list.AddLast(new LineItem(A));
+			list.AddLast(new Curve(A));
 			list.AddLast(Bone.HalfArcE(Size));
-			list.AddLast(new LineItem(B));
-			for (var I = list.Base as LineItem; I != null; I = I.Next as LineItem) {
+			list.AddLast(new Curve(B));
+			for (var I = list.Base as Curve; I != null; I = I.Next as Curve) {
 				AddCurve(I.Line);
 			}
+			End();
 		}
 		#endregion
 		#region #method# AddCubic00(x0, y0, x1, y1, x2, y2, x3, y3) 
@@ -3649,41 +3471,42 @@ namespace Wholemy {
 			var LinearRounds = Linear && (IsRoundM || IsRoundE);
 
 			var List = Bone.RootsList(Roots);
-			var Li = Bone.ExtReturn(Size, List).Base as RSABCItem;
+			var Li = Bone.ExtReturn(Size, List).Base as Stab;
 			bool first = true;
 			while (Li != null) {
 				var list = new List();
 				if (Li.C.Base != null && ((Linear && (IsRoundM || IsRoundE)) || (!Linear && IsRoundM && first))) {
-					list.AddLast(((LineItem)Li.C.Base).Line.HalfArcM(Size));
+					list.AddLast(((Curve)Li.C.Base).Line.HalfArcM(Size));
 					if (!Linear) first = false;
 				}
 				list.AddLast(Li.A);
 				if (Li.C.Last != null && (Linear && (IsRoundM || IsRoundE) || (!Linear && IsRoundE && Li.Next == null))) {
-					list.AddLast(((LineItem)Li.C.Last).Line.HalfArcE(Size));
+					list.AddLast(((Curve)Li.C.Last).Line.HalfArcE(Size));
 				}
 				list.AddLast(Li.B);
-				for (var I = list.Base as LineItem; I != null; I = I.Next as LineItem) {
+				for (var I = list.Base as Curve; I != null; I = I.Next as Curve) {
 					AddCurve(I.Line);
 				}
-				Li = Li.Next as RSABCItem;
+				Li = Li.Next as Stab;
 				if (Li != null) { BeginFz(); }
 			}
+			End();
 		}
 		#endregion
-		#region #class# LineItem 
-		public class LineItem : Item {
+		#region #class# Curve 
+		public class Curve : Item {
 			#region #through# 
 #if TRACE
 			[System.Diagnostics.DebuggerStepThrough]
 #endif
 			#endregion
-			public LineItem() { }
+			public Curve() { }
 			#region #through# 
 #if TRACE
 			[System.Diagnostics.DebuggerStepThrough]
 #endif
 			#endregion
-			public LineItem(Line Line) {
+			public Curve(Line Line) {
 				this.Line = Line;
 			}
 			#region #field# Line 
@@ -3705,20 +3528,20 @@ namespace Wholemy {
 			#endregion
 		}
 		#endregion
-		#region #class# RSLineItem 
-		public class RSLineItem : LineItem {
+		#region #class# CurveRoot 
+		public class CurveRoot : Curve {
 			#region #through# 
 #if TRACE
 			[System.Diagnostics.DebuggerStepThrough]
 #endif
 			#endregion
-			public RSLineItem() { }
+			public CurveRoot() { }
 			#region #through# 
 #if TRACE
 			[System.Diagnostics.DebuggerStepThrough]
 #endif
 			#endregion
-			public RSLineItem(Line Line, double Root, double Size) {
+			public CurveRoot(Line Line, double Root, double Size) {
 				this.Line = Line;
 				this.Root = Root;
 				this.Size = Size;
@@ -3751,10 +3574,12 @@ namespace Wholemy {
 			#endregion
 		}
 		#endregion
-		#region #class# RSABCItem 
-		public class RSABCItem : Item {
+		#region #class# Stab 
+		public class Stab : Item {
 			public double Root;
 			public double Size;
+			public bool ResetA;
+			public bool ResetB;
 			#region #invisible# 
 #if TRACE
 			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
@@ -3778,7 +3603,7 @@ namespace Wholemy {
 			[System.Diagnostics.DebuggerStepThrough]
 #endif
 			#endregion
-			public RSABCItem(double Root, double Size, bool A = true, bool B = true, bool C = true) {
+			public Stab(double Root, double Size, bool A = true, bool B = true, bool C = true) {
 				if (!A && !B && !C) throw new System.ArgumentOutOfRangeException();
 				this.Root = Root;
 				this.Size = Size;
@@ -3810,24 +3635,24 @@ namespace Wholemy {
 #endif
 			#endregion
 			public void Add(Line A, Line B, Line C, double Root, double Size) {
-				if (this.A != null) this.A.AddLast(new RSLineItem(A, Root, Size));
-				if (this.B != null) this.B.AddBase(new RSLineItem(B, Root, Size));
-				if (this.C != null) this.C.AddLast(new RSLineItem(C, Root, Size));
+				if (this.A != null) this.A.AddLast(new CurveRoot(A, Root, Size));
+				if (this.B != null) this.B.AddBase(new CurveRoot(B, Root, Size));
+				if (this.C != null) this.C.AddLast(new CurveRoot(C, Root, Size));
 			}
 			#region #through# 
 #if TRACE
 			[System.Diagnostics.DebuggerStepThrough]
 #endif
 			#endregion
-			public RSABCItem AddLastTo(List List, double ROOT, out double Root, out double Size) {
-				var Last = List.Last as RSABCItem;
+			public Stab AddLastTo(List List, bool ResetA, bool ResetB, double ROOT, out double Root, out double Size) {
+				var Last = List.Last as Stab;
 				var LastRoot = Last.Root;
 				var LastSize = Last.Size;
 				var PrevSize = LastSize * ROOT;
 				LastSize -= PrevSize;
 				LastRoot += PrevSize;
 				Last.Size = PrevSize;
-				var Stab = new RSABCItem(LastRoot, LastSize, this.A != null, this.B != null, this.C != null);
+				var Stab = new Stab(LastRoot, LastSize, this.A != null, this.B != null, this.C != null) { ResetA = ResetA, ResetB = ResetB };
 				List.AddLast(Stab);
 				Root = LastRoot;
 				Size = LastSize;

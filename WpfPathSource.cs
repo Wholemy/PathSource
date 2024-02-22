@@ -58,7 +58,9 @@ namespace Wholemy {
 		/// <param name="AY">Конец по оси Y)</param>
 		/// <returns>Возвращает корень поворота от 0.0 до 1.0)</returns>
 		public static double GetaR1(double CX, double CY, double BX, double BY, double AX, double AY) {
-			return (0.5 / System.Math.PI) * (System.Math.Atan2(AY - CY, AX - CX) - System.Math.Atan2(BY - CY, BX - CX));
+			var R = (0.5 / System.Math.PI) * (System.Math.Atan2(AY - CY, AX - CX) - System.Math.Atan2(BY - CY, BX - CX));
+			if (R < 0) R += 1.0;
+			return R;
 		}
 		#endregion
 		#region #method# Sqrt(X, Y) 
@@ -163,253 +165,48 @@ namespace Wholemy {
 			return Roots;
 		}
 		#endregion
-		#region #class# Lot 
-		public class Lot {
-			public int Fl;
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public bool Valid;
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public Lot Pair;
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public Line Poly;
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public int Count;
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public Dot Base;
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public Dot Last;
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-			#endregion
-			public Dot[] Cache;
-			#region #new# (Line) 
-			public Lot(Line Line) {
-				var Poly = this.Poly = Line;
-				var Base = this.Base = Poly.Dot(0.0);
-				var Last = this.Last = Poly.Dot(1.0);
-				Base.Next = Last;
-				Last.Prev = Base;
-				Base.NextRoot = Last.PrevRoot = 0.5;
-				Base.Lot = Last.Lot = this;
-				this.Count = 2;
-			}
-			#endregion
-			#region #get# Items 
-			#region #invisible# 
-#if TRACE
-			[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.RootHidden)]
-#endif
-			#endregion
-			public Dot[] Items {
-				#region #through# 
-#if TRACE
-				[System.Diagnostics.DebuggerStepThrough]
-#endif
-				#endregion
-				get {
-					if (Cache != null) return Cache;
-					var I = Count;
-					var A = new Dot[I];
-					var S = Last;
-					while (--I >= 0) { A[I] = S; S = S.Prev; }
-					Cache = A;
-					return A;
-				}
-			}
-			#endregion
-			#region #method# ToString 
-			#region #through# 
-#if TRACE
-			[System.Diagnostics.DebuggerStepThrough]
-#endif
-			#endregion
-			public override string ToString() {
-				var I = System.Globalization.CultureInfo.InvariantCulture;
-				return "Lot Count:" + Count.ToString();
-			}
-			#endregion
-			#region #method# Adds 
-			public void Adds() {
-				var I = this.Base;
-				var N = true;
-				while (I != null) {
-					var ii = I.Next;
-					if (N) I.AddPrev();
-					N = I.AddNext();
-					I = ii;
-				}
-			}
-			#endregion
-		}
-		#endregion
-		#region #class# Dot 
-		public class Dot {
-			public Lot Lot;
-			public Dot Prev;
-			public Dot Next;
-			public double PrevRoot;
-			public double NextRoot;
-			public double PrevLen;
-			public double NextLen;
-			/// <summary>Длина до точки другого лота, наиболее короткая)</summary>
-			public double Len = double.NaN;
-			public readonly double Root;
-			public readonly double X;
-			public readonly double Y;
-			public double AX;
-			public double AY;
-			public double BX;
-			public double BY;
-			public double S;
-			#region #new# (Root, X, Y, MX, MY, EX, EY) 
-			#region #through# 
-#if TRACE
-			[System.Diagnostics.DebuggerStepThrough]
-#endif
-			#endregion
-			public Dot(double Root, double X, double Y, double AX, double AY, double BX, double BY) {
-				this.PrevRoot = this.NextRoot = this.Root = Root;
-				this.X = X; this.Y = Y;
-				this.AX = AX; this.AY = AY;
-				this.BX = BX; this.BY = BY;
-				this.S = 0.0;
-			}
-			#endregion
-			#region #method# ToString 
-			public override string ToString() {
-				var I = System.Globalization.CultureInfo.InvariantCulture;
-				return $"Dot Len: {Len.ToString("G17", I)} Root: {Root.ToString("G17", I)} X: {X.ToString("G17", I)} Y: {Y.ToString("G17", I)}";
-			}
-			#endregion
-			#region #method# LenTo(Dot) 
-			public double LenTo(Dot Dot) {
-				return Sqrt(this.X - Dot.X, this.Y - Dot.Y);
-			}
-			#endregion
-			#region #method# AddPrev 
-			public bool AddPrev() {
-				var Lot = this.Lot;
-				Dot Prev, New; double Size;
-				var R = true;
-				if (this.PrevRoot < this.Root) {
-					Size = (this.Root - this.PrevRoot) * 0.5;
-					New = Lot.Poly.Dot(this.PrevRoot);
-					New.PrevRoot -= Size;
-					if (New.PrevRoot < 0.0) New.PrevRoot = 0.0;
-					New.NextRoot += Size;
-					if (New.NextRoot > 1.0) New.NextRoot = 1.0;
-					Prev = this.Prev;
-					if (Prev != null) {
-						if (Prev.NextRoot == this.PrevRoot) {
-							Prev.NextRoot = New.PrevRoot;
-							R = false;
-						}
-						New.Prev = Prev;
-						Prev.Next = New;
-					} else {
-						Lot.Base = New;
-					}
-					this.PrevRoot = New.NextRoot;
-					New.Next = this;
-					this.Prev = New;
-					New.Lot = Lot;
-					Lot.Count++;
-					Lot.Cache = null;
-				}
-				return R;
-			}
-			#endregion
-			#region #method# AddNext 
-			public bool AddNext() {
-				var Lot = this.Lot;
-				Dot Next, New; double Size;
-				var R = true;
-				if (this.NextRoot > this.Root) {
-					Size = (this.NextRoot - this.Root) * 0.5;
-					New = Lot.Poly.Dot(this.NextRoot);
-					New.PrevRoot -= Size;
-					if (New.PrevRoot < 0.0)
-						New.PrevRoot = 0.0;
-					New.NextRoot += Size;
-					if (New.NextRoot > 1.0)
-						New.NextRoot = 1.0;
-					Next = this.Next;
-					if (Next != null) {
-						if (Next.PrevRoot == this.NextRoot) {
-							Next.PrevRoot = New.NextRoot; R = false;
-						}
-						New.Next = Next;
-						Next.Prev = New;
-					} else {
-						Lot.Last = New;
-					}
-					this.NextRoot = New.PrevRoot;
-					New.Prev = this;
-					this.Next = New;
-					New.Lot = Lot;
-					Lot.Count++;
-					Lot.Cache = null;
-				}
-				return R;
-			}
-			#endregion
-			#region #method# Cut 
-			#region #through# 
-#if TRACE
-			[System.Diagnostics.DebuggerStepThrough]
-#endif
-			#endregion
-			public void Cut() {
-				var Lot = this.Lot;
-				if (Lot != null) {
-					var P = this.Prev;
-					var N = this.Next;
-					if (P != null) { P.Next = N; } else { Lot.Base = N; }
-					if (N != null) { N.Prev = P; } else { Lot.Last = P; }
-					Lot.Count--;
-					Lot.Cache = null;
-					this.Prev = null; this.Next = null; this.Lot = null;
-					this.Len = double.NaN;
-					Lot.Pair.Valid = false;
-				}
-			}
-			#endregion
-		}
-		#endregion
 		public static readonly double Arc14 = 4.0 / 3.0 * System.Math.Tan(System.Math.PI / 8);
-		private System.Windows.Media.Geometry LastPath;
+		#region #invisible# 
+#if TRACE
+		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+		#endregion
+		private System.Windows.Media.StreamGeometry LastPath;
+		#region #invisible# 
+#if TRACE
+		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+		#endregion
 		private System.Windows.Media.GeometryCombineMode LastMode;
 		public System.Windows.Media.Geometry Geometry {
 			get {
 				var G = this.LastPath;
 				if (G == null && Figures != null) { this.LastPath = G = FiguresToGeometry(); }
 				return G;
+			}
+		}
+		#region #invisible# 
+#if TRACE
+		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+		#endregion
+		private List CombinedFigures;
+		public List Combined {
+			get {
+				var C = this.CombinedFigures;
+				if (C == null) {
+					var G = this.LastPath;
+					System.Windows.Media.PathGeometry GG = null;
+					if (G == null && Figures != null) {
+						this.LastPath = G = FiguresToGeometry();
+					}
+					if (G != null) {
+						var P = new System.Windows.Media.PathGeometry();
+						GG = System.Windows.Media.PathGeometry.Combine(P, G, System.Windows.Media.GeometryCombineMode.Union, null, Tolerance, ToleranceType);
+						C = this.CombinedFigures = GetGeometry(GG);
+					}
+				}
+				return C;
 			}
 		}
 		public PathSource() { }
@@ -478,7 +275,7 @@ namespace Wholemy {
 		//		}
 		#endregion
 		#region #method# FiguresToGeometry 
-		private System.Windows.Media.Geometry FiguresToGeometry() {
+		private System.Windows.Media.StreamGeometry FiguresToGeometry() {
 			if (Figures == null) return null;
 			var Stream = new System.Windows.Media.StreamGeometry();
 			Stream.FillRule = IsUnited ? System.Windows.Media.FillRule.Nonzero : System.Windows.Media.FillRule.EvenOdd;
@@ -515,24 +312,24 @@ namespace Wholemy {
 			return Path;
 		}
 		#endregion
-		#region #method# AddGeometry(Geometry) 
-		public void AddGeometry(System.Windows.Media.Geometry Geometry) {
+		#region #method# GetGeometry(Geometry) 
+		public List GetGeometry(System.Windows.Media.Geometry Geometry) {
+			var FigureList = new List();
 			var Path = Geometry as System.Windows.Media.PathGeometry;
-			if (Path == null) Path = Geometry.GetFlattenedPathGeometry();
+			if (Path == null) Path = Geometry.GetFlattenedPathGeometry(Tolerance, ToleranceType);
 			var Figures = Path.Figures;
 			foreach (var Figure in Figures) {
-				var F = new Figure(this.IsFilled, this.IsClozed);
-				F.IsClozed = Figure.IsClosed;
-				F.IsFilled = Figure.IsFilled;
+				var F = new Figure(Figure.IsFilled, Figure.IsClosed);
 				var P0 = Figure.StartPoint;
 				var Segments = Figure.Segments;
+				var SegmentList = new List();
 				foreach (var Segment in Segments) {
 					var MX = P0.X;
 					var MY = P0.Y;
 					if (Segment is System.Windows.Media.LineSegment) {
 						var S = (System.Windows.Media.LineSegment)Segment;
 						var P1 = S.Point;
-						AddCurve(P0.X, P0.Y, P1.X, P1.Y);
+						SegmentList.AddLast(new Curve(P0.X, P0.Y, P1.X, P1.Y));
 						P0 = P1;
 					} else if (Segment is System.Windows.Media.PolyLineSegment) {
 						var Poly = (System.Windows.Media.PolyLineSegment)Segment;
@@ -540,14 +337,14 @@ namespace Wholemy {
 						var C = Points.Count;
 						for (var I = 0; I < C; I++) {
 							var P1 = Points[I];
-							AddCurve(P0.X, P0.Y, P1.X, P1.Y);
+							SegmentList.AddLast(new Curve(P0.X, P0.Y, P1.X, P1.Y));
 							P0 = P1;
 						}
 					} else if (Segment is System.Windows.Media.QuadraticBezierSegment) {
 						var S = (System.Windows.Media.QuadraticBezierSegment)Segment;
 						var P1 = S.Point1;
 						var P2 = S.Point2;
-						AddCurve(P0.X, P0.Y, P1.X, P1.Y, P2.X, P2.Y);
+						SegmentList.AddLast(new Curve(P0.X, P0.Y, P1.X, P1.Y, P2.X, P2.Y));
 						P0 = P2;
 					} else if (Segment is System.Windows.Media.PolyQuadraticBezierSegment) {
 						var Poly = (System.Windows.Media.PolyQuadraticBezierSegment)Segment;
@@ -556,7 +353,7 @@ namespace Wholemy {
 						for (var I = 0; I < C; I += 2) {
 							var P1 = Points[I];
 							var P2 = Points[I + 1];
-							AddCurve(P0.X, P0.Y, P1.X, P1.Y, P2.X, P2.Y);
+							SegmentList.AddLast(new Curve(P0.X, P0.Y, P1.X, P1.Y, P2.X, P2.Y));
 							P0 = P2;
 						}
 					} else if (Segment is System.Windows.Media.BezierSegment) {
@@ -564,7 +361,7 @@ namespace Wholemy {
 						var P1 = S.Point1;
 						var P2 = S.Point2;
 						var P3 = S.Point3;
-						AddCurve(P0.X, P0.Y, P1.X, P1.Y, P2.X, P2.Y, P3.X, P3.Y);
+						SegmentList.AddLast(new Curve(P0.X, P0.Y, P1.X, P1.Y, P2.X, P2.Y, P3.X, P3.Y));
 						P0 = P3;
 					} else if (Segment is System.Windows.Media.PolyBezierSegment) {
 						var Poly = (System.Windows.Media.PolyBezierSegment)Segment;
@@ -574,20 +371,25 @@ namespace Wholemy {
 							var P1 = Points[I];
 							var P2 = Points[I + 1];
 							var P3 = Points[I + 2];
-							AddCurve(P0.X, P0.Y, P1.X, P1.Y, P2.X, P2.Y, P3.X, P3.Y);
+							SegmentList.AddLast(new Curve(P0.X, P0.Y, P1.X, P1.Y, P2.X, P2.Y, P3.X, P3.Y));
 							P0 = P3;
 						}
 					} else {
 						throw new System.NotSupportedException();
 					}
 				}
+				if (SegmentList.Count > 0) {
+					F.Curves = SegmentList;
+					FigureList.AddLast(F);
+				}
 			}
+			return FigureList;
 		}
 		#endregion
 		#region #method# Begin[Hollow = H|Filled = F][Closed = z] 
 		public void Begin() {
 			End();
-			this.ProcessingFigure = new FigureProcessing(this.IsFilled,this.IsClozed);
+			this.ProcessingFigure = new FigureProcessing(this.IsFilled, this.IsClozed);
 		}
 		public void BeginHz() {
 			End();
@@ -619,6 +421,7 @@ namespace Wholemy {
 				}
 				this.ProcessingFigure = null;
 				this.LastPath = null;
+				this.CombinedFigures = null;
 			}
 		}
 		#endregion
@@ -1016,7 +819,7 @@ namespace Wholemy {
 			public List ProcessingCurves;
 			public List ProcessingBones;
 			#region #new# (IsFilled, IsClozed) 
-			public FigureProcessing(bool IsFilled, bool IsClozed):base(IsFilled, IsClozed) {
+			public FigureProcessing(bool IsFilled, bool IsClozed) : base(IsFilled, IsClozed) {
 			}
 			#endregion
 			#region #method# ToString 
@@ -1238,19 +1041,6 @@ namespace Wholemy {
 				return this;
 			}
 			#endregion
-			#region #method# Dot(root) 
-			public virtual Dot Dot(double root) {
-				if (root < 0.0 || root > 1.0) throw new System.InvalidOperationException();
-				var R = root;
-				var x00 = MX;
-				var y00 = MY;
-				var x11 = EX;
-				var y11 = EY;
-				var x01 = (x11 - x00) * R + x00;
-				var y01 = (y11 - y00) * R + y00;
-				return new Dot(root, x01, y01, x00, y00, x11, y11);
-			}
-			#endregion
 			#region #method# HalfArcM(Size) 
 			public virtual List HalfArcM(double Size) {
 				var List = new List();
@@ -1444,11 +1234,107 @@ namespace Wholemy {
 				return true;
 			}
 			#endregion
+			#region #method# ExtCw(Size, exA, exB, cwA, cwB) 
+			public virtual bool ExtCw(double Size, ref Line exA, ref Line exB, ref bool cwA, ref bool cwB) {
+				if (this.Ext(Size, out var A, out var B)) {
+					exA = A;
+					exB = B;
+					cwA = (GetaR1(this.MX, this.MY, A.MX, A.MY, A.EX, A.EY) > 0.5);
+					cwB = (GetaR1(this.MX, this.MY, B.MX, B.MY, B.EX, B.EY) > 0.5);
+					return true;
+				}
+				return false;
+			}
+			#endregion
 			#region #method# TesReturn(Size, PA, PB, Reset) 
 			public virtual bool TesReturn(double Size, ref Line PA, ref Line PB, out bool ResetA, out bool ResetB) {
 				ResetA = false;
 				ResetB = false;
 				return true;
+			}
+			#endregion
+			#region #method# ExtCw(Size, Roots) 
+			public List ExtCw(double Size, List Roots = null) {
+				List List = new List();
+				var DIV = 0.5;
+				var POS = 0.0;
+				var ROOT = 0.0;
+				Line RES = this;
+				Line TES = this;
+				var LastRoot = 0.0;
+				var LastSize = 1.0;
+				CurveRoot Item = null;
+				if (Roots != null) {
+					Item = Roots.Base as CurveRoot;
+					if (Item != null) {
+						TES = RES = Item.Line;
+						LastRoot = Item.Root;
+						LastSize = Item.Size;
+						Item = Item.Next as CurveRoot;
+					}
+				}
+				Stab Stab = null;//new Stab(LastRoot, LastSize) { ResetA = true, ResetB = true };
+												 //List.AddLast(Stab);
+				var cwA = false;
+				var cwB = false;
+				var prevA = true;
+				var prevB = true;
+				Line NOW;
+				Line RAM;
+				Line PreA = null;
+				Line PreB = null;
+				RTES:
+				if (TES.ExtCw(Size, ref PreA, ref PreB, ref cwA, ref cwB)) {
+					if (Stab == null) {
+						Stab = new Stab(LastRoot, LastSize) { ResetA = cwA, ResetB = cwB };
+						List.AddLast(Stab);
+						prevA = cwA; prevB = cwB;
+					} else if ((prevA != cwA || prevB != cwB) && Stab.IsUsed) {
+						Stab = Stab.AddLastTo(List, cwA, cwB, ROOT, out LastRoot, out LastSize);
+						ROOT = 0.0;
+					}
+					prevA = cwA; prevB = cwB;
+					Stab.Add(PreA, PreB, TES, LastRoot + (ROOT * LastSize), LastSize - (ROOT * LastSize));
+					POS = 0.0;
+				} else {
+					NEXT:
+					TES.Div(DIV, out NOW, out RAM);
+					if (NOW.ExtCw(Size, ref PreA, ref PreB, ref cwA, ref cwB)) {
+						var PDIV = ((1.0 - POS) * DIV);
+						var RPDIV = ((1.0 - ROOT) * PDIV);
+						if (Stab == null) {
+							Stab = new Stab(LastRoot, LastSize) { ResetA = cwA, ResetB = cwB };
+							List.AddLast(Stab);
+							prevA = cwA; prevB = cwB;
+						} else if ((prevA != cwA || prevB != cwB) && Stab.IsUsed) {
+							Stab = Stab.AddLastTo(List, cwA, cwB, ROOT, out LastRoot, out LastSize);
+							ROOT = 0.0;
+						}
+						Stab.Add(PreA, PreB, NOW, LastRoot + (ROOT * LastSize), RPDIV * LastSize);
+						POS += PDIV;
+						ROOT += RPDIV;
+						DIV = 0.5;
+						if ((prevA != cwA || prevB != cwB)) {
+							prevA = cwA; prevB = cwB;
+							RES.Div(POS, out var CUT, out RES);
+							TES = RES;
+							POS = 0.0;
+							goto RTES;
+						} else {
+							TES = RAM;
+						}
+						goto RTES;
+					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
+				}
+				if (Item != null) {
+					List.AddLast(Stab = new Stab(Item.Root, Item.Size));
+					ROOT = 0.0;
+					POS = 0.0;
+					TES = RES = Item.Line;
+					Item = Item.Next as CurveRoot;
+					goto RTES;
+				}
+				return List;
 			}
 			#endregion
 			#region #method# ExtReturn(Size, Roots) 
@@ -1562,7 +1448,6 @@ namespace Wholemy {
 				this.cmY = V;
 			}
 			#endregion
-
 			#region #method# Div(R, A, B) 
 			public override void Div(double R, out Line A, out Line B) {
 				var x00 = MX;
@@ -1668,32 +1553,6 @@ namespace Wholemy {
 				var y03 = (y13 - y02) * R + y02;
 				X = x03;
 				Y = y03;
-			}
-			#endregion
-			#region #method# Dot(root) 
-			public override Dot Dot(double R) {
-				if (R < 0.0 || R > 1.0) throw new System.InvalidOperationException();
-				var x00 = MX;
-				var y00 = MY;
-				var x11 = cmX;
-				var y11 = cmY;
-				var x22 = ceX;
-				var y22 = ceY;
-				var x33 = EX;
-				var y33 = EY;
-				var x01 = (x11 - x00) * R + x00;
-				var y01 = (y11 - y00) * R + y00;
-				var x12 = (x22 - x11) * R + x11;
-				var y12 = (y22 - y11) * R + y11;
-				var x02 = (x12 - x01) * R + x01;
-				var y02 = (y12 - y01) * R + y01;
-				var x23 = (x33 - x22) * R + x22;
-				var y23 = (y33 - y22) * R + y22;
-				var x13 = (x23 - x12) * R + x12;
-				var y13 = (y23 - y12) * R + y12;
-				var x03 = (x13 - x02) * R + x02;
-				var y03 = (y13 - y02) * R + y02;
-				return new Dot(R, x03, y03, x13, y13, x02, y02);
 			}
 			#endregion
 			#region #method# FixM 
@@ -2208,6 +2067,28 @@ namespace Wholemy {
 				return false;
 			}
 			#endregion
+			#region #method# ExtCw(Size, exA, exB, cwA, cwB) 
+			public override bool ExtCw(double Size, ref Line exA, ref Line exB, ref bool cwA, ref bool cwB) {
+				if (this.Ext(Size, out var A, out var B)) {
+					var S = QualityBut * Size;
+					if (S < QualityMin) S = QualityMin; else if (S > QualityMax) S = QualityMax;
+					if (this.DivBExtAMBE(Size, out var TAMX, out var TAMY, out var TBEX, out var TBEY)) {
+						A.DivC(0.5, out var ABMX, out var ABMY);
+						B.DivC(0.5, out var BAEX, out var BAEY);
+						var AL = Sqrt(ABMX - TAMX, ABMY - TAMY);
+						var BL = Sqrt(BAEX - TBEX, BAEY - TBEY);
+						if (AL < S && BL < S) {
+							exA = A;
+							exB = B;
+							cwA = (GetaR1(this.MX, this.MY, A.MX, A.MY, A.EX, A.EY) > 0.5);
+							cwB = (GetaR1(this.MX, this.MY, B.MX, B.MY, B.EX, B.EY) > 0.5);
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+			#endregion
 			#region #method# ExtReturn(Size, Roots) 
 			//public override List ExtReturn(double Size, List Roots = null) {
 			//	List List = new List();
@@ -2594,25 +2475,6 @@ namespace Wholemy {
 				return List;
 			}
 			#endregion
-			#region #method# Dot(root) 
-			public override Dot Dot(double root) {
-				if (root < 0.0 || root > 1.0) throw new System.InvalidOperationException();
-				var R = root;
-				var x00 = MX;
-				var y00 = MY;
-				var x11 = QX;
-				var y11 = QY;
-				var x22 = EX;
-				var y22 = EY;
-				var x01 = (x11 - x00) * R + x00;
-				var y01 = (y11 - y00) * R + y00;
-				var x12 = (x22 - x11) * R + x11;
-				var y12 = (y22 - y11) * R + y11;
-				var x02 = (x12 - x01) * R + x01;
-				var y02 = (y12 - y01) * R + y01;
-				return new Dot(root, x02, y02, x12, y12, x01, y01);
-			}
-			#endregion
 			#region #method# Div(root, A, B) 
 			public override void Div(double root, out Line A, out Line B) {
 				var x00 = MX;
@@ -2817,6 +2679,28 @@ namespace Wholemy {
 							}
 							PA = A;
 							PB = B;
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+			#endregion
+			#region #method# ExtCw(Size, exA, exB, cwA, cwB) 
+			public override bool ExtCw(double Size, ref Line exA, ref Line exB, ref bool cwA, ref bool cwB) {
+				if (this.Ext(Size, out var A, out var B)) {
+					var S = QualityBut * Size;
+					if (S < QualityMin) S = QualityMin; else if (S > QualityMax) S = QualityMax;
+					if (this.DivBExtAMBE(Size, out var TAMX, out var TAMY, out var TBEX, out var TBEY)) {
+						A.DivC(0.5, out var ABMX, out var ABMY);
+						B.DivC(0.5, out var BAEX, out var BAEY);
+						var AL = Sqrt(ABMX - TAMX, ABMY - TAMY);
+						var BL = Sqrt(BAEX - TBEX, BAEY - TBEY);
+						if (AL < S && BL < S) {
+							exA = A;
+							exB = B;
+							cwA = (GetaR1(this.MX, this.MY, A.MX, A.MY, A.EX, A.EY) > 0.5);
+							cwB = (GetaR1(this.MX, this.MY, B.MX, B.MY, B.EX, B.EY) > 0.5);
 							return true;
 						}
 					}
@@ -3451,27 +3335,16 @@ namespace Wholemy {
 			var RootE = this.RootE; this.RootE = null;
 			var Bone = new Cubic(x0, y0, x1, y1, x2, y2, x3, y3).CutedCubic(RootM, RootE);
 			if (IsBoned) { AddBone(Bone); }
-			//{ BeginFz();
-			//var list = new List();
-			//list.AddLast(Bone.HalfArcM(Size));
-			//Bone.Ext(Size, out var A, out var B);
-			//list.AddLast(new LineItem(A));
-			//list.AddLast(Bone.HalfArcE(Size));
-			//list.AddLast(new LineItem(B));
-			//for (var I = list.Base as LineItem; I != null; I = I.Next as LineItem) {
-			//	AddCurve(I.Line);
-			//}
-			//}
-			//return;
 			BeginFz();
 			var Roots = new double[0];
-			Roots = Bone.Extrema(Roots);
+			//Roots = Bone.Extrema(Roots);
 			//Roots = AddRoots(0.5, Roots);
 			var Linear = Bone.Linear;
 			var LinearRounds = Linear && (IsRoundM || IsRoundE);
 
 			var List = Bone.RootsList(Roots);
-			var Li = Bone.ExtReturn(Size, List).Base as Stab;
+			var Lll = Bone.ExtCw(Size, List);
+			var Li = Lll.Base as Stab;
 			bool first = true;
 			while (Li != null) {
 				var list = new List();
@@ -3479,11 +3352,45 @@ namespace Wholemy {
 					list.AddLast(((Curve)Li.C.Base).Line.HalfArcM(Size));
 					if (!Linear) first = false;
 				}
-				list.AddLast(Li.A);
+				Curve elseB = null;
+				if (!Li.ResetB) {
+					var ABase = Li.A.Base as Curve;
+					var ALast = Li.A.Last as Curve;
+					var BBase = Li.B.Base as Curve;
+					var BLast = Li.B.Last as Curve;
+					var aX = 0.0;
+					var aY = 0.0;
+					if (IntersectLines(
+						ABase.Line.MX, ABase.Line.MY, BLast.Line.EX, BLast.Line.EY,
+						ALast.Line.EX, ALast.Line.EY, BBase.Line.MX, BBase.Line.MY,
+						ref aX, ref aY)) {
+						elseB = new Curve(BBase.Line.MX, BBase.Line.MY, aX, aY);
+					}
+				}
+				if (Li.ResetA) {
+					/*if (!Li.ResetB) */list.AddLast(Li.A);
+				} else {
+					var ABase = Li.A.Base as Curve;
+					var ALast = Li.A.Last as Curve;
+					var BLast = Li.B.Last as Curve;
+					var BBase = Li.B.Base as Curve;
+					var aX = 0.0;
+					var aY = 0.0;
+					if(IntersectLines(
+						ABase.Line.MX, ABase.Line.MY, BLast.Line.EX, BLast.Line.EY,
+						ALast.Line.EX, ALast.Line.EY, BBase.Line.MX, BBase.Line.MY,
+						ref aX, ref aY )) {
+						list.AddLast(new Curve(ABase.Line.MX, ABase.Line.MY, aX, aY));
+					}
+				}
 				if (Li.C.Last != null && (Linear && (IsRoundM || IsRoundE) || (!Linear && IsRoundE && Li.Next == null))) {
 					list.AddLast(((Curve)Li.C.Last).Line.HalfArcE(Size));
 				}
-				list.AddLast(Li.B);
+				if (Li.ResetB) {
+					/*if (!Li.ResetA) */list.AddLast(Li.B);
+				} else {
+					if(elseB!=null) list.AddLast(elseB);
+				}
 				for (var I = list.Base as Curve; I != null; I = I.Next as Curve) {
 					AddCurve(I.Line);
 				}
@@ -3508,6 +3415,30 @@ namespace Wholemy {
 			#endregion
 			public Curve(Line Line) {
 				this.Line = Line;
+			}
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public Curve(double MX, double MY, double EX, double EY) {
+				this.Line = new Line(MX, MY, EX, EY);
+			}
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public Curve(double MX, double MY, double QX, double QY, double EX, double EY) {
+				this.Line = new Quadratic(MX, MY, QX, QY, EX, EY);
+			}
+			#region #through# 
+#if TRACE
+			[System.Diagnostics.DebuggerStepThrough]
+#endif
+			#endregion
+			public Curve(double MX, double MY, double cmX, double cmY, double ceX, double ceY, double EX, double EY) {
+				this.Line = new Cubic(MX, MY, cmX, cmY, ceX, ceY, EX, EY);
 			}
 			#region #field# Line 
 			#region #invisible# 

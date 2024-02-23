@@ -1327,7 +1327,10 @@ namespace Wholemy {
 					} else { DIV /= 2.0; if (DIV > 0.0) goto NEXT; }
 				}
 				if (Item != null) {
-					List.AddLast(Stab = new Stab(Item.Root, Item.Size));
+					LastRoot = Item.Root;
+					LastSize = Item.Size;
+					//List.AddLast(Stab = new Stab(Item.Root, Item.Size));
+					Stab = null;
 					ROOT = 0.0;
 					POS = 0.0;
 					TES = RES = Item.Line;
@@ -3337,7 +3340,7 @@ namespace Wholemy {
 			if (IsBoned) { AddBone(Bone); }
 			BeginFz();
 			var Roots = new double[0];
-			//Roots = Bone.Extrema(Roots);
+			Roots = Bone.Extrema(Roots);
 			//Roots = AddRoots(0.5, Roots);
 			var Linear = Bone.Linear;
 			var LinearRounds = Linear && (IsRoundM || IsRoundE);
@@ -3352,8 +3355,27 @@ namespace Wholemy {
 					list.AddLast(((Curve)Li.C.Base).Line.HalfArcM(Size));
 					if (!Linear) first = false;
 				}
+				Curve elseA = null;
 				Curve elseB = null;
-				if (!Li.ResetB) {
+				if (!Li.ResetA&& Li.ResetB) {
+					var ABase = Li.A.Base as Curve;
+					var ALast = Li.A.Last as Curve;
+					var BLast = Li.B.Last as Curve;
+					var BBase = Li.B.Base as Curve;
+					var aX = 0.0;
+					var aY = 0.0;
+					if (IntersectLines(
+						ABase.Line.MX, ABase.Line.MY, BLast.Line.EX, BLast.Line.EY,
+						ALast.Line.EX, ALast.Line.EY, BBase.Line.MX, BBase.Line.MY,
+						ref aX, ref aY)) {
+						elseA = new Curve(ABase.Line.MX, ABase.Line.MY, aX, aY);
+					} else {
+						//var CBase = Li.C.Base as Curve;
+						//var CLast = Li.C.Last as Curve;
+						//elseA = new Curve(ALast.Line.MX, ALast.Line.MY, CBase.Line.MX, CBase.Line.MY);
+					}
+				}
+				if (!Li.ResetB&& Li.ResetA) {
 					var ABase = Li.A.Base as Curve;
 					var ALast = Li.A.Last as Curve;
 					var BBase = Li.B.Base as Curve;
@@ -3365,23 +3387,16 @@ namespace Wholemy {
 						ALast.Line.EX, ALast.Line.EY, BBase.Line.MX, BBase.Line.MY,
 						ref aX, ref aY)) {
 						elseB = new Curve(BBase.Line.MX, BBase.Line.MY, aX, aY);
+					} else {
+						//var CBase = Li.C.Base as Curve;
+						//var CLast = Li.C.Last as Curve;
+						//elseB = new Curve(CLast.Line.EX, CLast.Line.EY, BLast.Line.EX, BLast.Line.EY);
 					}
 				}
 				if (Li.ResetA) {
-					/*if (!Li.ResetB) */list.AddLast(Li.A);
+					list.AddLast(Li.A);
 				} else {
-					var ABase = Li.A.Base as Curve;
-					var ALast = Li.A.Last as Curve;
-					var BLast = Li.B.Last as Curve;
-					var BBase = Li.B.Base as Curve;
-					var aX = 0.0;
-					var aY = 0.0;
-					if(IntersectLines(
-						ABase.Line.MX, ABase.Line.MY, BLast.Line.EX, BLast.Line.EY,
-						ALast.Line.EX, ALast.Line.EY, BBase.Line.MX, BBase.Line.MY,
-						ref aX, ref aY )) {
-						list.AddLast(new Curve(ABase.Line.MX, ABase.Line.MY, aX, aY));
-					}
+					if (elseA != null) list.AddLast(elseA);
 				}
 				if (Li.C.Last != null && (Linear && (IsRoundM || IsRoundE) || (!Linear && IsRoundE && Li.Next == null))) {
 					list.AddLast(((Curve)Li.C.Last).Line.HalfArcE(Size));

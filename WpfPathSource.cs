@@ -1,5 +1,75 @@
 namespace Wholemy {
 	public class PathSource {
+		public static double[] AtanC = new double[] { 0.0, 0.4636476090008061165, 0.7853981633974483094, 0.98279372324732906714, 1.1071487177940905022, 1.1902899496825317322, 1.2490457723982544262, 1.2924966677897852673, 1.3258176636680324644 };
+		public static double Atan(double X) {
+			var Minus = false;
+			if (X < 0) { X = -X; Minus = true; }
+			var L = 0;
+			var Y = 0;
+			if (X >= 4.0) { L = -1; X = 1.0 / X; goto Next; } else { if (X < 0.25) goto Next; }
+			var F = (float)(X / 0.5);
+			if (F < 0) F++;
+			Y = (int)F;
+			var XX = Y * 0.5;
+			X = (X - XX) / (X * XX + 1);
+			Next:
+			XX = X * X;
+			var B = ((((893025 * XX + 49116375) * XX + 425675250) * XX + 1277025750) * XX + 1550674125) * XX + 654729075;
+			var A = (((13852575 * XX + 216602100) * XX + 891080190) * XX + 1332431100) * XX + 654729075;
+			A = (A / B) * X + AtanC[Y];
+			if (L != 0) A = (System.Math.PI / 2.0) - A;
+			return Minus ? -A : A;
+		}
+		public static double Atan2(double y, double x) {
+			if (x == 0.0) {
+				if (y == 0.0) return 0.0;
+				else if (y > 0) return System.Math.PI / 2.0; else return -(System.Math.PI / 2.0);
+			}
+			var A = Atan(y / x);
+			if (x < 0.0) {
+				if (y >= 0.0) A += System.Math.PI; else A -= System.Math.PI;
+			}
+			return A;
+		}
+		public static double Aint(double X) {
+			float F = (float)X;
+			if ((-0.5) != 0 && F < 0) F++;
+			X = (double)F;
+			return X;
+		}
+		public static double Asin(double X) {
+			if (X < 0) X = -X;
+			if (X > 1) return 1;
+			return Atan2(X, Sqrt(1 - X * X));
+		}
+		public static double Sin(double X) {
+			var Minus = false;
+			if (X < 0) { X = -X; Minus = true; }
+			if (X > (System.Math.PI * 2.0)) {
+				X -= (Aint(X / (System.Math.PI * 2.0)) * (System.Math.PI * 2.0));
+			}
+			if (X > System.Math.PI) { X -= System.Math.PI; Minus = !Minus; }
+			if (X > (System.Math.PI / 2.0)) X = System.Math.PI - X;
+
+			double Y, R, XX;
+			if (X < (System.Math.PI / 4.0)) {
+				Y = X * (4.0 / System.Math.PI);
+				XX = Y * Y;
+				R = Y * (((((((-0.202253129293E-13 * XX + 0.69481520350522E-11) * XX - 0.17572474176170806E-8) * XX + 0.313361688917325348E-6) * XX - 0.365762041821464001E-4) * XX + 0.249039457019271628E-2) * XX - 0.0807455121882807815) * XX + 0.785398163397448310);
+			} else {
+				Y = ((System.Math.PI / 2.0) - X) * (4.0 / System.Math.PI);
+				XX = Y * Y;
+				R = ((((((-0.38577620372E-12 * XX + 0.11500497024263E-9) * XX - 0.2461136382637005E-7) * XX + 0.359086044588581953E-5) * XX - 0.325991886926687550E-3) * XX + 0.0158543442438154109) * XX - 0.308425137534042452) * XX + 1.0;
+			}
+			return Minus ? -R : R;
+		}
+
+		public static double Cos(double X) {
+			if (X < 0.0) X = -X;
+			if (X > (System.Math.PI * 2.0))
+				X = X - (Aint(X / (System.Math.PI * 2.0)) * (System.Math.PI * 2.0));
+			return Sin(X + (System.Math.PI / 2.0));
+		}
 		public static double TCos(double X) {
 			var M = false;
 			if (X < 0) { X = -X; M = true; }
@@ -37,6 +107,25 @@ namespace Wholemy {
 			if (R <= -1.0) R = -1.0;
 			return R;
 		}
+		public static double Tan(double X) {
+			return Sin(X) / Cos(X);
+		}
+		public static double Cot(double x) {
+			return (1.0 / Tan(x));
+		}
+		public static double TTan(double X) {
+			return TSin(X) / TCos(X);
+		}
+		public static double TCot(double x) {
+			return (1.0 / TTan(x));
+		}
+		//public static double TAtan2(double y, double x) {
+		//	if (x < 0) {
+		//		return (Atan(y / x) + 3 * System.Math.PI / 2);
+		//	} else {
+		//		return (Atan(y / x) + System.Math.PI / 2);
+		//	}
+		//}
 		#region #method# IntersectLines(ax0, ay0, ax1, ay1, bx0, by0, bx1, by1, x, y) 
 		public static bool IntersectLines(double ax0, double ay0, double ax1, double ay1, double bx0, double by0, double bx1, double by1, ref double x, ref double y) {
 			var a = (bx1 - bx0) * (ay0 - by0) - (by1 - by0) * (ax0 - bx0);
@@ -139,7 +228,7 @@ namespace Wholemy {
 		/// <param name="AY">Конец по оси Y)</param>
 		/// <returns>Возвращает корень поворота от 0.0 до 1.0)</returns>
 		public static double GetaR1(double CX, double CY, double BX, double BY, double AX, double AY) {
-			var R = (0.5 / System.Math.PI) * (System.Math.Atan2(AY - CY, AX - CX) - System.Math.Atan2(BY - CY, BX - CX));
+			var R = (0.5 / System.Math.PI) * (Atan2(AY - CY, AX - CX) - Atan2(BY - CY, BX - CX));
 			if (R < 0) R += 1.0;
 			return R;
 		}
@@ -206,10 +295,33 @@ namespace Wholemy {
 		//			return R/=4;
 		//		}
 		#endregion
+		#region #method# Sqrt(X) 
+		public static double Sqrt(double X) {
+			if (X == 0) return 0; if (X < 0) return 1;
+			var PS = 0.0;
+			var SS = X * 2 / X;
+			var SSS = (SS - (X / SS)) / 2u;
+			while (SSS != PS) {
+				SS -= SSS;
+				PS = SSS;
+				SSS = (SS - (X / SS)) / 2u;
+			}
+			return SS;
+		}
+		#endregion
 		#region #method# Sqrt(X, Y) 
 		public static double Sqrt(double X, double Y) {
 			var S = X * X + Y * Y;
-			return System.Math.Sqrt(S);
+			if (S == 0) return 0; if (S < 0) return 1;
+			var PS = 0.0;
+			var SS = S * 2 / S;
+			var SSS = (SS - (S / SS)) / 2u;
+			while(SSS != PS) {
+				SS -= SSS;
+				PS = SSS;
+				SSS = (SS - (S / SS)) / 2u;
+			}
+			return SS;
 		}
 		#endregion
 		#region #method# RootOffset(x, y, X, Y) 
@@ -304,7 +416,7 @@ namespace Wholemy {
 			return Roots;
 		}
 		#endregion
-		public static readonly double Arc14 = 4.0 / 3.0 * System.Math.Tan(System.Math.PI / 8);
+		public static readonly double Arc14 = 4.0 / 3.0 * TTan(System.Math.PI / 8);
 		#region #invisible# 
 #if TRACE
 		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
@@ -878,8 +990,8 @@ namespace Wholemy {
 					var CX = this.CX;
 					var CY = this.CY;
 					A = A * System.Math.PI / 180.0;
-					var AC = System.Math.Cos(A);
-					var AS = System.Math.Sin(A);
+					var AC = TCos(A);
+					var AS = TSin(A);
 					RX -= CX;
 					RY -= CY;
 					if (x) X = ((RX * AC) - (RY * AS)) + CX;
@@ -916,8 +1028,8 @@ namespace Wholemy {
 					}
 					if (!CW) A = -A;
 					A = System.Math.Atan(A);
-					var AC = System.Math.Cos(A);
-					var AS = System.Math.Sin(A);
+					var AC = TCos(A);
+					var AS = TSin(A);
 					RX -= CX;
 					RY -= CY;
 					if (x) X = ((RX * AC) - (RY * AS)) + CX;

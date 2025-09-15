@@ -1,77 +1,26 @@
 namespace Wholemy {
 	public class PathSource {
-		public static double[] AtanC = new double[] { 0.0, 0.4636476090008061165, 0.7853981633974483094, 0.98279372324732906714, 1.1071487177940905022, 1.1902899496825317322, 1.2490457723982544262, 1.2924966677897852673, 1.3258176636680324644 };
-		public static double Atan(double X) {
-			var Minus = false;
-			if (X < 0) { X = -X; Minus = true; }
-			var L = 0;
-			var Y = 0;
-			if (X >= 4.0) { L = -1; X = 1.0 / X; goto Next; } else { if (X < 0.25) goto Next; }
-			var F = (float)(X / 0.5);
-			if (F < 0) F++;
-			Y = (int)F;
-			var XX = Y * 0.5;
-			X = (X - XX) / (X * XX + 1);
-			Next:
-			XX = X * X;
-			var B = ((((893025 * XX + 49116375) * XX + 425675250) * XX + 1277025750) * XX + 1550674125) * XX + 654729075;
-			var A = (((13852575 * XX + 216602100) * XX + 891080190) * XX + 1332431100) * XX + 654729075;
-			A = (A / B) * X + AtanC[Y];
-			if (L != 0) A = (System.Math.PI / 2.0) - A;
-			return Minus ? -A : A;
-		}
-		public static double Atan2(double y, double x) {
+		#region #method# TAtan2(y, x) 
+		public static double TAtan2(double y, double x) {
 			if (x == 0.0) {
 				if (y == 0.0) return 0.0;
 				else if (y > 0) return System.Math.PI / 2.0; else return -(System.Math.PI / 2.0);
 			}
-			var A = Atan(y / x);
+			var A = System.Math.Atan(y / x);
 			if (x < 0.0) {
 				if (y >= 0.0) A += System.Math.PI; else A -= System.Math.PI;
 			}
 			return A;
 		}
-		public static double Aint(double X) {
-			float F = (float)X;
-			if ((-0.5) != 0 && F < 0) F++;
-			X = (double)F;
-			return X;
-		}
-		public static double Asin(double X) {
+		#endregion
+		#region #method# TAsin(X) 
+		public static double TAsin(double X) {
 			if (X < 0) X = -X;
 			if (X > 1) return 1;
-			return Atan2(X, Sqrt(1 - X * X));
+			return TAtan2(X, Sqrt(1 - X * X));
 		}
-		private const double PI = System.Math.PI;
-		private const double PIX2 = System.Math.PI * 2;
-		private const double PId2 = System.Math.PI / 2;
-		private const double PId4 = System.Math.PI / 2;
-		private const double D4PI = 4.0 / System.Math.PI;
-		public static double Sin(double X) {
-			var Minus = false;
-			if (X < 0) { X = -X; Minus = true; }
-			if (X > PIX2) X -= (Aint(X / PIX2) * PIX2);
-			if (X > PI) { X -= PI; Minus = !Minus; }
-			if (X > (PId2)) X = PI - X;
-
-			double Y, R, XX;
-			if (X < PId4) {
-				Y = X * D4PI;
-				XX = Y * Y;
-				R = Y * (((((((-0.202253129293E-13 * XX + 0.69481520350522E-11) * XX - 0.17572474176170806E-8) * XX + 0.313361688917325348E-6) * XX - 0.365762041821464001E-4) * XX + 0.249039457019271628E-2) * XX - 0.0807455121882807815) * XX + 0.785398163397448310);
-			} else {
-				Y = ((PId2) - X) * (4.0 / System.Math.PI);
-				XX = Y * Y;
-				R = ((((((-0.38577620372E-12 * XX + 0.11500497024263E-9) * XX - 0.2461136382637005E-7) * XX + 0.359086044588581953E-5) * XX - 0.325991886926687550E-3) * XX + 0.0158543442438154109) * XX - 0.308425137534042452) * XX + 1.0;
-			}
-			return Minus ? -R : R;
-		}
-
-		public static double Cos(double X) {
-			if (X < 0.0) X = -X;
-			if (X > PIX2) X -= (Aint(X / PIX2) * PIX2);
-			return Sin(X + PId2);
-		}
+		#endregion
+		#region #method# TCos(X) 
 		public static double TCos(double X) {
 			var M = false;
 			if (X < 0) { X = -X; M = true; }
@@ -90,44 +39,59 @@ namespace Wholemy {
 			if (M) R = -R;
 			return R;
 		}
+		#endregion
+		#region #method# TSin(X) 
 		public static double TSin(double X) {
-			var XX = -(X * X);
-			var Q = X;
-			var R = X;
-			// var P = 1; var N = (P++ * P++ * 4);
-			R += (Q *= XX / 8);
-			R += (Q *= XX / 48);
-			R += (Q *= XX / 120);
-			R += (Q *= XX / 224);
-			R += (Q *= XX / 360);
-			R += (Q *= XX / 528);
-			R += (Q *= XX / 728);
-			R += (Q *= XX / 960);
-			R += (Q *= XX / 1224);
-			R += (Q *= XX / 1520);
-			if (R >= 1.0) return 1.0;
-			if (R <= -1.0) return -1.0;
+			var M = false;
+			if (X < 0) { X = -X; M = true; }
+			X -= System.Math.PI / 2;
+			var XX = X * X;
+			var XXX = XX;
+			var R = 1 - (XX / 2);
+			R += (XXX *= XX) / 24;
+			R -= (XXX *= XX) / 720;
+			R += (XXX *= XX) / 40320;
+			R -= (XXX *= XX) / 3628800;
+			R += (XXX *= XX) / 479001600;
+			R -= (XXX *= XX) / 87178291200;
+			R += (XXX *= XX) / 20922789888000;
+			R -= (XXX *= XX) / 6402373705728000;
+			R += (XXX *= XX) / 2432902008176640000;
+			if (M) R = -R;
 			return R;
 		}
-		public static double Tan(double X) {
-			return Sin(X) / Cos(X);
-		}
-		public static double Cot(double x) {
-			return (1.0 / Tan(x));
-		}
+		#endregion
+		#region #method# TTan(X) 
 		public static double TTan(double X) {
-			return TSin(X) / TCos(X);
+			var M = false;
+			if (X < 0) { X = -X; M = true; }
+			var S = false;
+			var Cos = 0.0;
+			Next:
+			var XX = X * X;
+			var XXX = XX;
+			var R = 1 - (XX / 2);
+			R += (XXX *= XX) / 24;
+			R -= (XXX *= XX) / 720;
+			R += (XXX *= XX) / 40320;
+			R -= (XXX *= XX) / 3628800;
+			R += (XXX *= XX) / 479001600;
+			R -= (XXX *= XX) / 87178291200;
+			R += (XXX *= XX) / 20922789888000;
+			R -= (XXX *= XX) / 6402373705728000;
+			R += (XXX *= XX) / 2432902008176640000;
+			if (!S) {
+				X -= System.Math.PI / 2;
+				Cos = R; S = true; goto Next;
+			}
+			return R / Cos;
 		}
+		#endregion
+		#region #method# TCot(x) 
 		public static double TCot(double x) {
 			return (1.0 / TTan(x));
 		}
-		//public static double TAtan2(double y, double x) {
-		//	if (x < 0) {
-		//		return (Atan(y / x) + 3 * System.Math.PI / 2);
-		//	} else {
-		//		return (Atan(y / x) + System.Math.PI / 2);
-		//	}
-		//}
+		#endregion
 		#region #method# IntersectLines(ax0, ay0, ax1, ay1, bx0, by0, bx1, by1, x, y) 
 		public static bool IntersectLines(double ax0, double ay0, double ax1, double ay1, double bx0, double by0, double bx1, double by1, ref double x, ref double y) {
 			var a = (bx1 - bx0) * (ay0 - by0) - (by1 - by0) * (ax0 - bx0);
@@ -154,67 +118,56 @@ namespace Wholemy {
 			}
 		}
 		#endregion
-		public static bool Rotate1(double CX, double CY, ref double BX, ref double BY, double AR, int ED = 56) {
+		#region #method# Rotate1(CX, CY, BX, BY, AR) 
+		public static bool Rotate1(double CX, double CY, ref double BX, ref double BY, double AR) {
 			var TX = BX; var TY = BY;
-			//var ecx = CX; var ecy = CY; var ebx = BX; var eby = BY; var ear = AR;
-			//AG:
-			//var cx = CX; var cy = CY; var bx = BX; var by = BY; var ar = AR;
 			if (AR == 0 || AR == 1) return false;
 			var A = AR * 4;
-			var X = CX - TX;
-			var Y = CY - TY;
-			if (X == 0 && Y == 0) return false;
+			var MX = CX - TX;
+			var MY = CY - TY;
+			if (MX == 0 && MY == 0) return false;
 			int R = (int)A;
 			if (R < 0) { A = R - A; R = R % 4 + 4; } else { A = A - R; R = R % 4; }
-			var MX = TX; var MY = TY;
-			if (R == 1) { MX = CY - TY + CX; MY = TX - CX + CY; } // 90
-			else if (R == 2) { MX = CX - TX + CX; MY = CY - TY + CY; } // 180
-			else if (R == 3) { MX = TY - CY + CX; MY = CX - TX + CY; } // 270
-			var EX = TX; var EY = TY; TX = MX; TY = MY;
-			if (A > 0 && R >= 0 && R < 3) { EX = CY - MY + CX; EY = MX - CX + CY; } // 90
+			if (R > 0) {
+				MX = TX; MY = TY;
+				if (R == 1) { TX = CY - MY; TY = MX - CX; } // 90
+				else if (R == 2) { TX = CX - MX; TY = CY - MY; } // 180
+				else { TX = MY - CY; TY = CX - MX; } // 270
+			}
 			if (A > 0 && A < 1) {
-				Rotate11(CX, CY, ref TX, ref TY, A/4);
-				BX = TX;
-				BY = TY;
-				return true;
-				var rl = Sqrt(X, Y);
-				while (A > 0 && A < 1 && ED-- > 0) {
-					X = MX - EX; Y = MY - EY;
-					var xl = Sqrt(X, Y);
-					if (xl == 0) break;
-					var ll = xl / 2;
-					if (A < 0.5) {
-						EX = MX + (EX - MX) / xl * ll;
-						EY = MY + (EY - MY) / xl * ll;
-						X = CX - EX; Y = CY - EY;
-						ll = Sqrt(X, Y);
-						EX = CX + (EX - CX) / ll * rl;
-						EY = CY + (EY - CY) / ll * rl;
-						A = A * 2;
-						TX = EX;
-						TY = EY;
-					} else {
-						MX = EX + (MX - EX) / xl * ll;
-						MY = EY + (MY - EY) / xl * ll;
-						X = CX - MX; Y = CY - MY;
-						ll = Sqrt(X, Y);
-						MX = CX + (MX - CX) / ll * rl;
-						MY = CY + (MY - CY) / ll * rl;
-						A = (A - 0.5) * 2;
-						TX = MX;
-						TY = MY;
+				if (TX != 0 || TY != 0) {
+					MX = System.Math.PI / 2 * A;
+					var S = false;
+					var CoS = 0.0;
+					Next:
+					if (MX < 0) { MX = -MX; }
+					var XX = MX * MX;
+					var XXX = XX;
+					MY = 1 - (XX / 2);
+					MY += (XXX *= XX) / 24;
+					MY -= (XXX *= XX) / 720;
+					MY += (XXX *= XX) / 40320;
+					MY -= (XXX *= XX) / 3628800;
+					MY += (XXX *= XX) / 479001600;
+					MY -= (XXX *= XX) / 87178291200;
+					MY += (XXX *= XX) / 20922789888000;
+					MY -= (XXX *= XX) / 6402373705728000;
+					MY += (XXX *= XX) / 2432902008176640000;
+					if (!S) {
+						MX -= System.Math.PI / 2;
+						CoS = MY; S = true; goto Next;
 					}
+					var SiN = MY;
+					MX = TX; MY = TY;
+					TX = (CoS * MX - SiN * MY);
+					TY = (SiN * MX + CoS * MY);
 				}
 			}
-			BX = TX;
-			BY = TY;
-			//Rotate12(cx, cy, ref bx, ref by, ar);
-			//if (bx != BX || by != BY) { // 98, -2
-			//	CX = ecx; CY = ecy; BX = ebx; BY = eby; AR = ear;
-			//	goto AG;
-			//}
+			BX = TX + CX;
+			BY = TY + CY;
 			return true;
 		}
+		#endregion
 		#region #method# Rotate1(CX, CY, BX, BY, AR) 
 		/// <summary>Поворачивает координаты #double# вокруг центра по корню четверти круга
 		/// где 90 градусов равно значению 0.25, а 360 градусов равно значению 1)</summary>
@@ -223,14 +176,14 @@ namespace Wholemy {
 		/// <param name="BX">Старт и возвращаемый результат поворота по оси X)</param>
 		/// <param name="BY">Старт и возвращаемый результат поворота по оси Y)</param>
 		/// <param name="AR">Корень четверти от 0.0 до 1.0 отрицательная в обратную сторону)</param>
-		public static void Rotate11(double CX, double CY, ref double BX, ref double BY, double AR) {
-			if (AR == 0.0) return;
+		public static void Rotate10(double CX, double CY, ref double BX, ref double BY, double AR) {
+			if (AR == 0) return;
 			var TX = BX - CX;
 			var TY = BY - CY;
-			if (TX == 0.0 && TY == 0.0) return;
-			var PI = System.Math.PI / 0.5 * AR;
-			var CoS = System.Math.Cos(PI);
-			var SiN = System.Math.Sin(PI);
+			if (TX == 0 && TY == 0) return;
+			var PI = System.Math.PI * 2 * AR;
+			var CoS = TCos(PI);
+			var SiN = TSin(PI);
 			var X = (CoS * TX - SiN * TY + CX);
 			var Y = (SiN * TX + CoS * TY + CY);
 			BX = X;
@@ -247,7 +200,7 @@ namespace Wholemy {
 		/// <param name="AY">Конец по оси Y)</param>
 		/// <returns>Возвращает корень поворота от 0.0 до 1.0)</returns>
 		public static double GetaR1(double CX, double CY, double BX, double BY, double AX, double AY) {
-			var R = (0.5 / System.Math.PI) * (Atan2(AY - CY, AX - CX) - Atan2(BY - CY, BX - CX));
+			var R = (0.5 / System.Math.PI) * (TAtan2(AY - CY, AX - CX) - TAtan2(BY - CY, BX - CX));
 			if (R < 0) R += 1.0;
 			return R;
 		}
@@ -345,7 +298,7 @@ namespace Wholemy {
 		#endregion
 		#region #method# RootOffset(x, y, X, Y) 
 		public static double RootOffset(double x, double y, out double X, out double Y) {
-			var L = System.Math.Sqrt(x * x + y * y);
+			var L = Sqrt(x * x + y * y);
 			X = -y / L;
 			Y = x / L;
 			return L;
@@ -423,7 +376,7 @@ namespace Wholemy {
 		public static double[] AddBoxRoots(double A, double B, double C, double[] Roots = null) {
 			var D = A - (B * 2) + C;
 			if (D != 0.0) {
-				var L = System.Math.Sqrt(B * B - A * C);
+				var L = Sqrt(B * B - A * C);
 				if (!double.IsNaN(L)) {
 					C = -A + B;
 					A = -(-L + C) / D;
@@ -435,19 +388,26 @@ namespace Wholemy {
 			return Roots;
 		}
 		#endregion
-		public static readonly double Arc14 = 4.0 / 3.0 * System.Math.Tan(System.Math.PI / 8);
+		#region #readonly# #field # Arc14 
+		public static readonly double Arc14 = 4.0 / 3.0 * TTan(System.Math.PI / 8);
+		#endregion
+		#region #field# LastPath 
 		#region #invisible# 
 #if TRACE
 		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
 		#endregion
 		private System.Windows.Media.StreamGeometry LastPath;
+		#endregion
+		#region #field# LastMode 
 		#region #invisible# 
 #if TRACE
 		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
 		#endregion
 		private System.Windows.Media.GeometryCombineMode LastMode;
+		#endregion
+		#region #get# Geometry 
 		public System.Windows.Media.Geometry Geometry {
 			get {
 				var G = this.LastPath;
@@ -455,12 +415,16 @@ namespace Wholemy {
 				return G;
 			}
 		}
+		#endregion
+		#region #field# CombinedFigures 
 		#region #invisible# 
 #if TRACE
 		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
 		#endregion
 		private List CombinedFigures;
+		#endregion
+		#region #get# Combined 
 		public List Combined {
 			get {
 				var C = this.CombinedFigures;
@@ -479,15 +443,34 @@ namespace Wholemy {
 				return C;
 			}
 		}
+		#endregion
+		#region #new# 
 		public PathSource() { }
+		#endregion
+		#region #field# Tolerance 
 		public double Tolerance = 0.5;
+		#endregion
+		#region #field# ToleranceType 
 		public System.Windows.Media.ToleranceType ToleranceType = System.Windows.Media.ToleranceType.Absolute;
+		#endregion
+		#region #field# IsUnited 
 		public bool IsUnited = true;
+		#endregion
+		#region #field# IsFilled 
 		public bool IsFilled = true;
+		#endregion
+		#region #field# IsClozed 
 		public bool IsClozed = true;
+		#endregion
+		#region #field# Inverted 
 		public bool Inverted;
+		#endregion
+		#region #field# RootM 
 		private Preset RootM;
+		#endregion
+		#region #field# RootE 
 		private Preset RootE;
+		#endregion
 		#region #class# Preset 
 		public class Preset {
 			public double Value;
@@ -532,17 +515,37 @@ namespace Wholemy {
 			this.RootM = new Preset(E);
 		}
 		#endregion
+		#region #field# Mod 
 		private Change Mod;
+		#endregion
+		#region #field# Figures 
 		private List Figures;
+		#endregion
+		#region #field# ProcessingFigure 
 		private FigureProcessing ProcessingFigure;
+		#endregion
+		#region #field# Thickness 
 		/// <summary>Толщина линий)</summary>
 		public double Thickness;
+		#endregion
+		#region #field# IsBoned 
 		public bool IsBoned;
+		#endregion
+		#region #field# IsRoundM 
 		public bool IsRoundM;
+		#endregion
+		#region #field# IsRoundE 
 		public bool IsRoundE;
+		#endregion
+		#region #field# QualityMax 
 		public const double QualityMax = 0.5;
+		#endregion
+		#region #field# QualityBut 
 		public const double QualityBut = 0.05;
+		#endregion
+		#region #field# QualityMin 
 		public const double QualityMin = 0.005;
+		#endregion
 		#region #property# Figures 
 		//		private Figure[] Figures {
 		//			#region #through# 
@@ -1023,16 +1026,9 @@ namespace Wholemy {
 				if (x || y) {
 					var RX = X;
 					var RY = Y;
-					var A = this.A;
-					var CX = this.CX;
-					var CY = this.CY;
-					A = A * System.Math.PI / 180.0;
-					var AC = System.Math.Cos(A);
-					var AS = System.Math.Sin(A);
-					RX -= CX;
-					RY -= CY;
-					if (x) X = ((RX * AC) - (RY * AS)) + CX;
-					if (y) Y = ((RX * AS) + (RY * AC)) + CY;
+					Rotate1(this.CX, this.CY, ref RX, ref RY, this.A /360);
+					if (x) X = RX;
+					if (y) Y = RY;
 				}
 			}
 		}
@@ -1051,26 +1047,13 @@ namespace Wholemy {
 			}
 			public override void Modify(ref double X, ref double Y, bool x, bool y) {
 				if (x || y) {
+					var A = GetaR1(CX, CY, AX, AY, AX, AY);
+					if(CW) A=-A;
 					var RX = X;
 					var RY = Y;
-					var AX = this.AX;
-					var AY = this.AY;
-					var CX = this.CX;
-					var CY = this.CY;
-					double A;
-					if (((CX < AX && CY < AY) || (CX > AX && CY > AY)) ^ CW) {
-						A = (AY > CY ? AY - CY : CY - AY) / (AX > CX ? CX - AX : AX - CX);
-					} else {
-						A = (AX > CX ? CX - AX : AX - CX) / (AY > CY ? AY - CY : CY - AY);
-					}
-					if (!CW) A = -A;
-					A = System.Math.Atan(A);
-					var AC = System.Math.Cos(A);
-					var AS = System.Math.Sin(A);
-					RX -= CX;
-					RY -= CY;
-					if (x) X = ((RX * AC) - (RY * AS)) + CX;
-					if (y) Y = ((RX * AS) + (RY * AC)) + CY;
+					Rotate1(this.CX, this.CY, ref RX, ref RY, A);
+					if (x) X = RX;
+					if (y) Y = RY;
 				}
 			}
 		}

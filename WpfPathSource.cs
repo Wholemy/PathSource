@@ -42,22 +42,25 @@ namespace Wholemy {
 			if (X > 1) return 1;
 			return Atan2(X, Sqrt(1 - X * X));
 		}
+		private const double PI = System.Math.PI;
+		private const double PIX2 = System.Math.PI * 2;
+		private const double PId2 = System.Math.PI / 2;
+		private const double PId4 = System.Math.PI / 2;
+		private const double D4PI = 4.0 / System.Math.PI;
 		public static double Sin(double X) {
 			var Minus = false;
 			if (X < 0) { X = -X; Minus = true; }
-			if (X > (System.Math.PI * 2.0)) {
-				X -= (Aint(X / (System.Math.PI * 2.0)) * (System.Math.PI * 2.0));
-			}
-			if (X > System.Math.PI) { X -= System.Math.PI; Minus = !Minus; }
-			if (X > (System.Math.PI / 2.0)) X = System.Math.PI - X;
+			if (X > PIX2) X -= (Aint(X / PIX2) * PIX2);
+			if (X > PI) { X -= PI; Minus = !Minus; }
+			if (X > (PId2)) X = PI - X;
 
 			double Y, R, XX;
-			if (X < (System.Math.PI / 4.0)) {
-				Y = X * (4.0 / System.Math.PI);
+			if (X < PId4) {
+				Y = X * D4PI;
 				XX = Y * Y;
 				R = Y * (((((((-0.202253129293E-13 * XX + 0.69481520350522E-11) * XX - 0.17572474176170806E-8) * XX + 0.313361688917325348E-6) * XX - 0.365762041821464001E-4) * XX + 0.249039457019271628E-2) * XX - 0.0807455121882807815) * XX + 0.785398163397448310);
 			} else {
-				Y = ((System.Math.PI / 2.0) - X) * (4.0 / System.Math.PI);
+				Y = ((PId2) - X) * (4.0 / System.Math.PI);
 				XX = Y * Y;
 				R = ((((((-0.38577620372E-12 * XX + 0.11500497024263E-9) * XX - 0.2461136382637005E-7) * XX + 0.359086044588581953E-5) * XX - 0.325991886926687550E-3) * XX + 0.0158543442438154109) * XX - 0.308425137534042452) * XX + 1.0;
 			}
@@ -66,9 +69,8 @@ namespace Wholemy {
 
 		public static double Cos(double X) {
 			if (X < 0.0) X = -X;
-			if (X > (System.Math.PI * 2.0))
-				X = X - (Aint(X / (System.Math.PI * 2.0)) * (System.Math.PI * 2.0));
-			return Sin(X + (System.Math.PI / 2.0));
+			if (X > PIX2) X -= (Aint(X / PIX2) * PIX2);
+			return Sin(X + PId2);
 		}
 		public static double TCos(double X) {
 			var M = false;
@@ -103,8 +105,8 @@ namespace Wholemy {
 			R += (Q *= XX / 960);
 			R += (Q *= XX / 1224);
 			R += (Q *= XX / 1520);
-			if (R >= 1.0) R = 1.0;
-			if (R <= -1.0) R = -1.0;
+			if (R >= 1.0) return 1.0;
+			if (R <= -1.0) return -1.0;
 			return R;
 		}
 		public static double Tan(double X) {
@@ -152,48 +154,67 @@ namespace Wholemy {
 			}
 		}
 		#endregion
-		//		#region #through# 
-		//#if TRACE
-		//		[System.Diagnostics.DebuggerStepThrough]
-		//#endif
-		//		#endregion
-		//		public static bool Rotate1(double CX, double CY, ref double BX, ref double BY, double AR, int ED = 56) {
-		//			if (AR == 0) return false;
-		//			AR *= 4;
-		//			var Len = Sqrt(CX - BX, CY - BY);
-		//			if (Len == 0) return false;
-		//			long R = (long)AR;
-		//			if (AR < 0) { AR = 1 + (AR - R); R %= 4; R += 3; } else { AR -= R; R %= 4; }
-		//			var MX = BX; var MY = BY;
-		//			if (R == 1) { MX = CY - BY + CX; MY = BX - CX + CY; } // 90
-		//			else if (R == 2) { MX = CX - BX + CX; MY = CY - BY + CY; } // 180
-		//			else if (R == 3) { MX = BY - CY + CX; MY = CX - BX + CY; } // 270
-		//			var EX = BX; var EY = BY; BX = MX; BY = MY;
-		//			if (AR > 0 && R >= 0 && R < 3) { EX = CY - MY + CX; EY = MX - CX + CY; } // 90
-		//			while (AR > 0 && AR < 1 && ED-- > 0) {
-		//				var L = Sqrt(MX - EX, MY - EY);
-		//				if (L == 0) break;
-		//				var ll = L / 2;
-		//				if (AR < 0.5) {
-		//					EX = MX + (EX - MX) / L * ll;
-		//					EY = MY + (EY - MY) / L * ll;
-		//					ll = Sqrt(CX - EX, CY - EY);
-		//					EX = CX + (EX - CX) / ll * Len;
-		//					EY = CY + (EY - CY) / ll * Len;
-		//					AR = AR * 2;
-		//					BX = EX;
-		//					BY = EY;
-		//				} else {
-		//					MX = EX + (MX - EX) / L * ll;
-		//					MY = EY + (MY - EY) / L * ll;
-		//					ll = Sqrt(CX - MX, CY - MY);
-		//					MX = CX + (MX - CX) / ll * Len;
-		//					MY = CY + (MY - CY) / ll * Len;
-		//					AR = (AR - 0.5) * 2; BX = MX; BY = MY;
-		//				}
-		//			}
-		//			return true;
-		//		}
+		public static bool Rotate1(double CX, double CY, ref double BX, ref double BY, double AR, int ED = 56) {
+			var TX = BX; var TY = BY;
+			//var ecx = CX; var ecy = CY; var ebx = BX; var eby = BY; var ear = AR;
+			//AG:
+			//var cx = CX; var cy = CY; var bx = BX; var by = BY; var ar = AR;
+			if (AR == 0 || AR == 1) return false;
+			var A = AR * 4;
+			var X = CX - TX;
+			var Y = CY - TY;
+			if (X == 0 && Y == 0) return false;
+			int R = (int)A;
+			if (R < 0) { A = R - A; R = R % 4 + 4; } else { A = A - R; R = R % 4; }
+			var MX = TX; var MY = TY;
+			if (R == 1) { MX = CY - TY + CX; MY = TX - CX + CY; } // 90
+			else if (R == 2) { MX = CX - TX + CX; MY = CY - TY + CY; } // 180
+			else if (R == 3) { MX = TY - CY + CX; MY = CX - TX + CY; } // 270
+			var EX = TX; var EY = TY; TX = MX; TY = MY;
+			if (A > 0 && R >= 0 && R < 3) { EX = CY - MY + CX; EY = MX - CX + CY; } // 90
+			if (A > 0 && A < 1) {
+				Rotate11(CX, CY, ref TX, ref TY, A/4);
+				BX = TX;
+				BY = TY;
+				return true;
+				var rl = Sqrt(X, Y);
+				while (A > 0 && A < 1 && ED-- > 0) {
+					X = MX - EX; Y = MY - EY;
+					var xl = Sqrt(X, Y);
+					if (xl == 0) break;
+					var ll = xl / 2;
+					if (A < 0.5) {
+						EX = MX + (EX - MX) / xl * ll;
+						EY = MY + (EY - MY) / xl * ll;
+						X = CX - EX; Y = CY - EY;
+						ll = Sqrt(X, Y);
+						EX = CX + (EX - CX) / ll * rl;
+						EY = CY + (EY - CY) / ll * rl;
+						A = A * 2;
+						TX = EX;
+						TY = EY;
+					} else {
+						MX = EX + (MX - EX) / xl * ll;
+						MY = EY + (MY - EY) / xl * ll;
+						X = CX - MX; Y = CY - MY;
+						ll = Sqrt(X, Y);
+						MX = CX + (MX - CX) / ll * rl;
+						MY = CY + (MY - CY) / ll * rl;
+						A = (A - 0.5) * 2;
+						TX = MX;
+						TY = MY;
+					}
+				}
+			}
+			BX = TX;
+			BY = TY;
+			//Rotate12(cx, cy, ref bx, ref by, ar);
+			//if (bx != BX || by != BY) { // 98, -2
+			//	CX = ecx; CY = ecy; BX = ebx; BY = eby; AR = ear;
+			//	goto AG;
+			//}
+			return true;
+		}
 		#region #method# Rotate1(CX, CY, BX, BY, AR) 
 		/// <summary>Поворачивает координаты #double# вокруг центра по корню четверти круга
 		/// где 90 градусов равно значению 0.25, а 360 градусов равно значению 1)</summary>
@@ -202,18 +223,16 @@ namespace Wholemy {
 		/// <param name="BX">Старт и возвращаемый результат поворота по оси X)</param>
 		/// <param name="BY">Старт и возвращаемый результат поворота по оси Y)</param>
 		/// <param name="AR">Корень четверти от 0.0 до 1.0 отрицательная в обратную сторону)</param>
-		public static void Rotate1(double CX, double CY, ref double BX, ref double BY, double AR) {
+		public static void Rotate11(double CX, double CY, ref double BX, ref double BY, double AR) {
 			if (AR == 0.0) return;
 			var TX = BX - CX;
 			var TY = BY - CY;
 			if (TX == 0.0 && TY == 0.0) return;
 			var PI = System.Math.PI / 0.5 * AR;
-			//var Cos = System.Math.Cos(PI);
-			var Cos = TCos(PI);
-			//var Sin = System.Math.Sin(PI);
-			var Sin = TSin(PI);
-			var X = (Cos * TX - Sin * TY + CX);
-			var Y = (Sin * TX + Cos * TY + CY);
+			var CoS = System.Math.Cos(PI);
+			var SiN = System.Math.Sin(PI);
+			var X = (CoS * TX - SiN * TY + CX);
+			var Y = (SiN * TX + CoS * TY + CY);
 			BX = X;
 			BY = Y;
 		}
@@ -316,7 +335,7 @@ namespace Wholemy {
 			var PS = 0.0;
 			var SS = S * 2 / S;
 			var SSS = (SS - (S / SS)) / 2u;
-			while(SSS != PS) {
+			while (SSS != PS) {
 				SS -= SSS;
 				PS = SSS;
 				SSS = (SS - (S / SS)) / 2u;
@@ -416,7 +435,7 @@ namespace Wholemy {
 			return Roots;
 		}
 		#endregion
-		public static readonly double Arc14 = 4.0 / 3.0 * TTan(System.Math.PI / 8);
+		public static readonly double Arc14 = 4.0 / 3.0 * System.Math.Tan(System.Math.PI / 8);
 		#region #invisible# 
 #if TRACE
 		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
@@ -473,26 +492,44 @@ namespace Wholemy {
 		public class Preset {
 			public double Value;
 			public Preset(double Value) {
+				#region #debug# 
+#if DEBUG
 				if (Value < 0 || Value > 1) throw new System.ArgumentOutOfRangeException();
+#endif
+				#endregion
 				this.Value = Value;
 			}
 		}
 		#endregion
-		#region #method# PresetRoot(Root) 
-		public void PresetRoot(double Root) {
-			if (Root < 0) {
-				this.RootE = new Preset(-Root);
+		#region #method# PresetRoot() 
+		/// <summary>Удаляет предустановку корней)</summary>
+		/// <remarks>Корни отрезают часть фигуры с начала и/или с конца)</remarks>
+		public void PresetRoot() {
+			this.RootE = null;
+			this.RootM = null;
+		}
+		#endregion
+		#region #method# PresetRoot(me) 
+		/// <summary>Добавляет предустановку корня, начального если больше нуля, конечного если меньше нуля)</summary>
+		/// <remarks>Корни отрезают часть фигуры с начала и/или с конца)</remarks>
+		public void PresetRoot(double me) {
+			if (me < 0) {
+				this.RootE = new Preset(-me);
+				this.RootM = null;
 			} else {
-				this.RootM = new Preset(Root);
+				this.RootM = new Preset(me);
+				this.RootE = null;
 			}
 		}
 		#endregion
-		#region #method# PresetRoot(RootM, RootE) 
-		public void PresetRoot(double RootM, double RootE) {
-			if (RootM < 0) RootM = -RootM;
-			if (RootE < 0) RootE = -RootE;
-			this.RootE = new Preset(RootM);
-			this.RootM = new Preset(RootE);
+		#region #method# PresetRoot(M, E) 
+		/// <summary>Добавляет предустановку начального и конечного корня, знак числа не имеет значения)</summary>
+		/// <remarks>Корни отрезают часть фигуры с начала и/или с конца)</remarks>
+		public void PresetRoot(double M, double E) {
+			if (M < 0) M = -M;
+			if (E < 0) E = -E;
+			this.RootE = new Preset(M);
+			this.RootM = new Preset(E);
 		}
 		#endregion
 		private Change Mod;
@@ -990,8 +1027,8 @@ namespace Wholemy {
 					var CX = this.CX;
 					var CY = this.CY;
 					A = A * System.Math.PI / 180.0;
-					var AC = TCos(A);
-					var AS = TSin(A);
+					var AC = System.Math.Cos(A);
+					var AS = System.Math.Sin(A);
 					RX -= CX;
 					RY -= CY;
 					if (x) X = ((RX * AC) - (RY * AS)) + CX;
@@ -1028,8 +1065,8 @@ namespace Wholemy {
 					}
 					if (!CW) A = -A;
 					A = System.Math.Atan(A);
-					var AC = TCos(A);
-					var AS = TSin(A);
+					var AC = System.Math.Cos(A);
+					var AS = System.Math.Sin(A);
 					RX -= CX;
 					RY -= CY;
 					if (x) X = ((RX * AC) - (RY * AS)) + CX;

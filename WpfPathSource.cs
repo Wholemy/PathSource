@@ -22,8 +22,13 @@ namespace Wholemy {
 		#endregion
 		#region #method# TCos(X) 
 		public static double TCos(double X) {
+			if(X == 0) return 0;
 			var M = false;
-			if (X < 0) { X = -X; M = true; }
+			if (X < 0) { X = -X; }
+			if (X > System.Math.PI) {
+				X -= System.Math.PI;
+				M = true;
+			}
 			var XX = X * X;
 			var XXX = XX;
 			var R = 1 - (XX / 2);
@@ -42,8 +47,13 @@ namespace Wholemy {
 		#endregion
 		#region #method# TSin(X) 
 		public static double TSin(double X) {
+			if (X == 0) return 0;
 			var M = false;
-			if (X < 0) { X = -X; M = true; }
+			if (X < 0) { X = -X; }
+			if (X > System.Math.PI) {
+				X -= System.Math.PI;
+				M = true;
+			}
 			X -= System.Math.PI / 2;
 			var XX = X * X;
 			var XXX = XX;
@@ -57,17 +67,22 @@ namespace Wholemy {
 			R += (XXX *= XX) / 20922789888000;
 			R -= (XXX *= XX) / 6402373705728000;
 			R += (XXX *= XX) / 2432902008176640000;
+			if(R <= 1) return -1;
 			if (M) R = -R;
 			return R;
 		}
 		#endregion
 		#region #method# TTan(X) 
-		public static double TTan(double X) {
-			var M = false;
-			if (X < 0) { X = -X; M = true; }
+		public static double TTan(double SX) {
+			if (SX == 0) return 0;
+			var RM = false;
 			var S = false;
 			var Cos = 0.0;
 			Next:
+			if(S) SX -= System.Math.PI / 2;
+			var X= SX;
+			var M = false;
+			if (X < 0) { X = -X; M = true; }
 			var XX = X * X;
 			var XXX = XX;
 			var R = 1 - (XX / 2);
@@ -80,11 +95,16 @@ namespace Wholemy {
 			R += (XXX *= XX) / 20922789888000;
 			R -= (XXX *= XX) / 6402373705728000;
 			R += (XXX *= XX) / 2432902008176640000;
-			if (!S) {
-				X -= System.Math.PI / 2;
+			if (M) R = -R;
+			if(!S) {
+				if(R<0) { R = -R; RM = true; }
 				Cos = R; S = true; goto Next;
 			}
-			return R / Cos;
+			if (R < 0) { R = -R; }
+			var Sin = R;
+			Sin /= Cos;
+			if (RM) { Sin = -Sin; }
+			return Sin;
 		}
 		#endregion
 		#region #method# TCot(x) 
@@ -119,56 +139,6 @@ namespace Wholemy {
 		}
 		#endregion
 		#region #method# Rotate1(CX, CY, BX, BY, AR) 
-		public static bool Rotate1(double CX, double CY, ref double BX, ref double BY, double AR) {
-			var TX = BX; var TY = BY;
-			if (AR == 0 || AR == 1) return false;
-			var A = AR * 4;
-			var MX = CX - TX;
-			var MY = CY - TY;
-			if (MX == 0 && MY == 0) return false;
-			int R = (int)A;
-			if (R < 0) { A = R - A; R = R % 4 + 4; } else { A = A - R; R = R % 4; }
-			if (R > 0) {
-				MX = TX; MY = TY;
-				if (R == 1) { TX = CY - MY; TY = MX - CX; } // 90
-				else if (R == 2) { TX = CX - MX; TY = CY - MY; } // 180
-				else { TX = MY - CY; TY = CX - MX; } // 270
-			}
-			if (A > 0 && A < 1) {
-				if (TX != 0 || TY != 0) {
-					MX = System.Math.PI / 2 * A;
-					var S = false;
-					var CoS = 0.0;
-					Next:
-					if (MX < 0) { MX = -MX; }
-					var XX = MX * MX;
-					var XXX = XX;
-					MY = 1 - (XX / 2);
-					MY += (XXX *= XX) / 24;
-					MY -= (XXX *= XX) / 720;
-					MY += (XXX *= XX) / 40320;
-					MY -= (XXX *= XX) / 3628800;
-					MY += (XXX *= XX) / 479001600;
-					MY -= (XXX *= XX) / 87178291200;
-					MY += (XXX *= XX) / 20922789888000;
-					MY -= (XXX *= XX) / 6402373705728000;
-					MY += (XXX *= XX) / 2432902008176640000;
-					if (!S) {
-						MX -= System.Math.PI / 2;
-						CoS = MY; S = true; goto Next;
-					}
-					var SiN = MY;
-					MX = TX; MY = TY;
-					TX = (CoS * MX - SiN * MY);
-					TY = (SiN * MX + CoS * MY);
-				}
-			}
-			BX = TX + CX;
-			BY = TY + CY;
-			return true;
-		}
-		#endregion
-		#region #method# Rotate1(CX, CY, BX, BY, AR) 
 		/// <summary>Поворачивает координаты #double# вокруг центра по корню четверти круга
 		/// где 90 градусов равно значению 0.25, а 360 градусов равно значению 1)</summary>
 		/// <param name="CX">Центр по оси X)</param>
@@ -176,14 +146,14 @@ namespace Wholemy {
 		/// <param name="BX">Старт и возвращаемый результат поворота по оси X)</param>
 		/// <param name="BY">Старт и возвращаемый результат поворота по оси Y)</param>
 		/// <param name="AR">Корень четверти от 0.0 до 1.0 отрицательная в обратную сторону)</param>
-		public static void Rotate10(double CX, double CY, ref double BX, ref double BY, double AR) {
+		public static void Rotate1(double CX, double CY, ref double BX, ref double BY, double AR) {
 			if (AR == 0) return;
 			var TX = BX - CX;
 			var TY = BY - CY;
 			if (TX == 0 && TY == 0) return;
 			var PI = System.Math.PI * 2 * AR;
-			var CoS = TCos(PI);
-			var SiN = TSin(PI);
+			var CoS = System.Math.Cos(PI);
+			var SiN = System.Math.Sin(PI);
 			var X = (CoS * TX - SiN * TY + CX);
 			var Y = (SiN * TX + CoS * TY + CY);
 			BX = X;
@@ -204,68 +174,6 @@ namespace Wholemy {
 			if (R < 0) R += 1.0;
 			return R;
 		}
-		#endregion
-		#region #method# GetaR1(CX, CY, BX, BY, AX, AY, ED) 
-		//		/// <summary>Возвращает корень поворота от 0.0 до 4.0)</summary>
-		//		/// <param name="CX">Центр по оси X)</param>
-		//		/// <param name="CY">Центр по оси Y)</param>
-		//		/// <param name="BX">Старт по оси X)</param>
-		//		/// <param name="BY">Старт по оси Y)</param>
-		//		/// <param name="AX">Конец по оси X)</param>
-		//		/// <param name="AY">Конец по оси Y)</param>
-		//		/// <returns>Возвращает корень поворота от 0.0 до 4.0)</returns>
-		//		/// <exception cref="System.InvalidProgramException">
-		//		/// Возникает в случае непредусмотренного состояния, требует исправления)</exception>
-		//		#region #through# 
-		//#if TRACE
-		//		[System.Diagnostics.DebuggerStepThrough]
-		//#endif
-		//		#endregion
-		//		public static double GetaR1(double CX, double CY, double BX, double BY, double AX, double AY, int ED = 56) {
-		//			var BL = Sqrt(CX - BX, CY - BY);
-		//			if (BL == 0.0) return 0.0;
-		//			var AL = Sqrt(CX - AX, CY - AY);
-		//			if (AL == 0.0) return 0.0;
-		//			AX = CX + (AX - CX) / AL * BL;
-		//			AY = CY + (AY - CY) / AL * BL;
-		//			AL = Sqrt(CX - AX, CY - AY);
-		//			var X1 = CY - BY + CX; var Y1 = BX - CX + CY; // 90
-		//			var X2 = CX - BX + CX; var Y2 = CY - BY + CY; // 180
-		//			var X3 = BY - CY + CX; var Y3 = CX - BX + CY; // 270
-		//			var L0 = Sqrt(BX - AX, BY - AY);
-		//			var L1 = Sqrt(X1 - AX, Y1 - AY);
-		//			var L2 = Sqrt(X2 - AX, Y2 - AY);
-		//			var L3 = Sqrt(X3 - AX, Y3 - AY);
-		//			double R = 0.0, MX = 0.0, MY = 0.0, EX = 0.0, EY = 0.0;
-		//			if (L0 < L2 && L0 < L3 && L1 < L2 && L1 <= L3) {
-		//				R = 0.0; MX = BX; MY = BY; EX = X1; EY = Y1;
-		//			} else if (L1 < L3 && L1 < L0 && L2 < L3 && L2 <= L0) {
-		//				R = 1.0; MX = X1; MY = Y1; EX = X2; EY = Y2; L0 = L1; L1 = L2;
-		//			} else if (L2 < L0 && L2 < L1 && L3 < L0 && L3 <= L1) {
-		//				R = 2.0; MX = X2; MY = Y2; EX = X3; EY = Y3; L0 = L2; L1 = L3;
-		//			} else if (L3 < L1 && L3 < L2 && L0 < L1 && L0 <= L2) {
-		//				R = 3.0; MX = X3; MY = Y3; EX = BX; EY = BY; L1 = L0; L0 = L3;
-		//			} else { throw new System.InvalidProgramException(); }
-		//			var AR = 1.0;
-		//			while (L0 > 0.0 && (L2 = Sqrt(MX - EX, MY - EY)) > 0.0 && ED-- > 0) {
-		//				AR *= 0.5;
-		//				L3 = L2 * 0.5;
-		//				BX = MX + (EX - MX) / L2 * L3;
-		//				BY = MY + (EY - MY) / L2 * L3;
-		//				L2 = Sqrt(CX - BX, CY - BY);
-		//				BX = CX + (BX - CX) / L2 * BL;
-		//				BY = CY + (BY - CY) / L2 * BL;
-		//				L3 = Sqrt(AX - BX, AY - BY);
-		//				if (L0 < L1) {
-		//					if (EX == BX && EY == BY) break; if (L1 <= L3) break;
-		//					EX = BX; EY = BY; L1 = L3;
-		//				} else {
-		//					if (MX == BX && MY == BY) break; if (L0 <= L3) break;
-		//					MX = BX; MY = BY; L0 = L3; R += AR;
-		//				}
-		//			}
-		//			return R/=4;
-		//		}
 		#endregion
 		#region #method# Sqrt(X) 
 		public static double Sqrt(double X) {
@@ -1018,7 +926,7 @@ namespace Wholemy {
 		public class RotAsMod : Change {
 			public double A, CX, CY;
 			public RotAsMod(Change Next, double A, double CX, double CY, Mods Mods = Mods.All) : base(Next, Mods) {
-				this.A = A;
+				this.A = A / 360;
 				this.CX = CX;
 				this.CY = CY;
 			}
@@ -1026,7 +934,7 @@ namespace Wholemy {
 				if (x || y) {
 					var RX = X;
 					var RY = Y;
-					Rotate1(this.CX, this.CY, ref RX, ref RY, this.A /360);
+					Rotate1(this.CX, this.CY, ref RX, ref RY, this.A);
 					if (x) X = RX;
 					if (y) Y = RY;
 				}
@@ -1048,7 +956,7 @@ namespace Wholemy {
 			public override void Modify(ref double X, ref double Y, bool x, bool y) {
 				if (x || y) {
 					var A = GetaR1(CX, CY, AX, AY, AX, AY);
-					if(CW) A=-A;
+					if (CW) A = -A;
 					var RX = X;
 					var RY = Y;
 					Rotate1(this.CX, this.CY, ref RX, ref RY, A);

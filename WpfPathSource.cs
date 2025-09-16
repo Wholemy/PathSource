@@ -22,13 +22,13 @@ namespace Wholemy {
 		#endregion
 		#region #method# TCos(X) 
 		public static double TCos(double X) {
-			if(X == 0) return 0;
-			var M = false;
+			//var Test = System.Math.Cos(X);
 			if (X < 0) { X = -X; }
-			if (X > System.Math.PI) {
-				X -= System.Math.PI;
-				M = true;
+			if (X > System.Math.PI * 2) {
+				var P = X / (System.Math.PI * 2);
+				X = System.Math.PI * 2 * (P - (int)P);
 			}
+			var M = (X > System.Math.PI / 2 && X <= System.Math.PI / 2 * 3);
 			var XX = X * X;
 			var XXX = XX;
 			var R = 1 - (XX / 2);
@@ -41,20 +41,22 @@ namespace Wholemy {
 			R += (XXX *= XX) / 20922789888000;
 			R -= (XXX *= XX) / 6402373705728000;
 			R += (XXX *= XX) / 2432902008176640000;
+			if (R < 0) R = -R;
 			if (M) R = -R;
+			//if (Test < 0 && !Minus) throw new System.InvalidOperationException();
 			return R;
 		}
 		#endregion
 		#region #method# TSin(X) 
 		public static double TSin(double X) {
-			if (X == 0) return 0;
-			var M = false;
-			if (X < 0) { X = -X; }
-			if (X > System.Math.PI) {
-				X -= System.Math.PI;
-				M = true;
-			}
+			//var Test = System.Math.Sin(X);
 			X -= System.Math.PI / 2;
+			if (X < 0) { X = -X; }
+			if (X > System.Math.PI * 2) {
+				var P = X / (System.Math.PI * 2);
+				X = System.Math.PI * 2 * (P - (int)P);
+			}
+			var M = (X > System.Math.PI / 2 && X <= System.Math.PI / 2 * 3);
 			var XX = X * X;
 			var XXX = XX;
 			var R = 1 - (XX / 2);
@@ -67,23 +69,28 @@ namespace Wholemy {
 			R += (XXX *= XX) / 20922789888000;
 			R -= (XXX *= XX) / 6402373705728000;
 			R += (XXX *= XX) / 2432902008176640000;
-			if(R <= 1) return -1;
+			if (R < 0) R = -R;
 			if (M) R = -R;
+			//if (Test < 0 && !Minus) throw new System.InvalidOperationException();
 			return R;
 		}
 		#endregion
 		#region #method# TTan(X) 
-		public static double TTan(double SX) {
-			if (SX == 0) return 0;
-			var RM = false;
-			var S = false;
+		public static double TTan(double X) {
+			//var Test = System.Math.Tan(X);
+			if (X == 0) return 0;
+			var Sin = false;
 			var Cos = 0.0;
 			Next:
-			if(S) SX -= System.Math.PI / 2;
-			var X= SX;
-			var M = false;
-			if (X < 0) { X = -X; M = true; }
-			var XX = X * X;
+			if (Sin) X -= System.Math.PI / 2;
+			var x = X;
+			if (x < 0) { x = -x; }
+			if (x > System.Math.PI * 2) {
+				var P = x / (System.Math.PI * 2);
+				x = System.Math.PI * 2 * (P - (int)P);
+			}
+			var M = (x > System.Math.PI / 2 && x <= System.Math.PI / 2 * 3);
+			var XX = x * x;
 			var XXX = XX;
 			var R = 1 - (XX / 2);
 			R += (XXX *= XX) / 24;
@@ -95,16 +102,12 @@ namespace Wholemy {
 			R += (XXX *= XX) / 20922789888000;
 			R -= (XXX *= XX) / 6402373705728000;
 			R += (XXX *= XX) / 2432902008176640000;
+			if (R < 0) R = -R;
 			if (M) R = -R;
-			if(!S) {
-				if(R<0) { R = -R; RM = true; }
-				Cos = R; S = true; goto Next;
-			}
-			if (R < 0) { R = -R; }
-			var Sin = R;
-			Sin /= Cos;
-			if (RM) { Sin = -Sin; }
-			return Sin;
+			if (!Sin) { Cos = R; Sin = true; goto Next; }
+			R /= Cos;
+			//if (Test < 0 && R >= 0) throw new System.InvalidOperationException();
+			return R;
 		}
 		#endregion
 		#region #method# TCot(x) 
@@ -152,8 +155,8 @@ namespace Wholemy {
 			var TY = BY - CY;
 			if (TX == 0 && TY == 0) return;
 			var PI = System.Math.PI * 2 * AR;
-			var CoS = System.Math.Cos(PI);
-			var SiN = System.Math.Sin(PI);
+			var CoS = TCos(PI);
+			var SiN = TSin(PI);
 			var X = (CoS * TX - SiN * TY + CX);
 			var Y = (SiN * TX + CoS * TY + CY);
 			BX = X;
@@ -196,7 +199,7 @@ namespace Wholemy {
 			var PS = 0.0;
 			var SS = S * 2 / S;
 			var SSS = (SS - (S / SS)) / 2u;
-			while (SSS != PS) {
+			while (!double.IsNaN(PS) && SSS != PS) {
 				SS -= SSS;
 				PS = SSS;
 				SSS = (SS - (S / SS)) / 2u;
@@ -297,7 +300,7 @@ namespace Wholemy {
 		}
 		#endregion
 		#region #readonly# #field # Arc14 
-		public static readonly double Arc14 = 4.0 / 3.0 * TTan(System.Math.PI / 8);
+		public static readonly double Arc14 = 4.0 / 3 * TTan(System.Math.PI / 8);
 		#endregion
 		#region #field# LastPath 
 		#region #invisible# 

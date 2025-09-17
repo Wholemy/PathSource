@@ -1,12 +1,104 @@
 namespace Wholemy {
 	public class PathSource {
+		#region #method# SAtan(X) 
+		/// <summary>Близкий к системному атану)</summary>
+		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		public static double SAtan(double X) {
+			var M = false;
+			if (X < 0) { X = -X; M = true; }
+			var L = 0;
+			var YY = 0.0;
+			if (X >= 4.0) { L = -1; X = 1.0 / X; goto Next; } else { if (X < 0.25) goto Next; }
+			var Y = (int)(X * 2);
+			if (Y < 0) Y++;
+			switch (Y) {
+				case 0: break;
+				case 1: YY = 0.4636476090008061165; break;
+				case 2: YY = 0.7853981633974483094; break;
+				case 3: YY = 0.98279372324732906714; break;
+				case 4: YY = 1.1071487177940905022; break;
+				case 5: YY = 1.1902899496825317322; break;
+				case 6: YY = 1.2490457723982544262; break;
+				case 7: YY = 1.2924966677897852673; break;
+				case 8: YY = 1.3258176636680324644; break;
+			}
+			var XX = Y / 2.0;
+			X = (X - XX) / (X * XX + 1);
+			Next:
+			XX = X * X;
+			var Sin = (((13852575 * XX + 216602100) * XX + 891080190) * XX + 1332431100) * XX + 654729075;
+			var Cos = ((((893025 * XX + 49116375) * XX + 425675250) * XX + 1277025750) * XX + 1550674125) * XX + 654729075;
+			var A = (Sin / Cos) * X + YY;
+			if (L != 0) A = (System.Math.PI / 2.0) - A;
+			return M ? -A : A;
+		}
+		#endregion
+		#region #method# TAtan(X) 
+		/// <summary>Похожий на основе тангенса, возможно он точнее, но это не точно, нечем это измерить)</summary>
+		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		public static double TAtan(double X) {
+			var M = false;
+			if (X < 0) { X = -X; M = true; }
+			var L = 0;
+			var YY = 0.0;
+			var XX = 0.0;
+			if (X >= 4.0) { L = -1; X = 1.0 / X; goto Next; } else { if (X < 0.25) goto Next; }
+			var Y = (int)(X * 2);
+			if (Y < 0) Y++;
+			switch(Y) {
+				case 0: break;
+				case 1: YY = 0.4636476090008061165; break;
+				case 2: YY = 0.7853981633974483094; break;
+				case 3: YY = 0.98279372324732906714; break;
+				case 4: YY = 1.1071487177940905022; break;
+				case 5: YY = 1.1902899496825317322; break;
+				case 6: YY = 1.2490457723982544262; break;
+				case 7: YY = 1.2924966677897852673; break;
+				case 8: YY = 1.3258176636680324644; break;
+			}
+			XX = Y / 2.0;
+			X = (X - XX) / (X * XX + 1);
+			Next:
+			var Sin = false;
+			var Cos = 0.0;
+			TanSin:
+			var x = X;
+			if (Sin) x -= System.Math.PI / 2;
+			if (x < 0) { x = -x; }
+			if (x > System.Math.PI * 2) {
+				var P = x / (System.Math.PI * 2);
+				x = System.Math.PI * 2 * (P - (int)P);
+			}
+			var MM = (x > System.Math.PI / 2 && x <= System.Math.PI / 2 * 3);
+			XX = x * x;
+			var XXX = XX;
+			var R = 1 - (XX / 2);
+			R += (XXX *= XX) / 24;
+			R -= (XXX *= XX) / 720;
+			R += (XXX *= XX) / 40320;
+			R -= (XXX *= XX) / 3628800;
+			R += (XXX *= XX) / 479001600;
+			R -= (XXX *= XX) / 87178291200;
+			R += (XXX *= XX) / 20922789888000;
+			R -= (XXX *= XX) / 6402373705728000;
+			R += (XXX *= XX) / 2432902008176640000;
+			if (R < 0) R = -R;
+			if (MM) R = -R;
+			if (!Sin) { Cos = R; Sin = true; goto TanSin; }
+			R /= Cos;
+			var A = R * X + YY;
+			if (L != 0) A = (System.Math.PI / 2.0) - A;
+			return M ? -A : A;
+		}
+		#endregion
 		#region #method# TAtan2(y, x) 
+		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		public static double TAtan2(double y, double x) {
 			if (x == 0.0) {
 				if (y == 0.0) return 0.0;
 				else if (y > 0) return System.Math.PI / 2.0; else return -(System.Math.PI / 2.0);
 			}
-			var A = System.Math.Atan(y / x);
+			var A = TAtan(y / x);
 			if (x < 0.0) {
 				if (y >= 0.0) A += System.Math.PI; else A -= System.Math.PI;
 			}
@@ -14,6 +106,7 @@ namespace Wholemy {
 		}
 		#endregion
 		#region #method# TAsin(X) 
+		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		public static double TAsin(double X) {
 			if (X < 0) X = -X;
 			if (X > 1) return 1;
@@ -21,6 +114,7 @@ namespace Wholemy {
 		}
 		#endregion
 		#region #method# TCos(X) 
+		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		public static double TCos(double X) {
 			//var Test = System.Math.Cos(X);
 			if (X < 0) { X = -X; }
@@ -43,11 +137,12 @@ namespace Wholemy {
 			R += (XXX *= XX) / 2432902008176640000;
 			if (R < 0) R = -R;
 			if (M) R = -R;
-			//if (Test < 0 && !Minus) throw new System.InvalidOperationException();
+			//if (Test < 0 && !M) throw new System.InvalidOperationException();
 			return R;
 		}
 		#endregion
 		#region #method# TSin(X) 
+		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		public static double TSin(double X) {
 			//var Test = System.Math.Sin(X);
 			X -= System.Math.PI / 2;
@@ -71,14 +166,14 @@ namespace Wholemy {
 			R += (XXX *= XX) / 2432902008176640000;
 			if (R < 0) R = -R;
 			if (M) R = -R;
-			//if (Test < 0 && !Minus) throw new System.InvalidOperationException();
+			//if (Test < 0 && !M) throw new System.InvalidOperationException();
 			return R;
 		}
 		#endregion
 		#region #method# TTan(X) 
+		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		public static double TTan(double X) {
 			//var Test = System.Math.Tan(X);
-			if (X == 0) return 0;
 			var Sin = false;
 			var Cos = 0.0;
 			Next:
@@ -111,6 +206,7 @@ namespace Wholemy {
 		}
 		#endregion
 		#region #method# TCot(x) 
+		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		public static double TCot(double x) {
 			return (1.0 / TTan(x));
 		}
@@ -184,7 +280,7 @@ namespace Wholemy {
 			var PS = 0.0;
 			var SS = X * 2 / X;
 			var SSS = (SS - (X / SS)) / 2u;
-			while (SSS != PS) {
+			while (!double.IsNaN(SSS) && SSS != PS) {
 				SS -= SSS;
 				PS = SSS;
 				SSS = (SS - (X / SS)) / 2u;
@@ -199,7 +295,7 @@ namespace Wholemy {
 			var PS = 0.0;
 			var SS = S * 2 / S;
 			var SSS = (SS - (S / SS)) / 2u;
-			while (!double.IsNaN(PS) && SSS != PS) {
+			while (!double.IsNaN(SSS) && SSS != PS) {
 				SS -= SSS;
 				PS = SSS;
 				SSS = (SS - (S / SS)) / 2u;

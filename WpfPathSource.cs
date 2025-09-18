@@ -1,67 +1,10 @@
 namespace Wholemy {
 	public class PathSource {
-		public static double[] AtanN = new double[] {
-			0.0,
-			System.Math.Atan(0.5),
-			System.Math.Atan(1.0),
-			System.Math.Atan(1.5),
-			System.Math.Atan(2.0),
-			System.Math.Atan(2.5),
-			System.Math.Atan(3.0),
-			System.Math.Atan(3.5)
-		};
-		//public static BugNum[] AtanBN = new BugNum[] {
-		//	0.0,
-		//	System.Math.Atan(0.5),
-		//	System.Math.Atan(1.0),
-		//	System.Math.Atan(1.5),
-		//	System.Math.Atan(2.0),
-		//	System.Math.Atan(2.5),
-		//	System.Math.Atan(3.0),
-		//	System.Math.Atan(3.5)
-		//};
-		public static double[] AtanMinMax = new double[18];
-		public static double NAtan(double X) {
-			var Sys = X;
-			var RR = false;
-			var M = false;
-			if (X < 0) { X = -X; M = true; }
-			var L = 0;
-			var YY = 0.0;
-			var Y = 0;
-			if (X >= 4.0) { L = -1; X = 1.0 / X; goto Next; } else if (X < 0.5) goto Next;
-			Y = (int)(X * 2);
-			if (Y < 0) Y++;
-			var XX = Y / 2.0;
-			X = (X - XX) / (X * XX + 1);
-			Next:
-			XX = X * X;
-			var C = (((13852575 * XX + 216602100) * XX + 891080190) * XX + 1332431100) * XX + 654729075;
-			var B = ((((893025 * XX + 49116375) * XX + 425675250) * XX + 1277025750) * XX + 1550674125) * XX + 654729075;
-			var R = (C / B) * X;
-
-			var Atan = System.Math.Atan(Sys);
-			var A = Atan < 0 ? -Atan : Atan;
-			var AA = A - R;
-			if(Y>0||(Y == 0&& AA>=0&& AA< System.Math.Atan(0.5))) {
-				var AMin = AtanMinMax[Y];
-				var AMax = AtanMinMax[Y + 9];
-				if (AMin == 0 && AMax == 0) {
-					AMin = AMax = AtanMinMax[Y] = AtanMinMax[Y + 9] = AA;
-				} else if (AMin > AA) {
-					AMin = AtanMinMax[Y] = AA;
-				} else if (AMax < AA) {
-					AMax = AtanMinMax[Y + 9] = AA;
-				}
-				var RRR = R + AMin;
-			}
-			R += AtanN[Y];
-			if (L != 0) R = (System.Math.PI / 2.0) - R;
-			R = M ? -R : R;
-			return R;
-		}
+		#region #field# AtanArray 
+		public static double[] AtanArray;
+		#endregion
 		#region #method# TAtan(X) 
-		/// <summary>Близкий к системному атану)</summary>
+		/// <summary>Близкий к системному атану, практически на его основе)</summary>
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		public static double TAtan(double X) {
 			var M = false;
@@ -76,23 +19,31 @@ namespace Wholemy {
 			X = (X - XX) / (X * XX + 1);
 			Next:
 			XX = X * X;
-			var Sin = (((13852575 * XX + 216602100) * XX + 891080190) * XX + 1332431100) * XX + 654729075;
-			var Cos = ((((893025 * XX + 49116375) * XX + 425675250) * XX + 1277025750) * XX + 1550674125) * XX + 654729075;
-			var A = (Sin / Cos) * X + AtanN[Y];
-			if (L != 0) A = (System.Math.PI / 2.0) - A;
-			return M ? -A : A;
+			var C = (((13852575 * XX + 216602100) * XX + 891080190) * XX + 1332431100) * XX + 654729075;
+			var B = ((((893025 * XX + 49116375) * XX + 425675250) * XX + 1277025750) * XX + 1550674125) * XX + 654729075;
+			var R = (C / B) * X;
+			if (Y > 0) {
+				var I = Y - 1;
+				var AR = AtanArray;
+				if (AR == null) AtanArray = AR = new double[7];
+				var N = AR[I];
+				if (N == 0) N = AR[I] = System.Math.Atan(Y * 0.5);
+				R += N;
+			}
+			if (L != 0) R = (System.Math.PI / 2.0) - R;
+			return M ? -R : R;
 		}
 		#endregion
 		#region #method# TAtan2(y, x) 
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-		public static double TAtan2(double y, double x) {
-			if (x == 0.0) {
-				if (y == 0.0) return 0.0;
-				else if (y > 0) return System.Math.PI / 2.0; else return -(System.Math.PI / 2.0);
+		public static double TAtan2(double Y, double X) {
+			if (X == 0.0) {
+				if (Y == 0.0) return 0.0;
+				else if (Y > 0) return System.Math.PI / 2.0; else return -(System.Math.PI / 2.0);
 			}
-			var A = TAtan(y / x);
-			if (x < 0.0) {
-				if (y >= 0.0) A += System.Math.PI; else A -= System.Math.PI;
+			var A = TAtan(Y / X);
+			if (X < 0.0) {
+				if (Y >= 0.0) A += System.Math.PI; else A -= System.Math.PI;
 			}
 			return A;
 		}

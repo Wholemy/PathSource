@@ -1,5 +1,79 @@
 namespace Wholemy {
 	public class PathSource {
+		public static double[] AtanN = new double[] {
+			0.0,
+			System.Math.Atan(0.5),
+			System.Math.Atan(1.0),
+			System.Math.Atan(1.5),
+			System.Math.Atan(2.0),
+			System.Math.Atan(2.5),
+			System.Math.Atan(3.0),
+			System.Math.Atan(3.5),
+			System.Math.Atan(4.0)
+		};
+		//public static BugNum[] AtanBN = new BugNum[] {
+		//	0.0,
+		//	System.Math.Atan(0.5),
+		//	System.Math.Atan(1.0),
+		//	System.Math.Atan(1.5),
+		//	System.Math.Atan(2.0),
+		//	System.Math.Atan(2.5),
+		//	System.Math.Atan(3.0),
+		//	System.Math.Atan(3.5),
+		//	System.Math.Atan(4.0)
+		//};
+		//public static double[] AtanMinMax = new double[40];
+		public static double NAtan(double X) {
+			var Sys = X;
+			var AS = X;
+			var RR = false;
+			var M = false;
+			if (X < 0) { AS = X = -X; M = true; }
+			var L = 0;
+			var YY = 0.0;
+			var Y = 0;
+			if (X >= 4.0) { L = -1; X = 1.0 / X; goto Next; } else { if (X < 0.25) goto Next; }
+			RR = true;
+			Y = (int)(X * 2);
+			if (Y < 0) Y++;
+			var XX = Y / 2.0;
+			X = (X - XX) / (X * XX + 1);
+			Next:
+			XX = X * X;
+			var C = (((13852575 * XX + 216602100) * XX + 891080190) * XX + 1332431100) * XX + 654729075;
+			var B = ((((893025 * XX + 49116375) * XX + 425675250) * XX + 1277025750) * XX + 1550674125) * XX + 654729075;
+			var R = (C / B) * X;
+			//if (RR) {
+			//	var AMin = AtanMinMax[Y];
+			//	var AMax = AtanMinMax[Y + 10];
+			//	var RMin = AtanMinMax[Y + 20];
+			//	var RMax = AtanMinMax[Y + 30];
+			//	if (RMin == 0 && RMax == 0) {
+			//		var Atan = System.Math.Atan(Sys);
+			//		var A = Atan < 0 ? -Atan : Atan;
+			//		var AA = A - R;
+			//		AMin = AMax = AtanMinMax[Y] = AtanMinMax[Y + 10] = AA;
+			//		RMin = RMax = AtanMinMax[Y + 20] = AtanMinMax[Y + 30] = AS;
+			//	} else if (RMin > AS) {
+			//		var Atan = System.Math.Atan(Sys);
+			//		var A = Atan < 0 ? -Atan : Atan;
+			//		var AA = A - R;
+			//		AMin = AtanMinMax[Y] = AA;
+			//		RMin = AtanMinMax[Y + 20] = AS;
+			//	} else if (RMax < AS) {
+			//		var Atan = System.Math.Atan(Sys);
+			//		var A = Atan < 0 ? -Atan : Atan;
+			//		var AA = A - R;
+			//		AMax = AtanMinMax[Y + 10] = AA;
+			//		RMax = AtanMinMax[Y + 30] = AS;
+			//	}
+			//	var RRR = R + AMin;
+			//}
+			R += AtanN[Y];
+			if (L != 0) R = (System.Math.PI / 2.0) - R;
+			R = M ? -R : R;
+			return R;
+		}
 		#region #method# SAtan(X) 
 		/// <summary>Близкий к системному атану)</summary>
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
@@ -40,22 +114,11 @@ namespace Wholemy {
 			var M = false;
 			if (X < 0) { X = -X; M = true; }
 			var L = 0;
-			var YY = 0.0;
 			var XX = 0.0;
+			var Y = 0;
 			if (X >= 4.0) { L = -1; X = 1.0 / X; goto Next; } else { if (X < 0.25) goto Next; }
-			var Y = (int)(X * 2);
+			Y = (int)(X * 2);
 			if (Y < 0) Y++;
-			switch(Y) {
-				case 0: break;
-				case 1: YY = 0.4636476090008061165; break;
-				case 2: YY = 0.7853981633974483094; break;
-				case 3: YY = 0.98279372324732906714; break;
-				case 4: YY = 1.1071487177940905022; break;
-				case 5: YY = 1.1902899496825317322; break;
-				case 6: YY = 1.2490457723982544262; break;
-				case 7: YY = 1.2924966677897852673; break;
-				case 8: YY = 1.3258176636680324644; break;
-			}
 			XX = Y / 2.0;
 			X = (X - XX) / (X * XX + 1);
 			Next:
@@ -86,7 +149,7 @@ namespace Wholemy {
 			if (MM) R = -R;
 			if (!Sin) { Cos = R; Sin = true; goto TanSin; }
 			R /= Cos;
-			var A = R * X + YY;
+			var A = R * X + AtanN[Y];
 			if (L != 0) A = (System.Math.PI / 2.0) - A;
 			return M ? -A : A;
 		}
@@ -253,6 +316,8 @@ namespace Wholemy {
 			var PI = System.Math.PI * 2 * AR;
 			var CoS = TCos(PI);
 			var SiN = TSin(PI);
+
+
 			var X = (CoS * TX - SiN * TY + CX);
 			var Y = (SiN * TX + CoS * TY + CY);
 			BX = X;

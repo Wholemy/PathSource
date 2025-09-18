@@ -8,8 +8,7 @@ namespace Wholemy {
 			System.Math.Atan(2.0),
 			System.Math.Atan(2.5),
 			System.Math.Atan(3.0),
-			System.Math.Atan(3.5),
-			System.Math.Atan(4.0)
+			System.Math.Atan(3.5)
 		};
 		//public static BugNum[] AtanBN = new BugNum[] {
 		//	0.0,
@@ -19,21 +18,18 @@ namespace Wholemy {
 		//	System.Math.Atan(2.0),
 		//	System.Math.Atan(2.5),
 		//	System.Math.Atan(3.0),
-		//	System.Math.Atan(3.5),
-		//	System.Math.Atan(4.0)
+		//	System.Math.Atan(3.5)
 		//};
-		//public static double[] AtanMinMax = new double[40];
+		public static double[] AtanMinMax = new double[18];
 		public static double NAtan(double X) {
 			var Sys = X;
-			var AS = X;
 			var RR = false;
 			var M = false;
-			if (X < 0) { AS = X = -X; M = true; }
+			if (X < 0) { X = -X; M = true; }
 			var L = 0;
 			var YY = 0.0;
 			var Y = 0;
-			if (X >= 4.0) { L = -1; X = 1.0 / X; goto Next; } else { if (X < 0.25) goto Next; }
-			RR = true;
+			if (X >= 4.0) { L = -1; X = 1.0 / X; goto Next; } else if (X < 0.5) goto Next;
 			Y = (int)(X * 2);
 			if (Y < 0) Y++;
 			var XX = Y / 2.0;
@@ -43,113 +39,46 @@ namespace Wholemy {
 			var C = (((13852575 * XX + 216602100) * XX + 891080190) * XX + 1332431100) * XX + 654729075;
 			var B = ((((893025 * XX + 49116375) * XX + 425675250) * XX + 1277025750) * XX + 1550674125) * XX + 654729075;
 			var R = (C / B) * X;
-			//if (RR) {
-			//	var AMin = AtanMinMax[Y];
-			//	var AMax = AtanMinMax[Y + 10];
-			//	var RMin = AtanMinMax[Y + 20];
-			//	var RMax = AtanMinMax[Y + 30];
-			//	if (RMin == 0 && RMax == 0) {
-			//		var Atan = System.Math.Atan(Sys);
-			//		var A = Atan < 0 ? -Atan : Atan;
-			//		var AA = A - R;
-			//		AMin = AMax = AtanMinMax[Y] = AtanMinMax[Y + 10] = AA;
-			//		RMin = RMax = AtanMinMax[Y + 20] = AtanMinMax[Y + 30] = AS;
-			//	} else if (RMin > AS) {
-			//		var Atan = System.Math.Atan(Sys);
-			//		var A = Atan < 0 ? -Atan : Atan;
-			//		var AA = A - R;
-			//		AMin = AtanMinMax[Y] = AA;
-			//		RMin = AtanMinMax[Y + 20] = AS;
-			//	} else if (RMax < AS) {
-			//		var Atan = System.Math.Atan(Sys);
-			//		var A = Atan < 0 ? -Atan : Atan;
-			//		var AA = A - R;
-			//		AMax = AtanMinMax[Y + 10] = AA;
-			//		RMax = AtanMinMax[Y + 30] = AS;
-			//	}
-			//	var RRR = R + AMin;
-			//}
+
+			var Atan = System.Math.Atan(Sys);
+			var A = Atan < 0 ? -Atan : Atan;
+			var AA = A - R;
+			if(Y>0||(Y == 0&& AA>=0&& AA< System.Math.Atan(0.5))) {
+				var AMin = AtanMinMax[Y];
+				var AMax = AtanMinMax[Y + 9];
+				if (AMin == 0 && AMax == 0) {
+					AMin = AMax = AtanMinMax[Y] = AtanMinMax[Y + 9] = AA;
+				} else if (AMin > AA) {
+					AMin = AtanMinMax[Y] = AA;
+				} else if (AMax < AA) {
+					AMax = AtanMinMax[Y + 9] = AA;
+				}
+				var RRR = R + AMin;
+			}
 			R += AtanN[Y];
 			if (L != 0) R = (System.Math.PI / 2.0) - R;
 			R = M ? -R : R;
 			return R;
 		}
-		#region #method# SAtan(X) 
+		#region #method# TAtan(X) 
 		/// <summary>Близкий к системному атану)</summary>
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-		public static double SAtan(double X) {
+		public static double TAtan(double X) {
 			var M = false;
 			if (X < 0) { X = -X; M = true; }
 			var L = 0;
+			var Y = 0;
 			var YY = 0.0;
-			if (X >= 4.0) { L = -1; X = 1.0 / X; goto Next; } else { if (X < 0.25) goto Next; }
-			var Y = (int)(X * 2);
+			if (X >= 4.0) { L = -1; X = 1.0 / X; goto Next; } else if (X < 0.5) goto Next;
+			Y = (int)(X * 2);
 			if (Y < 0) Y++;
-			switch (Y) {
-				case 0: break;
-				case 1: YY = 0.4636476090008061165; break;
-				case 2: YY = 0.7853981633974483094; break;
-				case 3: YY = 0.98279372324732906714; break;
-				case 4: YY = 1.1071487177940905022; break;
-				case 5: YY = 1.1902899496825317322; break;
-				case 6: YY = 1.2490457723982544262; break;
-				case 7: YY = 1.2924966677897852673; break;
-				case 8: YY = 1.3258176636680324644; break;
-			}
 			var XX = Y / 2.0;
 			X = (X - XX) / (X * XX + 1);
 			Next:
 			XX = X * X;
 			var Sin = (((13852575 * XX + 216602100) * XX + 891080190) * XX + 1332431100) * XX + 654729075;
 			var Cos = ((((893025 * XX + 49116375) * XX + 425675250) * XX + 1277025750) * XX + 1550674125) * XX + 654729075;
-			var A = (Sin / Cos) * X + YY;
-			if (L != 0) A = (System.Math.PI / 2.0) - A;
-			return M ? -A : A;
-		}
-		#endregion
-		#region #method# TAtan(X) 
-		/// <summary>Похожий на основе тангенса, возможно он точнее, но это не точно, нечем это измерить)</summary>
-		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-		public static double TAtan(double X) {
-			var M = false;
-			if (X < 0) { X = -X; M = true; }
-			var L = 0;
-			var XX = 0.0;
-			var Y = 0;
-			if (X >= 4.0) { L = -1; X = 1.0 / X; goto Next; } else { if (X < 0.25) goto Next; }
-			Y = (int)(X * 2);
-			if (Y < 0) Y++;
-			XX = Y / 2.0;
-			X = (X - XX) / (X * XX + 1);
-			Next:
-			var Sin = false;
-			var Cos = 0.0;
-			TanSin:
-			var x = X;
-			if (Sin) x -= System.Math.PI / 2;
-			if (x < 0) { x = -x; }
-			if (x > System.Math.PI * 2) {
-				var P = x / (System.Math.PI * 2);
-				x = System.Math.PI * 2 * (P - (int)P);
-			}
-			var MM = (x > System.Math.PI / 2 && x <= System.Math.PI / 2 * 3);
-			XX = x * x;
-			var XXX = XX;
-			var R = 1 - (XX / 2);
-			R += (XXX *= XX) / 24;
-			R -= (XXX *= XX) / 720;
-			R += (XXX *= XX) / 40320;
-			R -= (XXX *= XX) / 3628800;
-			R += (XXX *= XX) / 479001600;
-			R -= (XXX *= XX) / 87178291200;
-			R += (XXX *= XX) / 20922789888000;
-			R -= (XXX *= XX) / 6402373705728000;
-			R += (XXX *= XX) / 2432902008176640000;
-			if (R < 0) R = -R;
-			if (MM) R = -R;
-			if (!Sin) { Cos = R; Sin = true; goto TanSin; }
-			R /= Cos;
-			var A = R * X + AtanN[Y];
+			var A = (Sin / Cos) * X + AtanN[Y];
 			if (L != 0) A = (System.Math.PI / 2.0) - A;
 			return M ? -A : A;
 		}

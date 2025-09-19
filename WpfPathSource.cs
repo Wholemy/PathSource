@@ -1,9 +1,5 @@
 namespace Wholemy {
 	public class PathSource {
-		#region #field# NAtanArray 
-		public static double[] NAtanArray;
-		public static double[] NTanArray;
-		#endregion
 		#region #field# TAtanArray 
 		public static double[] TAtanArray;
 		#endregion
@@ -52,6 +48,7 @@ namespace Wholemy {
 		}
 		#endregion
 		#region #method# TATan(X) 
+		/// <summary>Функция возвращает обратный тангенс угла на базе тангенса, работает быстрее почему-то в огромных габаритах путей)</summary>
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		public static double TATan(double X) {
 			var M = false;

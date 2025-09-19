@@ -1,5 +1,9 @@
 namespace Wholemy {
 	public class PathSource {
+		#region #field# NAtanArray 
+		public static double[] NAtanArray;
+		public static double[] NTanArray;
+		#endregion
 		#region #field# TAtanArray 
 		public static double[] TAtanArray;
 		#endregion
@@ -12,6 +16,11 @@ namespace Wholemy {
 		/// В данных условиях возможно вычислить только первую опорную точку, в остальных случаях необходим System.Math.Atan)
 		/// К тангенсу эта последовательность никак не относится, я пробовал заменить (C/B) на TTan(X) работает, но не точно,
 		/// потому что я проворил минимальные и максимальные значения в том и в другом случае, с тангенсом они сильно разбегаются)
+		/// Однако есть другая точка зрения, судя по тому что кривые в невероятно больших значениях толщины, работают с тангенсом
+		/// быстрее и не просто, а сильно быстрее, есть теория, что кто-то решил основу для контрольных точек использовать вместо
+		/// тангенса, заменив его полностью, но вероятно что это не верно, может же быть такое что кто-то решил что-то неверно)
+		/// Поэтому я сделал две функции, есть TAtan и есть TATan на базе тангенса, который используется в TAtan2)
+		/// Теоретически, обратный тангенс должен дополнять тангенс, раз уж это работает без багов, но как-то не совсем так)
 		/// </remarks>
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		public static double TAtan(double X) {
@@ -42,6 +51,34 @@ namespace Wholemy {
 			return M ? -R : R;
 		}
 		#endregion
+		#region #method# TATan(X) 
+		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		public static double TATan(double X) {
+			var M = false;
+			if (X < 0) { X = -X; M = true; }
+			var L = 0;
+			var Y = 0;
+			var YY = 0.0;
+			if (X >= 4.0) { L = -1; X = 1.0 / X; goto Next; } else if (X < 0.5) goto Next;
+			Y = (int)(X * 2);
+			if (Y < 0) Y++;
+			var XX = Y / 2.0;
+			X = (X - XX) / (X * XX + 1);
+			Next:
+			XX = X * X;
+			var R = TTan(X) * X;
+			if (Y > 0) {
+				var I = Y - 1;
+				var AR = TAtanArray;
+				if (AR == null) TAtanArray = AR = new double[7];
+				var N = AR[I];
+				if (N == 0) N = AR[I] = System.Math.Atan(Y * 0.5);
+				R += N;
+			}
+			if (L != 0) R = (System.Math.PI / 2.0) - R;
+			return M ? -R : R;
+		}
+		#endregion
 		#region #method# TAtan2(Y, X) 
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		public static double TAtan2(double Y, double X) {
@@ -49,7 +86,7 @@ namespace Wholemy {
 				if (Y == 0.0) return 0.0;
 				else if (Y > 0) return System.Math.PI / 2.0; else return -(System.Math.PI / 2.0);
 			}
-			var A = TAtan(Y / X);
+			var A = TATan(Y / X);
 			if (X < 0.0) {
 				if (Y >= 0.0) A += System.Math.PI; else A -= System.Math.PI;
 			}

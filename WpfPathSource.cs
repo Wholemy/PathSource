@@ -48,7 +48,8 @@ namespace Wholemy {
 		}
 		#endregion
 		#region #method# TATan(X) 
-		/// <summary>Функция возвращает обратный тангенс угла на базе тангенса, работает быстрее почему-то в огромных габаритах путей)</summary>
+		/// <summary>Функция возвращает обратный тангенс угла на базе тангенса или его малой части)</summary>
+		/// <remarks>На случай обнаружения багов раскоментировать нужное или заменить на достоверный TAtan)</remarks>
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		public static double TATan(double X) {
 			var M = false;
@@ -56,14 +57,41 @@ namespace Wholemy {
 			var L = 0;
 			var Y = 0;
 			var YY = 0.0;
-			if (X >= 4.0) { L = -1; X = 1.0 / X; goto Next; } else if (X < 0.5) goto Next;
+			if (X >= 4.0) { L = -1; X = 1.0 / X; goto Nex; } else if (X < 0.5) goto Nex;
 			Y = (int)(X * 2);
 			if (Y < 0) Y++;
 			var XX = Y / 2.0;
 			X = (X - XX) / (X * XX + 1);
+			Nex:
+			var TS = false;
+			var TC = 0.0;
 			Next:
-			XX = X * X;
-			var R = TTan(X) * X;
+			var TX = X;
+			if (TS) TX -= System.Math.PI / 2;
+			var Tx = TX;
+			if (Tx < 0) { Tx = -Tx; }
+			if (Tx > System.Math.PI * 2) {
+				var P = Tx / (System.Math.PI * 2);
+				Tx = System.Math.PI * 2 * (P - (int)P);
+			}
+			var TM = (Tx > System.Math.PI / 2 && Tx <= System.Math.PI / 2 * 3);
+			var TXX = Tx * Tx;
+			var TXXX = TXX;
+			var TR = 1 - (TXX / 2);
+			TR += (TXXX *= TXX) / 24;
+			//TR -= (TXXX *= TXX) / 720;
+			//TR += (TXXX *= TXX) / 40320;
+			//TR -= (TXXX *= TXX) / 3628800;
+			//TR += (TXXX *= TXX) / 479001600;
+			//TR -= (TXXX *= TXX) / 87178291200;
+			//TR += (TXXX *= TXX) / 20922789888000;
+			//TR -= (TXXX *= TXX) / 6402373705728000;
+			//TR += (TXXX *= TXX) / 2432902008176640000;
+			if (TR < 0) TR = -TR;
+			if (TM) TR = -TR;
+			if (!TS) { TC = TR; TS = true; goto Next; }
+			TR /= TC;
+			var R = TR * X;
 			if (Y > 0) {
 				var I = Y - 1;
 				var AR = TAtanArray;
@@ -192,10 +220,10 @@ namespace Wholemy {
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		public static double TTan(double X) {
 			//var Test = System.Math.Tan(X);
-			var Sin = false;
-			var Cos = 0.0;
+			var S = false;
+			var C = 0.0;
 			Next:
-			if (Sin) X -= System.Math.PI / 2;
+			if (S) X -= System.Math.PI / 2;
 			var x = X;
 			if (x < 0) { x = -x; }
 			if (x > System.Math.PI * 2) {
@@ -217,8 +245,8 @@ namespace Wholemy {
 			R += (XXX *= XX) / 2432902008176640000;
 			if (R < 0) R = -R;
 			if (M) R = -R;
-			if (!Sin) { Cos = R; Sin = true; goto Next; }
-			R /= Cos;
+			if (!S) { C = R; S = true; goto Next; }
+			R /= C;
 			//if (Test < 0 && R >= 0) throw new System.InvalidOperationException();
 			return R;
 		}

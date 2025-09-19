@@ -1,7 +1,7 @@
 namespace Wholemy {
 	public class PathSource {
-		#region #field# AtanArray 
-		public static double[] AtanArray;
+		#region #field# TAtanArray 
+		public static double[] TAtanArray;
 		#endregion
 		#region #method# TAtan(X) 
 		/// <summary>Близкий к системному атану, практически на его основе)</summary>
@@ -24,8 +24,8 @@ namespace Wholemy {
 			var R = (C / B) * X;
 			if (Y > 0) {
 				var I = Y - 1;
-				var AR = AtanArray;
-				if (AR == null) AtanArray = AR = new double[7];
+				var AR = TAtanArray;
+				if (AR == null) TAtanArray = AR = new double[7];
 				var N = AR[I];
 				if (N == 0) N = AR[I] = System.Math.Atan(Y * 0.5);
 				R += N;
@@ -34,7 +34,7 @@ namespace Wholemy {
 			return M ? -R : R;
 		}
 		#endregion
-		#region #method# TAtan2(y, x) 
+		#region #method# TAtan2(Y, X) 
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 		public static double TAtan2(double Y, double X) {
 			if (X == 0.0) {
@@ -111,6 +111,39 @@ namespace Wholemy {
 			if (M) R = -R;
 			//if (Test < 0 && !M) throw new System.InvalidOperationException();
 			return R;
+		}
+		#endregion
+		#region #method# TSinCos(X) 
+		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+		public static void TSinCos(double X, out double Sin, out double Cos) {
+			var S = false;
+			var C = 0.0;
+			Next:
+			if (S) X -= System.Math.PI / 2;
+			var x = X;
+			if (x < 0) { x = -x; }
+			if (x > System.Math.PI * 2) {
+				var P = x / (System.Math.PI * 2);
+				x = System.Math.PI * 2 * (P - (int)P);
+			}
+			var M = (x > System.Math.PI / 2 && x <= System.Math.PI / 2 * 3);
+			var XX = x * x;
+			var XXX = XX;
+			var R = 1 - (XX / 2);
+			R += (XXX *= XX) / 24;
+			R -= (XXX *= XX) / 720;
+			R += (XXX *= XX) / 40320;
+			R -= (XXX *= XX) / 3628800;
+			R += (XXX *= XX) / 479001600;
+			R -= (XXX *= XX) / 87178291200;
+			R += (XXX *= XX) / 20922789888000;
+			R -= (XXX *= XX) / 6402373705728000;
+			R += (XXX *= XX) / 2432902008176640000;
+			if (R < 0) R = -R;
+			if (M) R = -R;
+			if (!S) { C = R; S = true; goto Next; }
+			Cos = C;
+			Sin = R;
 		}
 		#endregion
 		#region #method# TTan(X) 
@@ -194,10 +227,7 @@ namespace Wholemy {
 			var TY = BY - CY;
 			if (TX == 0 && TY == 0) return;
 			var PI = System.Math.PI * 2 * AR;
-			var CoS = TCos(PI);
-			var SiN = TSin(PI);
-
-
+			TSinCos(PI,out var SiN,out var CoS);
 			var X = (CoS * TX - SiN * TY + CX);
 			var Y = (SiN * TX + CoS * TY + CY);
 			BX = X;

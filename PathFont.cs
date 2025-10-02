@@ -1,6 +1,6 @@
-namespace Wholemy {
-	#region #class# PathFont 
+﻿namespace Wholemy {
 	public abstract class PathFont {
+		#region #method# GetChr(Char) 
 		public Chr GetChr(char Char) {
 			var P = Map.GetV(ref ChrMap, Char);
 			if (P == null) {
@@ -9,12 +9,46 @@ namespace Wholemy {
 			}
 			return P;
 		}
+		#endregion
 		private Map.Int<Chr> ChrMap;
 		private Map.Chars<Chr> StrMap;
+		public System.Windows.Media.Geometry GetGeometry(double X, double Y, string Value, double Height, double Weight, out double Width) {
+			var Count = Value.Length;
+			Width = 0.0;
+			var PathSource = new PathSource() { IsUnited = true };
+			for (int Index = 0; Index < Count; Index++) {
+				var Char = Value[Index];
+				var Chr = GetChr(Char);
+				var Mul = Height / Chr.Height;
+				PathSource.AddResizeMovA(WH: Mul, X: X + Width, Y: Y);
+				PathSource.Begin();
+				PathSource.Parse(Chr.GetWeight(Weight));
+				PathSource.CutResize();
+				Width += (Chr.Width * Mul);
+			}
+			return PathSource.CombineToGeometry();
+		}
+		public System.Windows.Media.Geometry GetGeometry(double X, double Y, string Value, double Height, double Weight) {
+			var Count = Value.Length;
+			var Width = 0.0;
+			var PathSource = new PathSource() { IsUnited = true };
+			for (int Index = 0; Index < Count; Index++) {
+				var Char = Value[Index];
+				var Chr = GetChr(Char);
+				var Mul = Height / Chr.Height;
+				PathSource.AddResizeMovA(WH: Mul, X: X + Width, Y: Y);
+				PathSource.Begin();
+				PathSource.Parse(Chr.GetWeight(Weight));
+				PathSource.CutResize();
+				Width += (Chr.Width * Mul);
+			}
+			return PathSource.CombineToGeometry();
+		}
+		#region #method# GetGeometry(Value, Height, Weight, Width) 
 		public System.Windows.Media.Geometry GetGeometry(string Value, double Height, double Weight, out double Width) {
 			var Count = Value.Length;
 			Width = 0.0;
-			var PathSource = new PathSource();
+			var PathSource = new PathSource() { IsUnited = true };
 			for (int Index = 0; Index < Count; Index++) {
 				var Char = Value[Index];
 				var Chr = GetChr(Char);
@@ -27,10 +61,12 @@ namespace Wholemy {
 			}
 			return PathSource.CombineToGeometry();
 		}
+		#endregion
+		#region #method# GetGeometry(Value, Height, Weight) 
 		public System.Windows.Media.Geometry GetGeometry(string Value, double Height, double Weight) {
 			var Count = Value.Length;
 			var Width = 0.0;
-			var PathSource = new PathSource();
+			var PathSource = new PathSource() { IsUnited = true };
 			for (int Index = 0; Index < Count; Index++) {
 				var Char = Value[Index];
 				var Chr = GetChr(Char);
@@ -43,7 +79,9 @@ namespace Wholemy {
 			}
 			return PathSource.CombineToGeometry();
 		}
-		public void ToPath(PathSource P,double X,double Y, string Value, double Height, double Weight) {
+		#endregion
+		#region #method# ToPath(P, X, Y, Value, Height, Weight) 
+		public void ToPath(PathSource P, double X, double Y, string Value, double Height, double Weight) {
 			var Count = Value.Length;
 			var Width = X;
 			var PathSource = P;
@@ -51,13 +89,15 @@ namespace Wholemy {
 				var Char = Value[Index];
 				var Chr = GetChr(Char);
 				var Mul = Height / Chr.Height;
-				PathSource.AddResizeMovA(WH: Mul, X: Width, Y:Y);
+				PathSource.AddResizeMovA(WH: Mul, X: Width, Y: Y);
 				PathSource.Begin();
 				PathSource.Parse(Chr.GetWeight(Weight));
 				PathSource.CutResize();
 				Width += (Chr.Width * Mul);
 			}
 		}
+		#endregion
+		#region #method# GetWidth(Value, Height) 
 		public double GetWidth(string Value, double Height) {
 			var Count = Value.Length;
 			var Width = 0.0;
@@ -69,6 +109,7 @@ namespace Wholemy {
 			}
 			return Width;
 		}
+		#endregion
 		#region #new# 
 		public PathFont() {
 			StrMap = new Map.Chars<Chr>();
@@ -117,7 +158,7 @@ namespace Wholemy {
 				if (S == null) {
 					var L = Get(D: Weight / 4).Geometry;
 					if (L != null) {
-						S = Get(D: Weight / 4).Geometry.ToString();
+						S = Get(D: Weight / 4).Geometry.ToString(System.Globalization.CultureInfo.InvariantCulture);
 					} else { S = ""; }
 					Map.Add(ref CacheMap, Weight, S);
 				}
@@ -135,48 +176,34 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= 2;
 					S.Thickness = D;
-					S.BeginFz();
 					//S.AddRotate(45, 500, 500);
 					//S.AddResizeMovA(XY: 100);
 					S.AddArc00(50, 200, 200, 50);
-					S.BeginFz();
 					S.AddArc00(600, 50, 750, 200);
-					S.BeginFz();
 					S.AddArc00(750, 600, 600, 750);
-					S.BeginFz();
 					S.AddArc00(200, 750, 50, 600);
-					S.BeginFz();
 					S.AddLin00(200, 50, 600, 50);
-					S.BeginFz();
 					S.AddLin00(750, 200, 750, 600);
-					S.BeginFz();
 					S.AddLin00(600, 750, 200, 750);
-					S.BeginFz();
 					S.AddLin00(50, 600, 50, 200);
 					//S.Thickness = 150 - D;
 					var chr = (int)(ushort)this.Str[0];
 					if (((chr >> 15) & 1) == 1) {
-						S.BeginFz();
 						S.AddOrc(200, 200, 25);
 					}
 					if (((chr >> 14) & 1) == 1) {
-						S.BeginFz();
 						S.AddOrc(200 + (400.0 / 3 * 1), 200, 25);
 					}
 					if (((chr >> 13) & 1) == 1) {
-						S.BeginFz();
 						S.AddOrc(600 - (400.0 / 3 * 1), 200, 25);
 					}
 					if (((chr >> 12) & 1) == 1) {
-						S.BeginFz();
 						S.AddOrc(600, 200, 25);
 					}
 					if (((chr >> 11) & 1) == 1) {
-						S.BeginFz();
 						S.AddOrc(200, 200 + (400.0 / 3 * 1), 25);
 					}
 					if (((chr >> 10) & 1) == 1) {
-						S.BeginFz();
 						S.AddOrc(200 + (400.0 / 3 * 1), 200 + (400.0 / 3 * 1), 25);
 					}
 					if (((chr >> 9) & 1) == 1) {
@@ -184,19 +211,15 @@ namespace Wholemy {
 						S.AddOrc(600 - (400.0 / 3 * 1), 200 + (400.0 / 3 * 1), 25);
 					}
 					if (((chr >> 8) & 1) == 1) {
-						S.BeginFz();
 						S.AddOrc(600, 200 + (400.0 / 3 * 1), 25);
 					}
 					if (((chr >> 7) & 1) == 1) {
-						S.BeginFz();
 						S.AddOrc(200, 600 - (400.0 / 3 * 1), 25);
 					}
 					if (((chr >> 6) & 1) == 1) {
-						S.BeginFz();
 						S.AddOrc(200 + (400.0 / 3 * 1), 600 - (400.0 / 3 * 1), 25);
 					}
 					if (((chr >> 5) & 1) == 1) {
-						S.BeginFz();
 						S.AddOrc(600 - (400.0 / 3 * 1), 600 - (400.0 / 3 * 1), 25);
 					}
 					if (((chr >> 4) & 1) == 1) {
@@ -204,11 +227,9 @@ namespace Wholemy {
 						S.AddOrc(600, 600 - (400.0 / 3 * 1), 25);
 					}
 					if (((chr >> 3) & 1) == 1) {
-						S.BeginFz();
 						S.AddOrc(200, 600, 25);
 					}
 					if (((chr >> 4) & 1) == 1) {
-						S.BeginFz();
 						S.AddOrc(200 + (400.0 / 3 * 1), 600, 25);
 					}
 					if (((chr >> 1) & 1) == 1) {
@@ -216,17 +237,14 @@ namespace Wholemy {
 						S.AddOrc(600 - (400.0 / 3 * 1), 600, 25);
 					}
 					if (((chr) & 1) == 1) {
-						S.BeginFz();
 						S.AddOrc(600, 600, 25);
 					}
 					//S.CutResize();
 					//S.CutRotate();
-					return S.Combine();
 				}
 				return S;
 			}
 		}
 		#endregion
 	}
-	#endregion
 }

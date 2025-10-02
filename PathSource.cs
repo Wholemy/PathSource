@@ -1,4 +1,4 @@
-namespace Wholemy {
+﻿namespace Wholemy {
 	public class PathSource {
 		public static ulong[] TTanArray;
 		#region #field# TAtanArray 
@@ -24,7 +24,7 @@ namespace Wholemy {
 			if (Y < 0) Y++;
 			var XX = Y / 2.0;
 			X = (X - XX) / (X * XX + 1);
-			Next:
+		Next:
 			XX = X * X;
 			var C = (((13852575 * XX + 216602100) * XX + 891080190) * XX + 1332431100) * XX + 654729075;
 			var B = ((((893025 * XX + 49116375) * XX + 425675250) * XX + 1277025750) * XX + 1550674125) * XX + 654729075;
@@ -139,7 +139,7 @@ namespace Wholemy {
 		public static void TSinCos(double X, out double Sin, out double Cos) {
 			var S = false;
 			var C = 0.0;
-			Next:
+		Next:
 			if (S) X -= System.Math.PI / 2;
 			var x = X;
 			if (x < 0) { x = -x; }
@@ -180,7 +180,7 @@ namespace Wholemy {
 			//var Test = System.Math.Tan(X);
 			var S = false;
 			var C = 0.0;
-			Next:
+		Next:
 			if (S) X -= System.Math.PI / 2;
 			var x = X;
 			if (x < 0) { x = -x; }
@@ -410,28 +410,92 @@ namespace Wholemy {
 		#region #readonly# #field # Arc14 
 		public static readonly double Arc14 = 4.0 / 3 * TTan(System.Math.PI / 8);
 		#endregion
+		#region #field# PrevPath 
+		#region #invisible# 
+#if TRACE
+		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+		#endregion
+		private System.Windows.Media.Geometry PrevPath;
+		#endregion
+		#region #field# PrevMode 
+		#region #invisible# 
+#if TRACE
+		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+		#endregion
+		private System.Windows.Media.GeometryCombineMode PrevMode;
+		#endregion
+		#region #method# Combine(Mode) 
+		public void Combine(System.Windows.Media.GeometryCombineMode Mode = System.Windows.Media.GeometryCombineMode.Union) {
+			End();
+			var P = PrevPath;
+			var G = FiguresToGeometry();
+			if (G != null)
+				PrevPath = P != null ? (System.Windows.Media.Geometry)System.Windows.Media.PathGeometry.Combine(P, G, Mode, null, Tolerance, ToleranceType) : G;
+			PrevMode = Mode;
+			this.Figures = null;
+			this.LastPath = null;
+		}
+		#endregion
+		#region #method# Union 
+		#region #through# 
+#if TRACE
+		[System.Diagnostics.DebuggerStepThrough]
+#endif
+		#endregion
+		public void Union() => Combine(System.Windows.Media.GeometryCombineMode.Union);
+		#endregion
+		#region #method# Intersect 
+		#region #through# 
+#if TRACE
+		[System.Diagnostics.DebuggerStepThrough]
+#endif
+		#endregion
+		public void Intersect() => Combine(System.Windows.Media.GeometryCombineMode.Intersect);
+		#endregion
+		#region #method# Xor 
+		#region #through# 
+#if TRACE
+		[System.Diagnostics.DebuggerStepThrough]
+#endif
+		#endregion
+		public void Xor() => Combine(System.Windows.Media.GeometryCombineMode.Xor);
+		#endregion
+		#region #method# Exclude 
+		#region #through# 
+#if TRACE
+		[System.Diagnostics.DebuggerStepThrough]
+#endif
+		#endregion
+		public void Exclude() => Combine(System.Windows.Media.GeometryCombineMode.Exclude);
+		#endregion
 		#region #field# LastPath 
 		#region #invisible# 
 #if TRACE
 		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 #endif
 		#endregion
-		private System.Windows.Media.StreamGeometry LastPath;
-		#endregion
-		#region #field# LastMode 
-		#region #invisible# 
-#if TRACE
-		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
-		#endregion
-		private System.Windows.Media.GeometryCombineMode LastMode;
+		private System.Windows.Media.Geometry LastPath;
 		#endregion
 		#region #get# Geometry 
 		public System.Windows.Media.Geometry Geometry {
 			get {
-				var G = this.LastPath;
-				if (G == null && Figures != null) { this.LastPath = G = FiguresToGeometry(); }
-				return G;
+				var L = this.LastPath;
+				if (L == null) {
+					var P = this.PrevPath;
+					var G = FiguresToGeometry();
+					if (P != null) {
+						if (G != null) {
+							L = this.LastPath = (System.Windows.Media.Geometry)System.Windows.Media.PathGeometry.Combine(P, G, PrevMode, null, Tolerance, ToleranceType);
+						} else {
+							L = this.LastPath = P;
+						}
+					} else {
+						L = this.LastPath = G;
+					}
+				}
+				return L;
 			}
 		}
 		#endregion
@@ -456,7 +520,7 @@ namespace Wholemy {
 					if (G != null) {
 						var P = new System.Windows.Media.PathGeometry();
 						GG = System.Windows.Media.PathGeometry.Combine(P, G, System.Windows.Media.GeometryCombineMode.Union, null, Tolerance, ToleranceType);
-						C = this.CombinedFigures = GetGeometry(GG);
+						C = this.CombinedFigures = GetFlattenedGeometry(GG);
 					}
 				}
 				return C;
@@ -622,11 +686,85 @@ namespace Wholemy {
 			return Path;
 		}
 		#endregion
-		#region #method# GetGeometry(Geometry) 
-		public List GetGeometry(System.Windows.Media.Geometry Geometry) {
+		#region #method# GetFlattenedGeometry(Geometry) 
+		public List GetFlattenedGeometry(System.Windows.Media.Geometry Geometry) {
 			var FigureList = new List();
 			var Path = Geometry as System.Windows.Media.PathGeometry;
 			if (Path == null) Path = Geometry.GetFlattenedPathGeometry(Tolerance, ToleranceType);
+			var Figures = Path.Figures;
+			foreach (var Figure in Figures) {
+				var F = new Figure(Figure.IsFilled, Figure.IsClosed);
+				var P0 = Figure.StartPoint;
+				var Segments = Figure.Segments;
+				var SegmentList = new List();
+				foreach (var Segment in Segments) {
+					var MX = P0.X;
+					var MY = P0.Y;
+					if (Segment is System.Windows.Media.LineSegment) {
+						var S = (System.Windows.Media.LineSegment)Segment;
+						var P1 = S.Point;
+						SegmentList.AddLast(new Curve(P0.X, P0.Y, P1.X, P1.Y));
+						P0 = P1;
+					} else if (Segment is System.Windows.Media.PolyLineSegment) {
+						var Poly = (System.Windows.Media.PolyLineSegment)Segment;
+						var Points = Poly.Points;
+						var C = Points.Count;
+						for (var I = 0; I < C; I++) {
+							var P1 = Points[I];
+							SegmentList.AddLast(new Curve(P0.X, P0.Y, P1.X, P1.Y));
+							P0 = P1;
+						}
+					} else if (Segment is System.Windows.Media.QuadraticBezierSegment) {
+						var S = (System.Windows.Media.QuadraticBezierSegment)Segment;
+						var P1 = S.Point1;
+						var P2 = S.Point2;
+						SegmentList.AddLast(new Curve(P0.X, P0.Y, P1.X, P1.Y, P2.X, P2.Y));
+						P0 = P2;
+					} else if (Segment is System.Windows.Media.PolyQuadraticBezierSegment) {
+						var Poly = (System.Windows.Media.PolyQuadraticBezierSegment)Segment;
+						var Points = Poly.Points;
+						var C = Points.Count;
+						for (var I = 0; I < C; I += 2) {
+							var P1 = Points[I];
+							var P2 = Points[I + 1];
+							SegmentList.AddLast(new Curve(P0.X, P0.Y, P1.X, P1.Y, P2.X, P2.Y));
+							P0 = P2;
+						}
+					} else if (Segment is System.Windows.Media.BezierSegment) {
+						var S = (System.Windows.Media.BezierSegment)Segment;
+						var P1 = S.Point1;
+						var P2 = S.Point2;
+						var P3 = S.Point3;
+						SegmentList.AddLast(new Curve(P0.X, P0.Y, P1.X, P1.Y, P2.X, P2.Y, P3.X, P3.Y));
+						P0 = P3;
+					} else if (Segment is System.Windows.Media.PolyBezierSegment) {
+						var Poly = (System.Windows.Media.PolyBezierSegment)Segment;
+						var Points = Poly.Points;
+						var C = Points.Count;
+						for (var I = 0; I < C; I += 3) {
+							var P1 = Points[I];
+							var P2 = Points[I + 1];
+							var P3 = Points[I + 2];
+							SegmentList.AddLast(new Curve(P0.X, P0.Y, P1.X, P1.Y, P2.X, P2.Y, P3.X, P3.Y));
+							P0 = P3;
+						}
+					} else {
+						throw new System.NotSupportedException();
+					}
+				}
+				if (SegmentList.Count > 0) {
+					F.Curves = SegmentList;
+					FigureList.AddLast(F);
+				}
+			}
+			return FigureList;
+		}
+		#endregion
+		#region #method# GetOutlinedGeometry(Geometry) 
+		public List GetOutlinedGeometry(System.Windows.Media.Geometry Geometry) {
+			var FigureList = new List();
+			var Path = Geometry as System.Windows.Media.PathGeometry;
+			if (Path == null) Path = Geometry.GetOutlinedPathGeometry(Tolerance, ToleranceType);
 			var Figures = Path.Figures;
 			foreach (var Figure in Figures) {
 				var F = new Figure(Figure.IsFilled, Figure.IsClosed);
@@ -1566,7 +1704,7 @@ namespace Wholemy {
 				Line RAM;
 				Line PreA = null;
 				Line PreB = null;
-				RTES:
+			RTES:
 				if (TES.ExtCw(Size, ref PreA, ref PreB, ref cwA, ref cwB)) {
 					if (Stab == null) {
 						Stab = new Stab(LastRoot, LastSize) { ResetA = cwA, ResetB = cwB };
@@ -1580,7 +1718,7 @@ namespace Wholemy {
 					Stab.Add(PreA, PreB, TES, LastRoot + (ROOT * LastSize), LastSize - (ROOT * LastSize));
 					POS = 0.0;
 				} else {
-					NEXT:
+				NEXT:
 					TES.Div(DIV, out NOW, out RAM);
 					if (NOW.ExtCw(Size, ref PreA, ref PreB, ref cwA, ref cwB)) {
 						var PDIV = ((1.0 - POS) * DIV);
@@ -1775,7 +1913,7 @@ namespace Wholemy {
 				var R = 0.0;
 				var r = 0.5;
 				var rr = 0.5;
-				End:
+			End:
 				var x00 = MX;
 				var y00 = MY;
 				var x11 = cmX;
@@ -1784,7 +1922,7 @@ namespace Wholemy {
 				var y22 = ceY;
 				var x33 = EX;
 				var y33 = EY;
-				Next:
+			Next:
 				var x01 = (x11 - x00) * rr + x00;
 				var y01 = (y11 - y00) * rr + y00;
 				var x12 = (x22 - x11) * rr + x11;
@@ -1822,7 +1960,7 @@ namespace Wholemy {
 				var R = 1.0;
 				var r = 0.5;
 				var rr = 0.5;
-				End:
+			End:
 				var x00 = MX;
 				var y00 = MY;
 				var x11 = cmX;
@@ -1831,7 +1969,7 @@ namespace Wholemy {
 				var y22 = ceY;
 				var x33 = EX;
 				var y33 = EY;
-				Next:
+			Next:
 				var x01 = (x11 - x00) * rr + x00;
 				var y01 = (y11 - y00) * rr + y00;
 				var x12 = (x22 - x11) * rr + x11;
@@ -3073,7 +3211,7 @@ namespace Wholemy {
 				var Prev = new DOT();
 				var Last = new DOT();
 				while (ParseToken(Val, ref Index, Count, ref Chr, ref Pre)) {
-					if (Chr != 'm') throw new System.FormatException("NeededToken M UnexpectedToken " + Chr);
+					//if (Chr != 'm') throw new System.FormatException("NeededToken M UnexpectedToken " + Chr);
 					switch (Chr) {
 						#region #case# 'm' Начало 
 						case 'm': {

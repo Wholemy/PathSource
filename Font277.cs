@@ -1,4 +1,4 @@
-namespace Wholemy {
+﻿namespace Wholemy {
 	//2021.1103.2015.277
 	public partial class Font277 : PathFont {
 		private const double UWH = 1.0;
@@ -1704,17 +1704,12 @@ namespace Wholemy {
 				if (D > 0) {
 					D /= UD;
 					S.Thickness = D;
-
 					S.AddResizeMovA(XY: UXY, WH: UWH);
 					S.AddArc10(50, 750, 575, 50);
-
 					S.AddArc00(575, 50, 750, 225);
-
 					S.AddLin01(750, 225, 750, 750);
-
 					S.AddLin10(225, 575, 750, 575);
 					S.CutResize();
-
 				}
 				return S;
 			}
@@ -2537,13 +2532,13 @@ namespace Wholemy {
 					S.Thickness = D;
 
 					S.AddResizeMoved(WH: 0.5, XY: 100, Y: 500);
-					S.AddArc00(50, 225, 400, 50);
+					S.AddArc11(50, 225, 400, 50);
 
-					S.AddArc00(400, 50, 750, 225);
+					S.AddArc11(400, 50, 750, 225);
 
-					S.AddArc00(750, 400, 400, 750);
+					S.AddArc11(750, 400, 400, 750);
 
-					S.AddArc00(400, 750, 50, 400);
+					S.AddArc11(400, 750, 50, 400);
 
 					S.AddLin00(50, 225, 50, 400);
 
@@ -3744,27 +3739,24 @@ namespace Wholemy {
 
 					S.AddRotate(400, -25, 250, 500);
 					S.AddArc10(150, 350 + 100, 150 - 100, 350);
-
 					S.AddArc01(150 - 100, 350, 150, 350 - 100);
-
 					S.AddArc10(350, 650 - 100, 350 + 100, 650);
-
 					S.AddArc01(350 + 100, 650, 350, 650 + 100);
 					S.CutRotate();
 
 					//var L = new Bezier(400, -25, 100, 1025);
-
+					S.Union();
 					//S.IsBonesUse = true;
 					S.AddOrc(400, -25, 25);
 					//S.BaseIntersectBones(L, out var M);
-
+					S.Union();
 					S.AddOrc(100, 1025, 25);
 					//S.LastIntersectBones(L, out var E);
 					//S.IsBonesUse = false;
-
-					S.PresetRoot(0.02289931874165918, -0.022899318741659291);
+					S.Union();
+					S.PresetRoot(0.02289931874165918, 0.022899318741659291);
 					S.AddLin00(400, -25, 100, 1025);
-
+					S.PresetRoot();
 				}
 				return S;
 			}
@@ -3783,15 +3775,15 @@ namespace Wholemy {
 					//S.IsBonesUse = true;
 					S.AddOrc(400, -25, 25);
 					//S.BaseIntersectBones(L, out var M);
-
+					S.Union();
 					S.AddOrc(100, 1025, 25);
 					//S.LastIntersectBones(L, out var E);
 					//S.IsBonesUse = false;
-
+					S.Union();
 					//S.AddLin00(x0, y0, x1, y1);
-					S.PresetRoot(0.02289931874165918, -0.022899318741659291);
+					S.PresetRoot(0.02289931874165918, 0.022899318741659291);
 					S.AddLin00(400, -25, 100, 1025);
-
+					S.PresetRoot();
 				}
 				return S;
 			}
@@ -3810,11 +3802,11 @@ namespace Wholemy {
 					//S.IsBonesUse = true;
 					S.AddOrc(100, -25, 25);
 					//S.BaseIntersectBones(L, out var M);
-
+					S.Union();
 					S.AddOrc(400, 1025, 25);
 					//S.LastIntersectBones(L, out var E);
 					//S.IsBonesUse = false;
-
+					S.Union();
 					S.PresetRoot(0.022899318741659208, -0.022899318741659291);
 					S.AddLin00(100, -25, 400, 1025);
 
@@ -4144,9 +4136,9 @@ namespace Wholemy {
 
 					S.PresetRoot(0.19760141239685169);
 					S.AddArc00(500, 1050, 100, 500/*, 0.19760141239685169*/);
-
+					S.Union();
 					S.AddOrc(400, -25, 25);
-
+					S.Union();
 					S.AddOrc(400, 1025, 25);
 
 				}
@@ -4168,9 +4160,9 @@ namespace Wholemy {
 
 					S.PresetRoot(-0.19760141239685169);
 					S.AddArc00(400, 500, 0, 1050/*, -0.19760141239685169*/);
-
+					S.Union();
 					S.AddOrc(100, -25, 25);
-
+					S.Union();
 					S.AddOrc(100, 1025, 25);
 
 				}
@@ -4208,9 +4200,9 @@ namespace Wholemy {
 
 					S.PresetRoot(-0.26924939404799664);
 					S.AddArc00(200, 300, 500, -50/*, -0.26924939404799664*/);
-
+					S.Union();
 					S.AddOrc(400, -25, 25);
-
+					S.Union();
 					S.AddOrc(400, 1025, 25);
 
 				}
@@ -4240,9 +4232,9 @@ namespace Wholemy {
 
 					S.PresetRoot(-0.26924939404799664);
 					S.AddArc00(300, 700, 0, 1050/*, -0.26924939404799664*/);
-
+					S.Union();
 					S.AddOrc(100, -25, 25);
-
+					S.Union();
 					S.AddOrc(100, 1025, 25);
 
 				}
@@ -4268,9 +4260,9 @@ namespace Wholemy {
 					S.AddLin10(250, -25, 375, -25);
 
 					S.AddLin10(250, 1025, 375, 1025);
-
+					S.Union();
 					S.AddOrc(400, -25, 25);
-
+					S.Union();
 					S.AddOrc(400, 1025, 25);
 
 				}
@@ -4296,9 +4288,9 @@ namespace Wholemy {
 					S.AddLin01(125, -25, 250, -25);
 
 					S.AddLin01(125, 1025, 250, 1025);
-
+					S.Union();
 					S.AddOrc(100, -25, 25);
-
+					S.Union();
 					S.AddOrc(100, 1025, 25);
 
 				}
@@ -4316,9 +4308,9 @@ namespace Wholemy {
 					S.Thickness = D;
 
 					S.AddLin00(250, 0, 250, 1000);
-
+					S.Union();
 					S.AddOrc(250, -25, 25);
-
+					S.Union();
 					S.AddOrc(250, 1025, 25);
 
 				}
@@ -4336,15 +4328,15 @@ namespace Wholemy {
 					S.Thickness = D;
 
 					S.AddLin00(250, 0, 250, 300);
-
+					S.Union();
 					S.AddLin00(250, 700, 250, 1000);
-
+					S.Union();
 					S.AddOrc(250, 325, 25);
-
+					S.Union();
 					S.AddOrc(250, 675, 25);
-
+					S.Union();
 					S.AddOrc(250, -25, 25);
-
+					S.Union();
 					S.AddOrc(250, 1025, 25);
 
 				}
